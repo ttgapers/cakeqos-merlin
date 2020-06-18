@@ -5,7 +5,17 @@
 
 # readonly SCRIPT_NAME="cake-qos"
 
-### Stop Cake
+cake_stop() {
+	logger "Cake Queue Management Stopping"
+	/opt/sbin/tc qdisc del dev eth0 ingress 2>/dev/null
+	/opt/sbin/tc qdisc del dev ifb9eth0 root 2>/dev/null
+	/opt/sbin/tc qdisc del dev eth0 root 2>/dev/null
+	ip link del ifb9eth0
+	rmmod sch_cake 2>/dev/null
+	fc enable
+	runner enable
+}
+
 cake_start() {
 	logger "Cake Queue Management Starting - settings: ${1} | ${2} | ${3}"
 	runner disable 2>/dev/null
@@ -20,18 +30,6 @@ cake_start() {
 	/opt/sbin/tc qdisc add dev ifb9eth0 root cake bandwidth "${1}" besteffort nat wash ingress "${3}"
 	ifconfig ifb9eth0 up
 	/opt/sbin/tc filter add dev eth0 parent ffff: protocol all prio 10 u32 match u32 0 0 flowid 1:1 action mirred egress redirect dev ifb9eth0
-}
-
-### Stop Cake
-cake_stop() {
-	logger "Cake Queue Management Stopping"
-	/opt/sbin/tc qdisc del dev eth0 ingress 2>/dev/null
-	/opt/sbin/tc qdisc del dev ifb9eth0 root 2>/dev/null
-	/opt/sbin/tc qdisc del dev eth0 root 2>/dev/null
-	ip link del ifb9eth0
-	rmmod sch_cake 2>/dev/null
-	fc enable
-	runner enable
 }
 
 ### Check Requirements
