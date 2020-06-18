@@ -13,9 +13,9 @@ Use 90-95% of your line speed as upload/download limits<br />
 <br />
 <b>Install Example</b><br />
 1. Download and apply permissions: /usr/sbin/curl --retry 3 "https://raw.githubusercontent.com/ttgapers/cakeqos-merlin/master/cake-qos.sh" -o "/jffs/scripts/cake-qos" && chmod 0755 /jffs/scripts/cake-qos<br />
-2.a dos2unix /jffs/scripts/cake-qos<br />
-2. Change for your router model: /jffs/scripts/cake-qos install <b>ac86u</b><br />
-3. Change for your linespeed and any overhead: /jffs/scripts/cake-qos enable <b>135</b>Mbit <b>13</b>Mbit <b>"docsis ack-filter"</b>
+3 dos2unix /jffs/scripts/cake-qos<br />
+3. Change for your router model: /jffs/scripts/cake-qos install <b>ac86u</b><br />
+4. Change for your linespeed and any overhead: /jffs/scripts/cake-qos enable <b>135</b>Mbit <b>13</b>Mbit <b>docsis ack-filter</b>
 <br />
 <b>CLI</b><br />
     tc qdisc<br />
