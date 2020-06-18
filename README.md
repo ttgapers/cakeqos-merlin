@@ -11,7 +11,7 @@
 If you use connections like ADSL, VDSL, Docsis, learn about the overhead keyword. https://man7.org/linux/man-pages/man8/tc-cake.8.html<br />
 Use 90-95% of your line speed as upload/download limits<br />
 <br />
-<b>Install Example</b><br />
+<b>Install Example</b>
 1. Download and apply permissions: <i>/usr/sbin/curl --retry 3 "https://raw.githubusercontent.com/ttgapers/cakeqos-merlin/master/cake-qos.sh" -o "/jffs/scripts/cake-qos" && chmod 0755 /jffs/scripts/cake-qos</i><br />
 2. Convert (just in case): <i>dos2unix /jffs/scripts/cake-qos</i><br />
 3. Change for your router model: <i>/jffs/scripts/cake-qos install <b>ac86u</b></i><br />
