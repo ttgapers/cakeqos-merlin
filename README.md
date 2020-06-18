@@ -25,9 +25,9 @@
 
 ## Usage
 
-> /jffs/scripts/cake-qos {install|enable|start|stop|disable}
+> /jffs/scripts/cake-qos {install|enable|start|startnow|stop|disable}
 
-(install, enable and start have required parameters)
+(install, enable, start, and startnow have required parameters)
     
 ## CLI
 

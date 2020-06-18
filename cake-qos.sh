@@ -157,18 +157,23 @@ case $1 in
 		cake_start "${2}" "${3}" "${4}"
 		return 0
 		;;
+	startnow)
+		cake_start "${2}" "${3}" "${4}"
+		return 0
+		;;
 	stop)
 		cake_stop
 		return 0
 		;;
 	*)
-		echo "Usage: $SCRIPT_NAME {install|enable|start|stop|disable} (install, enable and start have required parameters)"
+		echo "Usage: $SCRIPT_NAME {install|enable|start|startnow|stop|disable} (install, enable, start, and startnow have required parameters)"
 		echo ""
-		echo "install: install necessary $SCRIPT_NAME binaries"
-		echo "enable:  start $SCRIPT_NAME and add to startup"
-		echo "start:   start $SCRIPT_NAME"
-		echo "stop:    stop $SCRIPT_NAME"
-		echo "disable: stop $SCRIPT_NAME and remove from startup"
+		echo "install:  install necessary $SCRIPT_NAME binaries"
+		echo "enable:   start $SCRIPT_NAME and add to startup"
+		echo "start:    start $SCRIPT_NAME (5 minute delay)"
+		echo "startnow: start $SCRIPT_NAME (no delay)"
+		echo "stop:     stop $SCRIPT_NAME"
+		echo "disable:  stop $SCRIPT_NAME and remove from startup"
 		return 1
 		;;
 esac
