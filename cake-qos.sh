@@ -3,8 +3,9 @@
 # https://www.snbforums.com/threads/rt-ac86u-i-built-cake.49190/
 # Credits: robcore, Odkrys, ttgapers, jackiechun
 
-readonly SCRIPT_NAME="cake-qos"
+SCRIPT_NAME="cake-qos"
 
+### Cake Stop
 cake_stop() {
 	logger "Cake Queue Management Stopping"
 	/opt/sbin/tc qdisc del dev eth0 ingress 2>/dev/null
@@ -16,6 +17,7 @@ cake_stop() {
 	runner enable
 }
 
+### Cake Start
 cake_start() {
 	logger "Cake Queue Management Starting - settings: ${1} | ${2} | ${3}"
 	runner disable 2>/dev/null
@@ -72,8 +74,8 @@ case $1 in
 			FILE1="sched-cake-oot_2020-05-28-a5dccfd8-ax_aarch64-3.10.ipk"
 		fi
 		FILE2="tc-adv_4.16.0-git-20191110_aarch64-3.10.ipk"
-		/usr/sbin/curl --retry 3 "https://github.com/ttgapers/cakeqos-merlin/blob/master/${FILE1}" -o "/tmp/home/root/${FILE1}"
-		/usr/sbin/curl --retry 3 "https://github.com/ttgapers/cakeqos-merlin/blob/master/${FILE2}" -o "/tmp/home/root/${FILE2}"
+		/usr/sbin/curl --retry 3 "https://5m.ca/cake/${FILE1}" -o "/tmp/home/root/${FILE1}"
+		/usr/sbin/curl --retry 3 "https://5m.ca/cake/${FILE2}" -o "/tmp/home/root/${FILE2}"
 		/opt/bin/opkg install "/tmp/home/root/${FILE1}"
 		/opt/bin/opkg install "/tmp/home/root/${FILE2}"
 		return 0
