@@ -12,7 +12,7 @@ If you use connections like ADSL, VDSL, Docsis, learn about the overhead keyword
 Use 90-95% of your line speed as upload/download limits<br />
 <br />
 <b>Install Example</b><br />
-/usr/sbin/curl --retry 3 "https://raw.githubusercontent.com/ttgapers/cakeqos-merlin/master/cake-qos.sh" -o "/jffs/scripts/cake-qos" && chmod 0755 /jffs/scripts/cake-qos /jffs/scripts/cake-qos install ac86u /jffs/scripts/cake-qos enable 135Mbit 13Mbit "docsis ack-filter"
+/usr/sbin/curl --retry 3 "https://raw.githubusercontent.com/ttgapers/cakeqos-merlin/master/cake-qos.sh" -o "/jffs/scripts/cake-qos" && chmod 0755 /jffs/scripts/cake-qos /jffs/scripts/cake-qos install <b>ac86u</b> /jffs/scripts/cake-qos enable <b>135</b>Mbit <b>13</b>Mbit <b>"docsis ack-filter"</b>
 <br />
 <b>CLI</b><br />
     tc qdisc<br />
