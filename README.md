@@ -19,7 +19,7 @@
 </i><br />
 <br />
 <b>Usage:</b> /jffs/scripts/cake-qos {install|enable|start|stop|disable} (install, enable and start have required parameters)<br />
-
+<br />
 <b>CLI</b><br />
     tc qdisc<br />
     tc -s qdisc show dev eth0 (for upload)<br />
