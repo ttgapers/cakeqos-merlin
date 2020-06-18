@@ -8,7 +8,8 @@
     6. jffs<br />
 <br />
 <b>Tips</b><br />
-1. If you use connections like ADSL, VDSL, Docsis, learn about the overhead keyword. https://man7.org/linux/man-pages/man8/tc-cake.8.html<br />
+1. If you use connections like ADSL, VDSL, Docsis, learn about the overhead keyword. <br />
+    https://man7.org/linux/man-pages/man8/tc-cake.8.html<br />
 2. Use 90-95% of your line speed as upload/download limits<br />
 <br />
 <b>Install Example</b><br />
