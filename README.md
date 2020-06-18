@@ -20,7 +20,7 @@
     3. Change for your router model:<br />
     /jffs/scripts/cake-qos install <b>ac86u</b><br />
     4. Change for your linespeed and any overhead:<br />
-    /jffs/scripts/cake-qos enable <b>135</b>Mbit <b>13</b>Mbit <b>docsis ack-filter</b><br />
+    /jffs/scripts/cake-qos enable <b>135</b>Mbit <b>13</b>Mbit <b>"docsis" "ack-filter"</b><br />
     <br />
     <b>Usage:</b> /jffs/scripts/cake-qos {install|enable|start|stop|disable} (install, enable and start have required parameters)<br />
     <br />
