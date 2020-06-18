@@ -3,7 +3,7 @@
 # https://www.snbforums.com/threads/rt-ac86u-i-built-cake.49190/
 # Credits: robcore, Odkrys, ttgapers, jackiechun
 
-readonly SCRIPT_NAME="cake-qos"
+# readonly SCRIPT_NAME="cake-qos"
 
 ### Stop Cake
 cake_start() {
