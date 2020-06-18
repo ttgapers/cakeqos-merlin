@@ -3,8 +3,7 @@
 # https://www.snbforums.com/threads/rt-ac86u-i-built-cake.49190/
 # Credits: robcore, Odkrys, ttgapers, jackiechun
 
-# readonly SCRIPT_NAME="cake-qos"
-SCRIPT_NAME="cake-qos"
+readonly SCRIPT_NAME="cake-qos"
 
 cake_stop() {
 	logger "Cake Queue Management Stopping"
@@ -73,8 +72,8 @@ case $1 in
 			FILE1="sched-cake-oot_2020-05-28-a5dccfd8-ax_aarch64-3.10.ipk"
 		fi
 		FILE2="tc-adv_4.16.0-git-20191110_aarch64-3.10.ipk"
-		/usr/sbin/curl --retry 3 "https://github.com/ttgapers/cakeqos-merlin/raw/master/${FILE1}" -o "/tmp/home/root/${FILE1}"
-		/usr/sbin/curl --retry 3 "https://github.com/ttgapers/cakeqos-merlin/raw/master/${FILE2}" -o "/tmp/home/root/${FILE2}"
+		/usr/sbin/curl --retry 3 "https://github.com/ttgapers/cakeqos-merlin/blob/master/${FILE1}" -o "/tmp/home/root/${FILE1}"
+		/usr/sbin/curl --retry 3 "https://github.com/ttgapers/cakeqos-merlin/blob/master/${FILE2}" -o "/tmp/home/root/${FILE2}"
 		/opt/bin/opkg install "/tmp/home/root/${FILE1}"
 		/opt/bin/opkg install "/tmp/home/root/${FILE2}"
 		return 0
