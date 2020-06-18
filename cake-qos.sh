@@ -74,8 +74,8 @@ case $1 in
 			FILE1="sched-cake-oot_2020-05-28-a5dccfd8-ax_aarch64-3.10.ipk"
 		fi
 		FILE2="tc-adv_4.16.0-git-20191110_aarch64-3.10.ipk"
-		/usr/sbin/curl --retry 3 "https://5m.ca/cake/${FILE1}" -o "/tmp/home/root/${FILE1}"
-		/usr/sbin/curl --retry 3 "https://5m.ca/cake/${FILE2}" -o "/tmp/home/root/${FILE2}"
+		/usr/sbin/curl --retry 3 "https://github.com/jkychn/cakeqos-merlin/raw/master/${FILE1}" -o "/tmp/home/root/${FILE1}"
+		/usr/sbin/curl --retry 3 "https://github.com/jkychn/cakeqos-merlin/raw/master/${FILE2}" -o "/tmp/home/root/${FILE2}"
 		/opt/bin/opkg install "/tmp/home/root/${FILE1}"
 		/opt/bin/opkg install "/tmp/home/root/${FILE2}"
 		rm "/tmp/home/root/${FILE1}"
@@ -151,6 +151,9 @@ case $1 in
 		return 0
 		;;
 	start)
+		logger "Cake Queue Management Delayed Start (in 5 mins)"
+		echo "Cake Queue Management Delayed Start (in 5 mins)"
+		sleep 300s
 		cake_start "${2}" "${3}" "${4}"
 		return 0
 		;;
