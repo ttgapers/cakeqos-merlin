@@ -3,7 +3,7 @@
 # https://www.snbforums.com/threads/rt-ac86u-i-built-cake.49190/
 # Credits: robcore, Odkrys, ttgapers, jackiechun
 
-SCRIPT_NAME="cake-qos"
+readonly SCRIPT_NAME="cake-qos"
 
 ### Cake Stop
 cake_stop() {
@@ -78,6 +78,8 @@ case $1 in
 		/usr/sbin/curl --retry 3 "https://5m.ca/cake/${FILE2}" -o "/tmp/home/root/${FILE2}"
 		/opt/bin/opkg install "/tmp/home/root/${FILE1}"
 		/opt/bin/opkg install "/tmp/home/root/${FILE2}"
+		rm "/tmp/home/root/${FILE1}"
+		rm "/tmp/home/root/${FILE2}"
 		return 0
 		;;
 	enable)
