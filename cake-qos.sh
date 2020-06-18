@@ -4,6 +4,7 @@
 # Credits: robcore, Odkrys, ttgapers, jackiechun
 
 # readonly SCRIPT_NAME="cake-qos"
+SCRIPT_NAME="cake-qos"
 
 cake_stop() {
 	logger "Cake Queue Management Stopping"
