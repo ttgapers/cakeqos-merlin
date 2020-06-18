@@ -18,6 +18,8 @@
 4. Change for your linespeed and any overhead: <i>/jffs/scripts/cake-qos enable <b>135</b>Mbit <b>13</b>Mbit <b>docsis ack-filter</b>
 </i><br />
 
+<b>Usage:</b> /jffs/scripts/cake-qos {install|enable|start|stop|disable} (install, enable and start have required parameters)
+
 <b>CLI</b><br />
     tc qdisc<br />
     tc -s qdisc show dev eth0 (for upload)<br />
