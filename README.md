@@ -14,13 +14,13 @@
 <br />
 <b>Install Example</b><br />
 1. Download and apply permissions:<br />
-<i>/usr/sbin/curl --retry 3 "https://raw.githubusercontent.com/ttgapers/cakeqos-merlin/master/cake-qos.sh" -o "/jffs/scripts/cake-qos" && chmod 0755 /jffs/scripts/cake-qos</i><br />
+/usr/sbin/curl --retry 3 "https://raw.githubusercontent.com/ttgapers/cakeqos-merlin/master/cake-qos.sh" -o "/jffs/scripts/cake-qos" && chmod 0755 /jffs/scripts/cake-qos<br />
 2. Convert (just in case):<br />
-<i>dos2unix /jffs/scripts/cake-qos</i><br />
+dos2unix /jffs/scripts/cake-qos<br />
 3. Change for your router model:<br />
-<i>/jffs/scripts/cake-qos install <b>ac86u</b></i><br />
+/jffs/scripts/cake-qos install <b>ac86u</b><br />
 4. Change for your linespeed and any overhead:<br />
-<i>/jffs/scripts/cake-qos enable <b>135</b>Mbit <b>13</b>Mbit <b>docsis ack-filter</b></i><br />
+/jffs/scripts/cake-qos enable <b>135</b>Mbit <b>13</b>Mbit <b>docsis ack-filter</b><br />
 <br />
 <b>Usage:</b> /jffs/scripts/cake-qos {install|enable|start|stop|disable} (install, enable and start have required parameters)<br />
 <br />
