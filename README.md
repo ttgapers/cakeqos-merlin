@@ -17,6 +17,7 @@ Use 90-95% of your line speed as upload/download limits<br />
 3. Change for your router model: <i>/jffs/scripts/cake-qos install <b>ac86u</b></i><br />
 4. Change for your linespeed and any overhead: <i>/jffs/scripts/cake-qos enable <b>135</b>Mbit <b>13</b>Mbit <b>docsis ack-filter</b>
 </i><br />
+
 <b>CLI</b><br />
     tc qdisc<br />
     tc -s qdisc show dev eth0 (for upload)<br />
