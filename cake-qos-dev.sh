@@ -69,7 +69,7 @@ fi
 case $1 in
 	install)
 		if [ "${2}" = "ac86u" ]; then
-			FILE1="https://5m.ca/cake/sched-cake-oot_2020-05-28-a5dccfd8-1_aarch64-3.10.ipk"
+			FILE1="sched-cake-oot_2020-05-28-a5dccfd8-1_aarch64-3.10.ipk"
 		elif [ "${2}" = "ax88u" ]; then
 			FILE1="sched-cake-oot_2020-05-28-a5dccfd8-ax_aarch64-3.10.ipk"
 		fi
