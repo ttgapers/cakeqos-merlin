@@ -7,17 +7,17 @@ readonly SCRIPT_NAME="cake-qos"
 
 ### Cake Start
 cake_start() {
-	logger "Cake Queue Management Starting - settings: ${1} | ${2} | ${3}"
+	logger "Cake Queue Management Starting - settings: ${2} | ${3} | ${4}"
 	runner disable 2>/dev/null
 	fc disable 2>/dev/null
 	fc flush 2>/dev/null
 	insmod /opt/lib/modules/sch_cake.ko 2>/dev/null
-	/opt/sbin/tc qdisc replace dev eth0 root cake bandwidth "${2}" besteffort nat "${3}"
+	/opt/sbin/tc qdisc replace dev eth0 root cake bandwidth "${3}" besteffort nat "${4}"
 	ip link add name ifb9eth0 type ifb
 	/opt/sbin/tc qdisc del dev eth0 ingress 2>/dev/null
 	/opt/sbin/tc qdisc add dev eth0 handle ffff: ingress
 	/opt/sbin/tc qdisc del dev ifb9eth0 root 2>/dev/null
-	/opt/sbin/tc qdisc add dev ifb9eth0 root cake bandwidth "${1}" besteffort nat wash ingress "${3}"
+	/opt/sbin/tc qdisc add dev ifb9eth0 root cake bandwidth "${2}" besteffort nat wash ingress "${4}"
 	ifconfig ifb9eth0 up
 	/opt/sbin/tc filter add dev eth0 parent ffff: protocol all prio 10 u32 match u32 0 0 flowid 1:1 action mirred egress redirect dev ifb9eth0
 }
@@ -83,16 +83,6 @@ case $1 in
 		return 0
 		;;
 	enable)
-		# Remove old cake-qos-start.sh and remove from services-start/stop
-		if [ -f /jffs/scripts/cake-qos-start.sh ]; then
-			rm /jffs/scripts/cake-qos-start.sh
-			if [ -f /jffs/scripts/services-start ]; then
-				sed -i -e '/# '"cake-qos-start\.sh"'/d' /jffs/scripts/services-start
-			fi
-			if [ -f /jffs/scripts/services-stop ]; then
-				sed -i -e '/# '"cake-qos-start\.sh"'/d' /jffs/scripts/services-stop
-			fi
-		fi
 		# Start
 		if [ -f /jffs/scripts/firewall-start ]; then
 			LINECOUNT=$(grep -c '# '"$SCRIPT_NAME" /jffs/scripts/firewall-start)
@@ -129,8 +119,8 @@ case $1 in
 			echo "/jffs/scripts/$SCRIPT_NAME stop"' # '"$SCRIPT_NAME" >> /jffs/scripts/services-stop
 			chmod 0755 /jffs/scripts/services-stop
 		fi
-		logger "Cake Queue Management Enabled - settings: ${1} | ${2} | ${3}"
-		cake_start "${2}" "${3}" "${4}"
+		logger "Cake Queue Management Enabled - settings: ${2} | ${3} | ${4}"
+		cake_start "${@}"
 		return 0
 		;;
 	disable)
@@ -151,7 +141,7 @@ case $1 in
 		return 0
 		;;
 	start)
-		cake_start "${2}" "${3}" "${4}"
+		cake_start "${@}"
 		return 0
 		;;
 	stop)
