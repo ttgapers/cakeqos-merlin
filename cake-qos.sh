@@ -7,17 +7,17 @@ readonly SCRIPT_NAME="cake-qos"
 
 ### Cake Start
 cake_start() {
-	logger "Cake Queue Management Starting - settings: ${1} | ${2} | ${3}"
+	logger "Cake Queue Management Starting - settings: ${2} | ${3} | ${4}"
 	runner disable 2>/dev/null
 	fc disable 2>/dev/null
 	fc flush 2>/dev/null
 	insmod /opt/lib/modules/sch_cake.ko 2>/dev/null
-	/opt/sbin/tc qdisc replace dev eth0 root cake bandwidth "${2}" besteffort nat "${3}"
+	/opt/sbin/tc qdisc replace dev eth0 root cake bandwidth "${3}" besteffort nat ${4}
 	ip link add name ifb9eth0 type ifb
 	/opt/sbin/tc qdisc del dev eth0 ingress 2>/dev/null
 	/opt/sbin/tc qdisc add dev eth0 handle ffff: ingress
 	/opt/sbin/tc qdisc del dev ifb9eth0 root 2>/dev/null
-	/opt/sbin/tc qdisc add dev ifb9eth0 root cake bandwidth "${1}" besteffort nat wash ingress "${3}"
+	/opt/sbin/tc qdisc add dev ifb9eth0 root cake bandwidth "${2}" besteffort nat wash ingress ${4}
 	ifconfig ifb9eth0 up
 	/opt/sbin/tc filter add dev eth0 parent ffff: protocol all prio 10 u32 match u32 0 0 flowid 1:1 action mirred egress redirect dev ifb9eth0
 }
@@ -74,8 +74,8 @@ case $1 in
 			FILE1="sched-cake-oot_2020-05-28-a5dccfd8-ax_aarch64-3.10.ipk"
 		fi
 		FILE2="tc-adv_4.16.0-git-20191110_aarch64-3.10.ipk"
-		/usr/sbin/curl --retry 3 "https://github.com/ttgapers/cakeqos-merlin/raw/master/${FILE1}" -o "/tmp/home/root/${FILE1}"
-		/usr/sbin/curl --retry 3 "https://github.com/ttgapers/cakeqos-merlin/raw/master/${FILE2}" -o "/tmp/home/root/${FILE2}"
+		/usr/sbin/curl --retry 3 "https://raw.githubusercontent.com/ttgapers/cakeqos-merlin/master/${FILE1}" -o "/tmp/home/root/${FILE1}"
+		/usr/sbin/curl --retry 3 "https://raw.githubusercontent.com/ttgapers/cakeqos-merlin/master/${FILE2}" -o "/tmp/home/root/${FILE2}"
 		/opt/bin/opkg install "/tmp/home/root/${FILE1}"
 		/opt/bin/opkg install "/tmp/home/root/${FILE2}"
 		rm "/tmp/home/root/${FILE1}"
@@ -83,33 +83,23 @@ case $1 in
 		return 0
 		;;
 	enable)
-		# Remove old cake-qos-start.sh and remove from services-start/stop
-		if [ -f /jffs/scripts/cake-qos-start.sh ]; then
-			rm /jffs/scripts/cake-qos-start.sh
-			if [ -f /jffs/scripts/services-start ]; then
-				sed -i -e '/# '"cake-qos-start\.sh"'/d' /jffs/scripts/services-start
-			fi
-			if [ -f /jffs/scripts/services-stop ]; then
-				sed -i -e '/# '"cake-qos-start\.sh"'/d' /jffs/scripts/services-stop
-			fi
-		fi
 		# Start
-		if [ -f /jffs/scripts/services-start ]; then
-			LINECOUNT=$(grep -c '# '"$SCRIPT_NAME" /jffs/scripts/services-start)
-			LINECOUNTEX=$(grep -cx "/jffs/scripts/$SCRIPT_NAME start"' # '"$SCRIPT_NAME" /jffs/scripts/services-start)
+		if [ -f /jffs/scripts/firewall-start ]; then
+			LINECOUNT=$(grep -c '# '"$SCRIPT_NAME" /jffs/scripts/firewall-start)
+			LINECOUNTEX=$(grep -cx "/jffs/scripts/$SCRIPT_NAME start"' # '"$SCRIPT_NAME" /jffs/scripts/firewall-start)
 			
 			if [ "$LINECOUNT" -gt 1 ] || { [ "$LINECOUNTEX" -eq 0 ] && [ "$LINECOUNT" -gt 0 ]; }; then
-				sed -i -e '/# '"$SCRIPT_NAME"'/d' /jffs/scripts/services-start
+				sed -i -e '/# '"$SCRIPT_NAME"'/d' /jffs/scripts/firewall-start
 			fi
 			
 			if [ "$LINECOUNTEX" -eq 0 ]; then
-				echo "/jffs/scripts/$SCRIPT_NAME start ${2} ${3} \"${4}\""' # '"$SCRIPT_NAME" >> /jffs/scripts/services-start
+				echo "/jffs/scripts/$SCRIPT_NAME start ${2} ${3} \"${4}\""' # '"$SCRIPT_NAME" >> /jffs/scripts/firewall-start
 			fi
 		else
-			echo "#!/bin/sh" > /jffs/scripts/services-start
-			echo "" >> /jffs/scripts/services-start
-			echo "/jffs/scripts/$SCRIPT_NAME start ${2} ${3} \"${4}\""' # '"$SCRIPT_NAME" >> /jffs/scripts/services-start
-			chmod 0755 /jffs/scripts/services-start
+			echo "#!/bin/sh" > /jffs/scripts/firewall-start
+			echo "" >> /jffs/scripts/firewall-start
+			echo "/jffs/scripts/$SCRIPT_NAME start ${2} ${3} \"${4}\""' # '"$SCRIPT_NAME" >> /jffs/scripts/firewall-start
+			chmod 0755 /jffs/scripts/firewall-start
 		fi
 		# Stop
 		if [ -f /jffs/scripts/services-stop ]; then
@@ -129,16 +119,16 @@ case $1 in
 			echo "/jffs/scripts/$SCRIPT_NAME stop"' # '"$SCRIPT_NAME" >> /jffs/scripts/services-stop
 			chmod 0755 /jffs/scripts/services-stop
 		fi
-		logger "Cake Queue Management Enabled - settings: ${1} | ${2} | ${3}"
-		cake_start "${2}" "${3}" "${4}"
+		logger "Cake Queue Management Enabled - settings: ${2} | ${3} | ${4}"
+		cake_start "${@}"
 		return 0
 		;;
 	disable)
 		cake_stop
-		if [ -f /jffs/scripts/services-start ]; then
-			LINECOUNT=$(grep -c '# '"$SCRIPT_NAME" /jffs/scripts/services-start)
+		if [ -f /jffs/scripts/firewall-start ]; then
+			LINECOUNT=$(grep -c '# '"$SCRIPT_NAME" /jffs/scripts/firewall-start)
 			if [ "$LINECOUNT" -gt 0 ]; then
-				sed -i -e '/# '"$SCRIPT_NAME"'/d' /jffs/scripts/services-start
+				sed -i -e '/# '"$SCRIPT_NAME"'/d' /jffs/scripts/firewall-start
 			fi
 		fi
 		if [ -f /jffs/scripts/services-stop ]; then
@@ -151,14 +141,7 @@ case $1 in
 		return 0
 		;;
 	start)
-		logger "Cake Queue Management Delayed Start (in 5 mins)"
-		echo "Cake Queue Management Delayed Start (in 5 mins)"
-		sleep 300s
-		cake_start "${2}" "${3}" "${4}"
-		return 0
-		;;
-	startnow)
-		cake_start "${2}" "${3}" "${4}"
+		cake_start "${@}"
 		return 0
 		;;
 	stop)
@@ -166,14 +149,13 @@ case $1 in
 		return 0
 		;;
 	*)
-		echo "Usage: $SCRIPT_NAME {install|enable|start|startnow|stop|disable} (install, enable, start, and startnow have required parameters)"
+		echo "Usage: $SCRIPT_NAME {install|enable|start|stop|disable} (install, enable, and start have required parameters)"
 		echo ""
-		echo "install:  install necessary $SCRIPT_NAME binaries"
-		echo "enable:   start $SCRIPT_NAME and add to startup"
-		echo "start:    start $SCRIPT_NAME (5 minute delay)"
-		echo "startnow: start $SCRIPT_NAME (no delay)"
-		echo "stop:     stop $SCRIPT_NAME"
-		echo "disable:  stop $SCRIPT_NAME and remove from startup"
+		echo "install: install necessary $SCRIPT_NAME binaries"
+		echo "enable:  start $SCRIPT_NAME and add to startup"
+		echo "start:   start $SCRIPT_NAME"
+		echo "stop:    stop $SCRIPT_NAME"
+		echo "disable: stop $SCRIPT_NAME and remove from startup"
 		return 1
 		;;
 esac
