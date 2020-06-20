@@ -1,6 +1,6 @@
 #!/bin/sh
 # CAKE QoS port for Merlin firmware supported routers
-# https://www.snbforums.com/threads/rt-ac86u-i-built-cake.49190/
+# https://www.snbforums.com/threads/release-cakeqos-merlin.64800/
 # Credits: robcore, Odkrys, ttgapers, jackiechun
 
 readonly SCRIPT_NAME="cake-qos"
