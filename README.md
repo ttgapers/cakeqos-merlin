@@ -15,7 +15,7 @@
 
 ## Install Example
 
-Important: If you installed an older version before, comment out or remove any cake entries in `/jffs/scripts/services-start` before proceeding.
+<b>Important:>/b> If you installed an older version before, comment out or remove any cake entries in `/jffs/scripts/services-start` before proceeding.
 
 1. Download and apply permissions:
 > /usr/sbin/curl --retry 3 "https://raw.githubusercontent.com/ttgapers/cakeqos-merlin/master/cake-qos.sh" -o "/jffs/scripts/cake-qos" && chmod 0755 /jffs/scripts/cake-qos
