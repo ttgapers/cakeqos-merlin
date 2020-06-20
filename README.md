@@ -1,7 +1,7 @@
 # CakeQOS-Merlin
 
 ## Pre-requisites
-1. Currently only supports RT-86U & RT-AX88U running Merlin firmware
+1. Currently only supports RT-86U & RT-AX88U running Merlin firmware (384.xx and above)
 2. Not recommended for connection up/down of 250Mbps or higher
 3. Disable QoS (any) - probably best to go to Admin/Privacy and "Withdraw" to be sure (note disables other stuff too)
 4. Entware
