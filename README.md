@@ -1,7 +1,7 @@
 # CakeQOS-Merlin
 
 ## Pre-requisites
-1. Currently only supports RT-86U & RT-AX88U running Merlin firmware (384.xx and above)
+1. Currently only supports RT-86U & RT-AX88U running <a href="https://github.com/RMerl/asuswrt-merlin.ng">Merlin firmware</a> (384.xx and above)
 2. Not recommended for connection up/down of 250Mbps or higher
 3. Disable QoS (any) - probably best to go to Admin/Privacy and "Withdraw" to be sure (note disables other stuff too)
 4. Entware
@@ -12,6 +12,7 @@
 1. If you use connections like ADSL, VDSL, Docsis, learn about the overhead keyword. 
     https://man7.org/linux/man-pages/man8/tc-cake.8.html
 2. Use 90-95% of your line speed as upload/download limits
+3. Additional Parameters (Overhead): Overhead Parameters: https://man7.org/linux/man-pages/man8/tc-cake.8.html#OVERHEAD_COMPENSATION_PARAMETERS
 
 ## Install Example
 
