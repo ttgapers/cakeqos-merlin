@@ -11,7 +11,9 @@
 ## Tips
 1. If you use connections like ADSL, VDSL, Docsis, learn about the overhead keyword. 
     https://man7.org/linux/man-pages/man8/tc-cake.8.html
-2. Use 90-95% of your line speed as upload/download limits
+2. If you want to understand and change Priority Queue Parameters.
+    https://man7.org/linux/man-pages/man8/tc-cake.8.html#PRIORITY_QUEUE_PARAMETERS
+3. Use 90-95% of your line speed as upload/download limits
 
 ## Install Example
 
