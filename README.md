@@ -22,7 +22,7 @@
 2. Run the install command, change for your router model (`ac86u` or `ax88u`). If you receive any errors (e.g. libnl-tiny package size mismatch) please ensure your Entware instance is up-to-date:
 > /jffs/scripts/cake-qos install **ac86u**
 3. Change for your linespeed and any overhead (assuming 135Mbit download, 13Mbit upload, "docsis ack-filter" as optional extra parameters; speeds can also be specified in `Kbit` units):
-> /jffs/scripts/cake-qos enable **135Mbit 13Mbit "docsis ack-filter"**
+> /jffs/scripts/cake-qos enable **135Mbit 13Mbit "besteffort docsis ack-filter"**
 4. Reboot your router
 5. Check System Log in web interface for **Cake Queue Management Starting**
 6. (optional) To test, run the commands under **CLI** below and/or do a bufferbloat test on https://www.dslreports.com/speedtest
