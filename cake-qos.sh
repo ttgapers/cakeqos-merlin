@@ -24,10 +24,11 @@ cake_download() {
 	if [ "${VERSIONS_ONLINE}" != "" ] && [ "${VERSION_LOCAL_CAKE}" != "" ] && [ "${VERSION_LOCAL_TC}" != "" ]; then
 		VERSION_ONLINE_CAKE=$(echo "$VERSIONS_ONLINE" | awk -F"|" '{print $1}')
 		VERSION_ONLINE_TC=$(echo "$VERSIONS_ONLINE" | awk -F"|" '{print $2}')
+		VERSION_ONLINE_SUFFIX=$(echo "$VERSIONS_ONLINE" | awk -F"|" '{print $3}')
 		if [ "${VERSION_LOCAL_CAKE}" != "${VERSION_ONLINE_CAKE}" ] || [ "${VERSION_LOCAL_TC}" != "${VERSION_ONLINE_TC}" ]; then
 			echo "Updated binaries detected, updating..."
-			FILE1="sched-cake-oot_${VERSION_ONLINE_CAKE}-${FILE1_TYPE}_aarch64-3.10.ipk"
-			FILE2="tc-adv_${VERSION_ONLINE_TC}_aarch64-3.10.ipk"
+			FILE1="sched-cake-oot_${VERSION_ONLINE_CAKE}-${FILE1_TYPE}_${VERSION_ONLINE_SUFFIX}.ipk"
+			FILE2="tc-adv_${VERSION_ONLINE_TC}_${VERSION_ONLINE_SUFFIX}.ipk"
 			FILE1_OUT="sched-cake-oot.ipk"
 			FILE2_OUT="tc-adv.ipk"
 			/usr/sbin/curl --retry 3 "https://raw.githubusercontent.com/ttgapers/cakeqos-merlin/master/${FILE1}" -o "/tmp/home/root/${FILE1_OUT}"
@@ -57,7 +58,7 @@ cake_download() {
 cake_start() {
 	options=${4}
 	case "${options}" in 
-		*diffserv*|*besteffort*)
+		*diffserv3*|*diffserv4*|*diffserv8*|*besteffort*)
 			# priority queue specified
 			;;
 		*)
@@ -184,7 +185,7 @@ case $1 in
 			echo "/jffs/scripts/$SCRIPT_NAME stop"' # '"$SCRIPT_NAME" >> /jffs/scripts/services-stop
 			chmod 0755 /jffs/scripts/services-stop
 		fi
-		logger "Cake Queue Management Enabled - settings: ${2} | ${3} | ${4}"
+		logger "Cake Queue Management Enabled"
 		cake_start "${@}"
 		return 0
 		;;
