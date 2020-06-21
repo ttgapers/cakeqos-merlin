@@ -55,17 +55,27 @@ cake_download() {
 
 ### Cake Start
 cake_start() {
-	logger "Cake Queue Management Starting - settings: ${2} | ${3} | ${4}"
+	options=${4}
+	case "${options}" in 
+		*diffserv*|*besteffort*)
+			# priority queue specified
+			;;
+		*)
+			# priority queue not specified, default to besteffort
+			options="besteffort ${options}"
+			;;
+	esac
+	logger "Cake Queue Management Starting - settings: ${2} | ${3} | ${options}"
 	runner disable 2>/dev/null
 	fc disable 2>/dev/null
 	fc flush 2>/dev/null
 	insmod /opt/lib/modules/sch_cake.ko 2>/dev/null
-	/opt/sbin/tc qdisc replace dev eth0 root cake bandwidth "${3}" nat ${4}
+	/opt/sbin/tc qdisc replace dev eth0 root cake bandwidth "${3}" nat ${options}
 	ip link add name ifb9eth0 type ifb
 	/opt/sbin/tc qdisc del dev eth0 ingress 2>/dev/null
 	/opt/sbin/tc qdisc add dev eth0 handle ffff: ingress
 	/opt/sbin/tc qdisc del dev ifb9eth0 root 2>/dev/null
-	/opt/sbin/tc qdisc add dev ifb9eth0 root cake bandwidth "${2}" nat wash ingress ${4}
+	/opt/sbin/tc qdisc add dev ifb9eth0 root cake bandwidth "${2}" nat wash ingress ${options}
 	ifconfig ifb9eth0 up
 	/opt/sbin/tc filter add dev eth0 parent ffff: protocol all prio 10 u32 match u32 0 0 flowid 1:1 action mirred egress redirect dev ifb9eth0
 }
