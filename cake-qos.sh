@@ -56,6 +56,24 @@ cake_download() {
 
 ### Cake Start
 cake_start() {
+	# Thanks @JGrana
+	for i in 1 2 3 4 5 6 7 8 9 10
+	do
+		if [ -f /opt/bin/sh ]; then
+			cake_serve "${@}"
+			exit
+		else
+			sleep 10
+		fi
+	done
+	if [ ! -f /opt/bin/sh ]; then
+		logger "Cake Queue Management - Entware did not start in 100 seconds, please check"
+		return 1
+	fi
+}
+
+### Cake Serve
+cake_serve() {
 	options=${4}
 	case "${options}" in 
 		*diffserv3*|*diffserv4*|*diffserv8*|*besteffort*)
@@ -150,6 +168,7 @@ case $1 in
 		;;
 	enable)
 		# Start
+		# Remove from firewall-start
 		if [ -f /jffs/scripts/firewall-start ]; then
 			LINECOUNT=$(grep -c '# '"$SCRIPT_NAME" /jffs/scripts/firewall-start)
 			LINECOUNTEX=$(grep -cx "/jffs/scripts/$SCRIPT_NAME start"' # '"$SCRIPT_NAME" /jffs/scripts/firewall-start)
@@ -157,15 +176,24 @@ case $1 in
 			if [ "$LINECOUNT" -gt 1 ] || { [ "$LINECOUNTEX" -eq 0 ] && [ "$LINECOUNT" -gt 0 ]; }; then
 				sed -i -e '/# '"$SCRIPT_NAME"'/d' /jffs/scripts/firewall-start
 			fi
+		fi
+		# Add to post-mount
+		if [ -f /jffs/scripts/post-mount ]; then
+			LINECOUNT=$(grep -c '# '"$SCRIPT_NAME" /jffs/scripts/post-mount)
+			LINECOUNTEX=$(grep -cx "/jffs/scripts/$SCRIPT_NAME start"' # '"$SCRIPT_NAME" /jffs/scripts/post-mount)
+			
+			if [ "$LINECOUNT" -gt 1 ] || { [ "$LINECOUNTEX" -eq 0 ] && [ "$LINECOUNT" -gt 0 ]; }; then
+				sed -i -e '/# '"$SCRIPT_NAME"'/d' /jffs/scripts/post-mount
+			fi
 			
 			if [ "$LINECOUNTEX" -eq 0 ]; then
-				echo "/jffs/scripts/$SCRIPT_NAME start ${2} ${3} \"${4}\""' # '"$SCRIPT_NAME" >> /jffs/scripts/firewall-start
+				echo "/jffs/scripts/$SCRIPT_NAME start ${2} ${3} \"${4}\""' # '"$SCRIPT_NAME" >> /jffs/scripts/post-mount
 			fi
 		else
-			echo "#!/bin/sh" > /jffs/scripts/firewall-start
-			echo "" >> /jffs/scripts/firewall-start
-			echo "/jffs/scripts/$SCRIPT_NAME start ${2} ${3} \"${4}\""' # '"$SCRIPT_NAME" >> /jffs/scripts/firewall-start
-			chmod 0755 /jffs/scripts/firewall-start
+			echo "#!/bin/sh" > /jffs/scripts/post-mount
+			echo "" >> /jffs/scripts/post-mount
+			echo "/jffs/scripts/$SCRIPT_NAME start ${2} ${3} \"${4}\""' # '"$SCRIPT_NAME" >> /jffs/scripts/post-mount
+			chmod 0755 /jffs/scripts/post-mount
 		fi
 		# Stop
 		if [ -f /jffs/scripts/services-stop ]; then
