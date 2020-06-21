@@ -2,7 +2,7 @@
 
 ## Pre-requisites
 1. Currently only supports RT-86U & RT-AX88U running <a href="https://github.com/RMerl/asuswrt-merlin.ng">Merlin firmware</a> (384.xx and above)
-2. Not recommended for connection up/down of 250Mbps or higher
+2. Not recommended for connection up/down of 250Mbps or higher. Note, some users with higher up/down connections have reported lower peaks but overall better stability and user experience and continue to use Cake.
 3. Disable QoS (any) - probably best to go to Admin/Privacy and "Withdraw" to be sure (note disables other stuff too)
 4. Entware
 5. USB Storage
