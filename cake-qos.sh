@@ -189,12 +189,12 @@ case $1 in
 			fi
 			
 			if [ "$LINECOUNTEX" -eq 0 ]; then
-				echo "/jffs/scripts/$SCRIPT_NAME start ${2} ${3} \"${4}\""' # '"$SCRIPT_NAME" >> /jffs/scripts/services-start
+				echo "/jffs/scripts/$SCRIPT_NAME start ${2} ${3} \"${4}\" &"' # '"$SCRIPT_NAME" >> /jffs/scripts/services-start
 			fi
 		else
 			echo "#!/bin/sh" > /jffs/scripts/services-start
 			echo "" >> /jffs/scripts/services-start
-			echo "/jffs/scripts/$SCRIPT_NAME start ${2} ${3} \"${4}\""' # '"$SCRIPT_NAME" >> /jffs/scripts/services-start
+			echo "/jffs/scripts/$SCRIPT_NAME start ${2} ${3} \"${4}\" &"' # '"$SCRIPT_NAME" >> /jffs/scripts/services-start
 			chmod 0755 /jffs/scripts/services-start
 		fi
 		# Stop
