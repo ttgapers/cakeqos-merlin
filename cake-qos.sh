@@ -11,6 +11,8 @@ cake_download() {
 	if [ "${1}" = "update" ]; then
 		VERSION_LOCAL_CAKE=$(opkg list_installed | grep "^sched-cake-oot - " | awk -F" - " '{print $2}' | cut -d- -f-4)
 		VERSION_LOCAL_TC=$(opkg list_installed | grep "^tc-adv - " | awk -F" - " '{print $2}')
+		# todo: compare version numbers (local vs repo) and update the script if different
+		/usr/sbin/curl --retry 3 "https://raw.githubusercontent.com/ttgapers/cakeqos-merlin/develop/cake-qos.sh" -o "/jffs/scripts/${SCRIPT_NAME}" && chmod 0755 "/jffs/scripts/${SCRIPT_NAME}"
 	elif [ "${1}" = "install" ]; then
 		VERSION_LOCAL_CAKE="0"
 		VERSION_LOCAL_TC="0"
@@ -177,23 +179,23 @@ case $1 in
 				sed -i -e '/# '"$SCRIPT_NAME"'/d' /jffs/scripts/firewall-start
 			fi
 		fi
-		# Add to post-mount
-		if [ -f /jffs/scripts/post-mount ]; then
-			LINECOUNT=$(grep -c '# '"$SCRIPT_NAME" /jffs/scripts/post-mount)
-			LINECOUNTEX=$(grep -cx "/jffs/scripts/$SCRIPT_NAME start"' # '"$SCRIPT_NAME" /jffs/scripts/post-mount)
+		# Add to services-start
+		if [ -f /jffs/scripts/services-start ]; then
+			LINECOUNT=$(grep -c '# '"$SCRIPT_NAME" /jffs/scripts/services-start)
+			LINECOUNTEX=$(grep -cx "/jffs/scripts/$SCRIPT_NAME start"' # '"$SCRIPT_NAME" /jffs/scripts/services-start)
 			
 			if [ "$LINECOUNT" -gt 1 ] || { [ "$LINECOUNTEX" -eq 0 ] && [ "$LINECOUNT" -gt 0 ]; }; then
-				sed -i -e '/# '"$SCRIPT_NAME"'/d' /jffs/scripts/post-mount
+				sed -i -e '/# '"$SCRIPT_NAME"'/d' /jffs/scripts/services-start
 			fi
 			
 			if [ "$LINECOUNTEX" -eq 0 ]; then
-				echo "/jffs/scripts/$SCRIPT_NAME start ${2} ${3} \"${4}\""' # '"$SCRIPT_NAME" >> /jffs/scripts/post-mount
+				echo "/jffs/scripts/$SCRIPT_NAME start ${2} ${3} \"${4}\""' # '"$SCRIPT_NAME" >> /jffs/scripts/services-start
 			fi
 		else
-			echo "#!/bin/sh" > /jffs/scripts/post-mount
-			echo "" >> /jffs/scripts/post-mount
-			echo "/jffs/scripts/$SCRIPT_NAME start ${2} ${3} \"${4}\""' # '"$SCRIPT_NAME" >> /jffs/scripts/post-mount
-			chmod 0755 /jffs/scripts/post-mount
+			echo "#!/bin/sh" > /jffs/scripts/services-start
+			echo "" >> /jffs/scripts/services-start
+			echo "/jffs/scripts/$SCRIPT_NAME start ${2} ${3} \"${4}\""' # '"$SCRIPT_NAME" >> /jffs/scripts/services-start
+			chmod 0755 /jffs/scripts/services-start
 		fi
 		# Stop
 		if [ -f /jffs/scripts/services-stop ]; then
