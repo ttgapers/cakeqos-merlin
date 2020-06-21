@@ -1,5 +1,5 @@
 #!/bin/sh
-# CakeQOS-Merlin v0.0.3 Dev - port for Merlin firmware supported routers
+# CakeQOS-Merlin v0.0.3 - port for Merlin firmware supported routers
 # Site: https://github.com/ttgapers/cakeqos-merlin
 # Thread: https://www.snbforums.com/threads/release-cakeqos-merlin.64800/
 # Credits: robcore, Odkrys, ttgapers, jackiechun
@@ -130,7 +130,7 @@ if [ "${1}" = "enable" ] || [ "${1}" = "start" ]; then
 		echo "Required parameters missing: $SCRIPT_NAME ${1} dlspeed upspeed \"optional extra parameters\""
 		echo ""
 		echo "Example #1: $SCRIPT_NAME ${1} 30Mbit 5000Kbit"
-		echo "Example #2: $SCRIPT_NAME ${1} 30Mbit 5Mbit \"besteffort docsis ack-filter\""
+		echo "Example #2: $SCRIPT_NAME ${1} 30Mbit 5Mbit \"diffserv4 docsis ack-filter\""
 		return 1
 	fi	
 fi
@@ -211,9 +211,10 @@ case $1 in
 		return 0
 		;;
 	*)
-		echo "Usage: $SCRIPT_NAME {install|enable|start|stop|disable|uninstall} (install, enable, and start have required parameters)"
+		echo "Usage: $SCRIPT_NAME {install|update|enable|start|stop|disable|uninstall} (install, update, enable, and start have required parameters)"
 		echo ""
 		echo "install:   download and install necessary $SCRIPT_NAME binaries"
+		echo "update:    update $SCRIPT_NAME binaries (if any available)"
 		echo "enable:    start $SCRIPT_NAME and add to startup"
 		echo "start:     start $SCRIPT_NAME"
 		echo "stop:      stop $SCRIPT_NAME"
