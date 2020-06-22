@@ -347,6 +347,7 @@ case $1 in
 		if [ "$(isrunning)" = "false" ]; then
 			. "$WDog"
 		fi
+		;;
 	stop)
 		cake_stop
 		return 0
