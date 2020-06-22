@@ -23,12 +23,18 @@ cake_download() {
 		VERSION_LOCAL_TC=$(opkg list_installed | grep "^tc-adv - " | awk -F" - " '{print $2}')
 		LATEST=$(/usr/sbin/curl --retry 3 -s "https://raw.githubusercontent.com/ttgapers/cakeqos-merlin/master/cake-qos.sh")
 		LATEST_VERSION=$(echo "$LATEST" | grep "^readonly SCRIPT_VERSION" | awk -F"=" '{print $2}' | cut -d "\"" -f 2)
+		LOCALMD5="$(md5sum "/jffs/scripts/${SCRIPT_NAME}" | awk '{print $1}')"
+		REMOTEMD5="$($LATEST | md5sum | awk '{print $1}')"
 		if [ "${LATEST_VERSION}" != "" ]; then
 			if [ "${LATEST_VERSION}" != "${SCRIPT_VERSION}" ]; then
 				echo "New CakeQOS-Merlin detected (${LATEST_VERSION}, currently running ${SCRIPT_VERSION}), updating..."
 				echo "${LATEST}" > "/jffs/scripts/${SCRIPT_NAME}"
 				chmod 0755 "/jffs/scripts/${SCRIPT_NAME}"
-			else
+			elif [ "$LOCALMD5" != "$REMOTEMD5" ]; then
+				echo "CakeQOS-Merlin local and server md5 don't match, updating..."
+				echo "${LATEST}" > "/jffs/scripts/${SCRIPT_NAME}"
+				chmod 0755 "/jffs/scripts/${SCRIPT_NAME}"
+			else	
 				echo "You are running the latest CakeQOS-Merlin script (${LATEST_VERSION}, currently running ${SCRIPT_VERSION}), skipping..."
 			fi
 		fi
