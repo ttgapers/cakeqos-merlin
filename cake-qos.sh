@@ -9,6 +9,8 @@ readonly SCRIPT_VERSION="v0.0.5"
 readonly SCRIPT_NAME="cake-qos"
 readonly SCRIPT_NAME_FANCY="CakeQOS-Merlin"
 readonly SCRIPT_BRANCH="develop"
+WDogdir="/jffs/addons/$SCRIPT_NAME.d"
+WDog="${CFGdir}/cake-watchdog.sh"
 
 readonly CRIT="\\e[41m"
 readonly ERR="\\e[31m"
@@ -16,15 +18,6 @@ readonly WARN="\\e[33m"
 readonly PASS="\\e[32m"
 
 [ -z "$(nvram get odmpid)" ] && RMODEL=$(nvram get productid) || RMODEL=$(nvram get odmpid) #get router model
-
-### Status
-readonly STATUS="$(tc qdisc | grep '^qdisc cake ')"
-readonly STATUS_UPLOAD=$(echo "${STATUS}" | grep "dev eth0 root")
-readonly STATUS_DOWNLOAD=$(echo "${STATUS}" | grep "dev ifb9eth0 root")
-RUNNING="false"
-if [ "${STATUS_UPLOAD}" != "" ] && [ "${STATUS_DOWNLOAD}" != "" ]; then
-	RUNNING="true"
-fi
 
 ### Print_Output - Thanks @JackYaz
 Print_Output(){
@@ -36,6 +29,17 @@ Print_Output(){
 	fi
 }
 
+### Status
+isrunning() {
+	readonly STATUS="$(tc qdisc | grep '^qdisc cake ')"
+	readonly STATUS_UPLOAD=$(echo "${STATUS}" | grep "dev eth0 root")
+	readonly STATUS_DOWNLOAD=$(echo "${STATUS}" | grep "dev ifb9eth0 root")
+	if [ "${STATUS_UPLOAD}" != "" ] && [ "${STATUS_DOWNLOAD}" != "" ]; then
+		echo "true"
+	else
+		echo "false"
+	fi
+}
 ### Cake Download
 cake_download() {
 	if [ "${1}" = "update" ]; then
@@ -119,6 +123,18 @@ cake_download() {
 			return 0
 		fi
 	fi
+	
+#add watchdog
+
+if [ ! -f "$Wdog" ]; then
+	Print_Output "true" "Installing cake-watchdog..." "$WARN"
+	if [ ! -d "$Wdogdir" ]; then
+       mkdir "$Wdogdir"
+       chmod 0777 "$Wdogdir"
+	fi
+	printf "" > "$Wdog"
+	chmod 0755 "$Wdog"
+fi
 }
 
 ### Cake Start
@@ -138,6 +154,7 @@ cake_start() {
 		Print_Output "true" "Entware didn't start in 100 seconds, please check" "$CRIT"
 		return 1
 	fi
+cru a "$SCRIPT_NAME" "*/30 * * * * $0 checkrun"
 }
 
 ### Cake Serve
@@ -170,7 +187,7 @@ cake_serve() {
 
 ### Cake Stop If
 cake_stopif() {
-	if [ "${RUNNING}" = "true" ]; then
+	if [ "$(isrunning)" = "true" ]; then
 		cake_stop
 	fi
 }
@@ -236,11 +253,14 @@ case $1 in
 		;;
 	enable)
 		cake_stopif
+		#check if bins are installed, for the sake of......
 		if [ ! -f "/opt/lib/modules/sch_cake.ko" ] || [ ! -f "/opt/sbin/tc" ]; then
 				 cake_download "${@}"
 		fi
+		
+		
 		# Start
-
+####### remove from here after a while....
 		# Remove from firewall-start and services-start
 		if [ -f /jffs/scripts/firewall-start ]; then
 			LINECOUNT=$(grep -c '# '"$SCRIPT_NAME" /jffs/scripts/firewall-start)
@@ -258,43 +278,48 @@ case $1 in
 			if [ "$LINECOUNT" -gt 1 ] || { [ "$LINECOUNTEX" -eq 0 ] && [ "$LINECOUNT" -gt 0 ]; }; then
 				sed -i -e '/# '"$SCRIPT_NAME"'/d' /jffs/scripts/services-start
 			fi
-		fi
+		fi		
+####### until here.....
+
+
 		# Add to nat-start
 		if [ -f /jffs/scripts/nat-start ]; then
 			LINECOUNT=$(grep -c '# '"$SCRIPT_NAME" /jffs/scripts/nat-start)
-			LINECOUNTEX=$(grep -cx "/jffs/scripts/$SCRIPT_NAME start"' # '"$SCRIPT_NAME" /jffs/scripts/nat-start)
+			LINECOUNTEX=$(grep -cx "/jffs/scripts/$SCRIPT_NAME start"' # '"$SCRIPT_NAME_FANCY" /jffs/scripts/nat-start)
 
 			if [ "$LINECOUNT" -gt 1 ] || { [ "$LINECOUNTEX" -eq 0 ] && [ "$LINECOUNT" -gt 0 ]; }; then
 				sed -i -e '/# '"$SCRIPT_NAME"'/d' /jffs/scripts/nat-start
 			fi
 
 			if [ "$LINECOUNTEX" -eq 0 ]; then
-				echo "/jffs/scripts/$SCRIPT_NAME start ${2} ${3} \"${4}\" &"' # '"$SCRIPT_NAME" >> /jffs/scripts/nat-start
+				echo "/jffs/scripts/$SCRIPT_NAME start ${2} ${3} \"${4}\" &"' # '"$SCRIPT_NAME_FANCY" >> /jffs/scripts/nat-start
+				echo "/jffs/scripts/$SCRIPT_NAME start ${2} ${3} \"${4}\" &"' # '"$SCRIPT_NAME_FANCY" >> "$Wdog"
 			fi
 		else
-			echo "#!/bin/sh" > /jffs/scripts/nat-start
-			echo "" >> /jffs/scripts/nat-start
-			echo "/jffs/scripts/$SCRIPT_NAME start ${2} ${3} \"${4}\" &"' # '"$SCRIPT_NAME" >> /jffs/scripts/nat-start
+			printf "#!/bin/sh\n\n/jffs/scripts/$SCRIPT_NAME start ${2} ${3} \"${4}\" & # $SCRIPT_NAME_FANCY"  >> /jffs/scripts/nat-start
+			echo "/jffs/scripts/$SCRIPT_NAME start ${2} ${3} \"${4}\" &"' # '"$SCRIPT_NAME_FANCY" >> "$Wdog"
 			chmod 0755 /jffs/scripts/nat-start
 		fi
 		# Stop
 		if [ -f /jffs/scripts/services-stop ]; then
 			LINECOUNT=$(grep -c '# '"$SCRIPT_NAME" /jffs/scripts/services-stop)
-			LINECOUNTEX=$(grep -cx "/jffs/scripts/$SCRIPT_NAME stop"' # '"$SCRIPT_NAME" /jffs/scripts/services-stop)
+			LINECOUNTEX=$(grep -cx "/jffs/scripts/$SCRIPT_NAME stop"' # '"$SCRIPT_NAME_FANCY" /jffs/scripts/services-stop)
 
 			if [ "$LINECOUNT" -gt 1 ] || { [ "$LINECOUNTEX" -eq 0 ] && [ "$LINECOUNT" -gt 0 ]; }; then
-				sed -i -e '/# '"$SCRIPT_NAME"'/d' /jffs/scripts/services-stop
+				sed -i -e '/# '"$SCRIPT_NAME_FANCY"'/d' /jffs/scripts/services-stop
 			fi
 
 			if [ "$LINECOUNTEX" -eq 0 ]; then
-				echo "/jffs/scripts/$SCRIPT_NAME stop"' # '"$SCRIPT_NAME" >> /jffs/scripts/services-stop
+				echo "/jffs/scripts/$SCRIPT_NAME stop"' # '"$SCRIPT_NAME_FANCY" >> /jffs/scripts/services-stop
+				echo "" >> "$Wdog"
 			fi
 		else
-			echo "#!/bin/sh" > /jffs/scripts/services-stop
-			echo "" >> /jffs/scripts/services-stop
-			echo "/jffs/scripts/$SCRIPT_NAME stop"' # '"$SCRIPT_NAME" >> /jffs/scripts/services-stop
+			SCRIPT_NAME="cake-qos"
+			printf "#!/bin/sh\n\n/jffs/scripts/$SCRIPT_NAME stop # $SCRIPT_NAME_FANCY" > /jffs/scripts/services-stop
+			echo "" >> "$Wdog"
 			chmod 0755 /jffs/scripts/services-stop
 		fi
+		
 		Print_Output "true" "Enabled" "$PASS"
 		cake_start "${@}"
 		return 0
@@ -306,7 +331,7 @@ case $1 in
 		return 0
 		;;
 	status)
-		if [ "${RUNNING}" = "true" ]; then
+		if [ "$(isrunning)" = "true" ]; then
 			Print_Output "true" "Running..." "$WARN"
 			Print_Output "false" "> Download Status:" "$PASS"
 			Print_Output "false" "${STATUS_DOWNLOAD}"
@@ -318,6 +343,10 @@ case $1 in
 			return 1
 		fi
 		;;
+	checkrun)
+		if [ "$(isrunning)" = "false" ]; then
+			. "$WDog"
+		fi
 	stop)
 		cake_stop
 		return 0
