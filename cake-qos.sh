@@ -85,6 +85,17 @@ cake_download() {
         if [ ! -f "/opt/lib/modules/sch_cake.ko" ] || [ ! -f "/opt/sbin/tc" ]; then
                  DOINSTALL="1"
         fi
+#add watchdog
+
+if [ ! -f "$WDog" ]; then
+	Print_Output "true" "Installing cake-watchdog..." "$WARN"
+	if [ ! -d "$WDogdir" ]; then
+       mkdir "$WDogdir"
+       chmod 0777 "$WDogdir"
+	fi
+	printf "" > "$WDog"
+	chmod 0755 "$WDog"
+fi
 
 	VERSIONS_ONLINE=$(/usr/sbin/curl --retry 3 -s "https://raw.githubusercontent.com/ttgapers/cakeqos-merlin/$SCRIPT_BRANCH/versions.txt")
 	if [ "${VERSIONS_ONLINE}" != "" ]; then
@@ -123,18 +134,7 @@ cake_download() {
 			return 0
 		fi
 	fi
-	
-#add watchdog
 
-if [ ! -f "$Wdog" ]; then
-	Print_Output "true" "Installing cake-watchdog..." "$WARN"
-	if [ ! -d "$Wdogdir" ]; then
-       mkdir "$Wdogdir"
-       chmod 0777 "$Wdogdir"
-	fi
-	printf "" > "$Wdog"
-	chmod 0755 "$Wdog"
-fi
 }
 
 ### Cake Start
@@ -293,11 +293,11 @@ case $1 in
 
 			if [ "$LINECOUNTEX" -eq 0 ]; then
 				echo "/jffs/scripts/$SCRIPT_NAME start ${2} ${3} \"${4}\" &"' # '"$SCRIPT_NAME_FANCY" >> /jffs/scripts/nat-start
-				echo "/jffs/scripts/$SCRIPT_NAME start ${2} ${3} \"${4}\" &"' # '"$SCRIPT_NAME_FANCY" >> "$Wdog"
+				echo "/jffs/scripts/$SCRIPT_NAME start ${2} ${3} \"${4}\" &"' # '"$SCRIPT_NAME_FANCY" >> "$WDog"
 			fi
 		else
 			printf "#!/bin/sh\n\n/jffs/scripts/$SCRIPT_NAME start ${2} ${3} \"${4}\" & # $SCRIPT_NAME_FANCY"  >> /jffs/scripts/nat-start
-			echo "/jffs/scripts/$SCRIPT_NAME start ${2} ${3} \"${4}\" &"' # '"$SCRIPT_NAME_FANCY" >> "$Wdog"
+			echo "/jffs/scripts/$SCRIPT_NAME start ${2} ${3} \"${4}\" &"' # '"$SCRIPT_NAME_FANCY" >> "$WDog"
 			chmod 0755 /jffs/scripts/nat-start
 		fi
 		# Stop
@@ -311,12 +311,12 @@ case $1 in
 
 			if [ "$LINECOUNTEX" -eq 0 ]; then
 				echo "/jffs/scripts/$SCRIPT_NAME stop"' # '"$SCRIPT_NAME_FANCY" >> /jffs/scripts/services-stop
-				echo "" >> "$Wdog"
+				echo "" >> "$WDog"
 			fi
 		else
 			SCRIPT_NAME="cake-qos"
 			printf "#!/bin/sh\n\n/jffs/scripts/$SCRIPT_NAME stop # $SCRIPT_NAME_FANCY" > /jffs/scripts/services-stop
-			echo "" >> "$Wdog"
+			echo "" >> "$WDog"
 			chmod 0755 /jffs/scripts/services-stop
 		fi
 		
