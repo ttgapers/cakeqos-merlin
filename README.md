@@ -2,7 +2,7 @@
 
 ## Pre-requisites
 1. Currently only supports RT-86U & RT-AX88U running <a href="https://github.com/RMerl/asuswrt-merlin.ng">Merlin firmware</a> (384.xx and above)
-2. Not recommended for connection up/down of 250Mbps or higher. Note, some users with higher up/down connections have reported lower peaks but overall better stability and user experience and continue to use Cake.
+2. Not recommended for connection up/down of 250Mbps or higher. **Note:** Users with higher up/down connections have reported lower peaks but better stability and user experience overall and continue to use Cake.
 3. Disable QoS (any) - probably best to go to Admin/Privacy and "Withdraw" to be sure (note disables other stuff too)
 4. Entware
 5. USB Storage
@@ -51,6 +51,11 @@
 
 ```
 tc qdisc
+tc qdisc show | grep root
 tc -s qdisc show dev eth0 # for upload
 tc -s qdisc show dev ifb9eth0 # for download
 ```
+## Uninstall/Remove
+
+1. SSH to the router and execute:
+> /jffs/scripts/cake-qos uninstall
