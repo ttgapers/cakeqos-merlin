@@ -12,6 +12,7 @@ readonly CRIT="\\e[41m"
 readonly ERR="\\e[31m"
 readonly WARN="\\e[33m"
 readonly PASS="\\e[32m"
+[ -z "$(nvram get odmpid)" ] && RMODEL=$(nvram get productid) || RMODEL=$(nvram get odmpid) #get router model
 
 ### Status
 readonly STATUS="$(tc qdisc)"
@@ -21,7 +22,7 @@ RUNNING="false"
 if [ "${STATUS_UPLOAD}" != "" ] && [ "${STATUS_DOWNLOAD}" != "" ]; then
 	RUNNING="true"
 fi
-[ -z "$(nvram get odmpid)" ] && RMODEL=$(nvram get productid) || RMODEL=$(nvram get odmpid) #get router model
+
 
 Print_Output(){
 	if [ "$1" = "true" ]; then
@@ -58,14 +59,18 @@ cake_download() {
 		VERSION_LOCAL_CAKE="0"
 		VERSION_LOCAL_TC="0"
 	fi
-	if [ "$RMODEL" = "RT-AC86U" ]; then
-		FILE1_TYPE="1"
-	elif [ "$RMODEL" = "RT-AX88U" ]; then
-		FILE1_TYPE="ax"
-	else
-		Print_Output "false" "Cake isn't yet compatible with ASUS $RMODEL, keep watching our thread!" "$CRIT"
-		exit 1
-	fi
+
+	case "$RMODEL" in
+		RT-AC86U)
+			FILE1_TYPE="1"
+			;;
+		RT-AX88U)
+			FILE1_TYPE="ax"
+			;;
+		*)
+			Print_Output "false" "Cake isn't yet compatible with ASUS $RMODEL, keep watching our thread!" "$CRIT"
+			exit 1
+	esac
 	VERSIONS_ONLINE=$(/usr/sbin/curl --retry 3 -s "https://raw.githubusercontent.com/ttgapers/cakeqos-merlin/$SCRIPT_BRANCH/versions.txt")
 	if [ "${VERSIONS_ONLINE}" != "" ] && [ "${VERSION_LOCAL_CAKE}" != "" ] && [ "${VERSION_LOCAL_TC}" != "" ]; then
 		VERSION_ONLINE_CAKE=$(echo "$VERSIONS_ONLINE" | awk -F"|" '{print $1}')
