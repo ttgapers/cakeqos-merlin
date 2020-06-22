@@ -196,6 +196,7 @@ case $1 in
 		;;
 	enable)
 		cake_stopif
+		[ -f "/opt/bin/$SCRIPT_NAME" ] || ln -s "$0" "/opt/bin/$SCRIPT_NAME" >/dev/null 2>&1 # add to /opt/bin so it can be called only as "cake-qos param"
 		# Start
 		# Remove from firewall-start
 		if [ -f /jffs/scripts/firewall-start ]; then
@@ -279,6 +280,7 @@ case $1 in
 		opkg --autoremove remove sched-cake-oot
 		opkg --autoremove remove tc-adv
 		rm /jffs/scripts/$SCRIPT_NAME
+		rm /opt/bin/$SCRIPT_NAME
 		return 0
 		;;
 	*)
