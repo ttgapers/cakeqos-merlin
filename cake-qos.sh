@@ -4,6 +4,7 @@
 # Thread: https://www.snbforums.com/threads/release-cakeqos-merlin.64800/
 # Credits: robcore, Odkrys, ttgapers, jackiechun
 
+# shellcheck disable=SC2086
 readonly SCRIPT_VERSION="v0.0.5"
 readonly SCRIPT_NAME="cake-qos"
 readonly SCRIPT_NAME_FANCY="CakeQOS-Merlin"
@@ -54,14 +55,14 @@ cake_download() {
 				Print_Output "true" "Local and server md5 don't match, updating..." "$WARN"
 				echo "${LATEST}" > "/jffs/scripts/${SCRIPT_NAME}"
 				chmod 0755 "/jffs/scripts/${SCRIPT_NAME}"
-			else	
+			else
 				Print_Output "false" "You are running the latest CakeQOS-Merlin script (${LATEST_VERSION}, currently running ${SCRIPT_VERSION}), skipping..." "$PASS"
 			fi
 		fi
 	elif [ "${1}" = "install" ]; then
 		VERSION_LOCAL_CAKE="0"
 		VERSION_LOCAL_TC="0"
-                DOINSTALL="1"
+		DOINSTALL="1"
 	fi
 
 	case "$RMODEL" in
@@ -74,7 +75,7 @@ cake_download() {
 		*)
 			Print_Output "false" "Cake isn't yet compatible with ASUS $RMODEL, keep watching our thread!" "$CRIT"
 			exit 1
-                      ;;
+			;;
 	esac
 
         if [ ! -f "/opt/lib/modules/sch_cake.ko" ] || [ ! -f "/opt/sbin/tc" ]; then
@@ -87,7 +88,11 @@ cake_download() {
 		VERSION_ONLINE_TC=$(echo "$VERSIONS_ONLINE" | awk -F"|" '{print $2}')
 		VERSION_ONLINE_SUFFIX=$(echo "$VERSIONS_ONLINE" | awk -F"|" '{print $3}')
 		if [ "${VERSION_LOCAL_CAKE}" != "${VERSION_ONLINE_CAKE}" ] || [ "${VERSION_LOCAL_TC}" != "${VERSION_ONLINE_TC}" ] || [ "$DOINSTALL" = "1" ]; then
-			[ "$DOINSTALL" = "1" ] && Print_Output "true" "Installing cake binaries" "$WARN" || Print_Output "true" "Updated cake binaries detected, updating..." "$WARN"
+			if [ "$DOINSTALL" = "1" ]; then
+				Print_Output "true" "Installing cake binaries" "$WARN"
+			else
+				Print_Output "true" "Updated cake binaries detected, updating..." "$WARN"
+			fi
 			FILE1="sched-cake-oot_${VERSION_ONLINE_CAKE}-${FILE1_TYPE}_${VERSION_ONLINE_SUFFIX}.ipk"
 			FILE2="tc-adv_${VERSION_ONLINE_TC}_${VERSION_ONLINE_SUFFIX}.ipk"
 			FILE1_OUT="sched-cake-oot.ipk"
@@ -221,23 +226,26 @@ if [ "${1}" = "enable" ] || [ "${1}" = "start" ]; then
 		Print_Output "false" "Example #1: $SCRIPT_NAME ${1} 30Mbit 5000Kbit"
 		Print_Output "false" "Example #2: $SCRIPT_NAME ${1} 30Mbit 5Mbit \"diffserv4 docsis ack-filter\""
 		return 1
-	fi	
+	fi
 fi
 
 case $1 in
 	install|update)
 		cake_download "${@}"
-    [ -f "/opt/bin/$SCRIPT_NAME" ] || ln -s "$0" "/opt/bin/$SCRIPT_NAME" >/dev/null 2>&1 # add to /opt/bin so it can be called only as "cake-qos param"
+		[ -f "/opt/bin/$SCRIPT_NAME" ] || ln -s "$0" "/opt/bin/$SCRIPT_NAME" >/dev/null 2>&1 # add to /opt/bin so it can be called only as "cake-qos param"
 		;;
 	enable)
 		cake_stopif
+		if [ ! -f "/opt/lib/modules/sch_cake.ko" ] || [ ! -f "/opt/sbin/tc" ]; then
+				 cake_download "${@}"
+		fi
 		# Start
-    
+
 		# Remove from firewall-start and services-start
 		if [ -f /jffs/scripts/firewall-start ]; then
 			LINECOUNT=$(grep -c '# '"$SCRIPT_NAME" /jffs/scripts/firewall-start)
 			LINECOUNTEX=$(grep -cx "/jffs/scripts/$SCRIPT_NAME start"' # '"$SCRIPT_NAME" /jffs/scripts/firewall-start)
-			
+
 			if [ "$LINECOUNT" -gt 1 ] || { [ "$LINECOUNTEX" -eq 0 ] && [ "$LINECOUNT" -gt 0 ]; }; then
 				sed -i -e '/# '"$SCRIPT_NAME"'/d' /jffs/scripts/firewall-start
 			fi
@@ -246,20 +254,20 @@ case $1 in
 		if [ -f /jffs/scripts/services-start ]; then
 			LINECOUNT=$(grep -c '# '"$SCRIPT_NAME" /jffs/scripts/services-start)
 			LINECOUNTEX=$(grep -cx "/jffs/scripts/$SCRIPT_NAME start"' # '"$SCRIPT_NAME" /jffs/scripts/services-start)
-			
+
 			if [ "$LINECOUNT" -gt 1 ] || { [ "$LINECOUNTEX" -eq 0 ] && [ "$LINECOUNT" -gt 0 ]; }; then
 				sed -i -e '/# '"$SCRIPT_NAME"'/d' /jffs/scripts/services-start
 			fi
-		fi		
+		fi
 		# Add to nat-start
 		if [ -f /jffs/scripts/nat-start ]; then
 			LINECOUNT=$(grep -c '# '"$SCRIPT_NAME" /jffs/scripts/nat-start)
 			LINECOUNTEX=$(grep -cx "/jffs/scripts/$SCRIPT_NAME start"' # '"$SCRIPT_NAME" /jffs/scripts/nat-start)
-			
+
 			if [ "$LINECOUNT" -gt 1 ] || { [ "$LINECOUNTEX" -eq 0 ] && [ "$LINECOUNT" -gt 0 ]; }; then
 				sed -i -e '/# '"$SCRIPT_NAME"'/d' /jffs/scripts/nat-start
 			fi
-			
+
 			if [ "$LINECOUNTEX" -eq 0 ]; then
 				echo "/jffs/scripts/$SCRIPT_NAME start ${2} ${3} \"${4}\" &"' # '"$SCRIPT_NAME" >> /jffs/scripts/nat-start
 			fi
@@ -273,11 +281,11 @@ case $1 in
 		if [ -f /jffs/scripts/services-stop ]; then
 			LINECOUNT=$(grep -c '# '"$SCRIPT_NAME" /jffs/scripts/services-stop)
 			LINECOUNTEX=$(grep -cx "/jffs/scripts/$SCRIPT_NAME stop"' # '"$SCRIPT_NAME" /jffs/scripts/services-stop)
-			
+
 			if [ "$LINECOUNT" -gt 1 ] || { [ "$LINECOUNTEX" -eq 0 ] && [ "$LINECOUNT" -gt 0 ]; }; then
 				sed -i -e '/# '"$SCRIPT_NAME"'/d' /jffs/scripts/services-stop
 			fi
-			
+
 			if [ "$LINECOUNTEX" -eq 0 ]; then
 				echo "/jffs/scripts/$SCRIPT_NAME stop"' # '"$SCRIPT_NAME" >> /jffs/scripts/services-stop
 			fi
@@ -324,7 +332,7 @@ case $1 in
 		cake_disable
 		opkg --autoremove remove sched-cake-oot
 		opkg --autoremove remove tc-adv
-		rm /jffs/scripts/$SCRIPT_NAME
+		rm /jffs/scripts/"$SCRIPT_NAME"
 		return 0
 		;;
 	*)
