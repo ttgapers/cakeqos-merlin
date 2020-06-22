@@ -4,6 +4,7 @@
 # Thread: https://www.snbforums.com/threads/release-cakeqos-merlin.64800/
 # Credits: robcore, Odkrys, ttgapers, jackiechun
 
+# shellcheck disable=SC2086
 readonly SCRIPT_VERSION="v0.0.5"
 readonly SCRIPT_NAME="cake-qos"
 readonly SCRIPT_NAME_FANCY="CakeQOS-Merlin"
@@ -61,7 +62,7 @@ cake_download() {
 	elif [ "${1}" = "install" ]; then
 		VERSION_LOCAL_CAKE="0"
 		VERSION_LOCAL_TC="0"
-                DOINSTALL="1"
+		DOINSTALL="1"
 	fi
 
 	case "$RMODEL" in
@@ -74,7 +75,7 @@ cake_download() {
 		*)
 			Print_Output "false" "Cake isn't yet compatible with ASUS $RMODEL, keep watching our thread!" "$CRIT"
 			exit 1
-                      ;;
+			;;
 	esac
 
         if [ ! -f "/opt/lib/modules/sch_cake.ko" ] || [ ! -f "/opt/sbin/tc" ]; then
@@ -87,7 +88,11 @@ cake_download() {
 		VERSION_ONLINE_TC=$(echo "$VERSIONS_ONLINE" | awk -F"|" '{print $2}')
 		VERSION_ONLINE_SUFFIX=$(echo "$VERSIONS_ONLINE" | awk -F"|" '{print $3}')
 		if [ "${VERSION_LOCAL_CAKE}" != "${VERSION_ONLINE_CAKE}" ] || [ "${VERSION_LOCAL_TC}" != "${VERSION_ONLINE_TC}" ] || [ "$DOINSTALL" = "1" ]; then
-			[ "$DOINSTALL" = "1" ] && Print_Output "true" "Installing cake binaries" "$WARN" || Print_Output "true" "Updated cake binaries detected, updating..." "$WARN"
+			if [ "$DOINSTALL" = "1" ]; then
+				Print_Output "true" "Installing cake binaries" "$WARN"
+			else
+				Print_Output "true" "Updated cake binaries detected, updating..." "$WARN"
+			fi
 			FILE1="sched-cake-oot_${VERSION_ONLINE_CAKE}-${FILE1_TYPE}_${VERSION_ONLINE_SUFFIX}.ipk"
 			FILE2="tc-adv_${VERSION_ONLINE_TC}_${VERSION_ONLINE_SUFFIX}.ipk"
 			FILE1_OUT="sched-cake-oot.ipk"
