@@ -77,7 +77,7 @@ cake_download() {
                       ;;
 	esac
 
-        if [ -f "/opt/lib/modules/sch_cake.ko" ] || [ -f "/opt/sbin/tc" ]; then
+        if [ ! -f "/opt/lib/modules/sch_cake.ko" ] || [ ! -f "/opt/sbin/tc" ]; then
                  DOINSTALL="1"
         fi
 
