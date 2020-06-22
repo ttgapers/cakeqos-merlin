@@ -38,12 +38,18 @@ cake_download() {
 		VERSION_LOCAL_TC=$(opkg list_installed | grep "^tc-adv - " | awk -F" - " '{print $2}')
 		LATEST=$(/usr/sbin/curl --retry 3 -s "https://raw.githubusercontent.com/ttgapers/cakeqos-merlin/master/cake-qos.sh")
 		LATEST_VERSION=$(echo "$LATEST" | grep "^readonly SCRIPT_VERSION" | awk -F"=" '{print $2}' | cut -d "\"" -f 2)
+		LOCALMD5="$(md5sum "/jffs/scripts/${SCRIPT_NAME}" | awk '{print $1}')"
+		REMOTEMD5="$($LATEST | md5sum | awk '{print $1}')"
 		if [ "${LATEST_VERSION}" != "" ]; then
 			if [ "${LATEST_VERSION}" != "${SCRIPT_VERSION}" ]; then
 				Print_Output "true" "New CakeQOS-Merlin detected (${LATEST_VERSION}, currently running ${SCRIPT_VERSION}), updating..." "$PASS"
 				echo "${LATEST}" > "/jffs/scripts/${SCRIPT_NAME}"
 				chmod 0755 "/jffs/scripts/${SCRIPT_NAME}"
-			else
+			elif [ "$LOCALMD5" != "$REMOTEMD5" ]; then
+				Print_Output "true" "Local and server md5 don't match, updating..." "$PASS"
+				echo "${LATEST}" > "/jffs/scripts/${SCRIPT_NAME}"
+				chmod 0755 "/jffs/scripts/${SCRIPT_NAME}"
+			else	
 				Print_Output "false" "You are running the latest CakeQOS-Merlin script (${LATEST_VERSION}, currently running ${SCRIPT_VERSION}), skipping..." "$PASS"
 			fi
 		fi
@@ -212,8 +218,9 @@ case $1 in
 		;;
 	enable)
 		cake_stopif
+		[ -f "/opt/bin/$SCRIPT_NAME" ] || ln -s "$0" "/opt/bin/$SCRIPT_NAME" >/dev/null 2>&1 # add to /opt/bin so it can be called only as "cake-qos param"
 		# Start
-		# Remove from firewall-start
+		# Remove from firewall-start and services-start
 		if [ -f /jffs/scripts/firewall-start ]; then
 			LINECOUNT=$(grep -c '# '"$SCRIPT_NAME" /jffs/scripts/firewall-start)
 			LINECOUNTEX=$(grep -cx "/jffs/scripts/$SCRIPT_NAME start"' # '"$SCRIPT_NAME" /jffs/scripts/firewall-start)
@@ -222,7 +229,6 @@ case $1 in
 				sed -i -e '/# '"$SCRIPT_NAME"'/d' /jffs/scripts/firewall-start
 			fi
 		fi
-		# Add to services-start
 		if [ -f /jffs/scripts/services-start ]; then
 			LINECOUNT=$(grep -c '# '"$SCRIPT_NAME" /jffs/scripts/services-start)
 			LINECOUNTEX=$(grep -cx "/jffs/scripts/$SCRIPT_NAME start"' # '"$SCRIPT_NAME" /jffs/scripts/services-start)
@@ -230,15 +236,24 @@ case $1 in
 			if [ "$LINECOUNT" -gt 1 ] || { [ "$LINECOUNTEX" -eq 0 ] && [ "$LINECOUNT" -gt 0 ]; }; then
 				sed -i -e '/# '"$SCRIPT_NAME"'/d' /jffs/scripts/services-start
 			fi
+		fi		
+		# Add to nat-start
+		if [ -f /jffs/scripts/nat-start ]; then
+			LINECOUNT=$(grep -c '# '"$SCRIPT_NAME" /jffs/scripts/nat-start)
+			LINECOUNTEX=$(grep -cx "/jffs/scripts/$SCRIPT_NAME start"' # '"$SCRIPT_NAME" /jffs/scripts/nat-start)
+			
+			if [ "$LINECOUNT" -gt 1 ] || { [ "$LINECOUNTEX" -eq 0 ] && [ "$LINECOUNT" -gt 0 ]; }; then
+				sed -i -e '/# '"$SCRIPT_NAME"'/d' /jffs/scripts/nat-start
+			fi
 			
 			if [ "$LINECOUNTEX" -eq 0 ]; then
-				echo "/jffs/scripts/$SCRIPT_NAME start ${2} ${3} \"${4}\" &"' # '"$SCRIPT_NAME" >> /jffs/scripts/services-start
+				echo "/jffs/scripts/$SCRIPT_NAME start ${2} ${3} \"${4}\" &"' # '"$SCRIPT_NAME" >> /jffs/scripts/nat-start
 			fi
 		else
-			echo "#!/bin/sh" > /jffs/scripts/services-start
-			echo "" >> /jffs/scripts/services-start
-			echo "/jffs/scripts/$SCRIPT_NAME start ${2} ${3} \"${4}\" &"' # '"$SCRIPT_NAME" >> /jffs/scripts/services-start
-			chmod 0755 /jffs/scripts/services-start
+			echo "#!/bin/sh" > /jffs/scripts/nat-start
+			echo "" >> /jffs/scripts/nat-start
+			echo "/jffs/scripts/$SCRIPT_NAME start ${2} ${3} \"${4}\" &"' # '"$SCRIPT_NAME" >> /jffs/scripts/nat-start
+			chmod 0755 /jffs/scripts/nat-start
 		fi
 		# Stop
 		if [ -f /jffs/scripts/services-stop ]; then
