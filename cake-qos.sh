@@ -40,10 +40,10 @@ cake_download() {
 	if [ "${1}" = "update" ]; then
 		VERSION_LOCAL_CAKE=$(opkg list_installed | grep "^sched-cake-oot - " | awk -F" - " '{print $2}' | cut -d- -f-4)
 		VERSION_LOCAL_TC=$(opkg list_installed | grep "^tc-adv - " | awk -F" - " '{print $2}')
-		LATEST="$(/usr/sbin/curl -fsL --retry 3 https://raw.githubusercontent.com/ttgapers/cakeqos-merlin/$SCRIPT_BRANCH/cake-qos.sh)"
+		LATEST="$(/usr/sbin/curl -fsL --retry 3 https://raw.githubusercontent.com/ttgapers/cakeqos-merlin/$SCRIPT_BRANCH/$SCRIPT_NAME.sh)"
 		LATEST_VERSION=$(echo "$LATEST" | grep "^readonly SCRIPT_VERSION" | awk -F"=" '{print $2}' | cut -d "\"" -f 2)
 		LOCALMD5="$(md5sum "/jffs/scripts/$SCRIPT_NAME" | awk '{print $1}')"
-		REMOTEMD5="$(/usr/sbin/curl -fsL --retry 3 https://raw.githubusercontent.com/ttgapers/cakeqos-merlin/$SCRIPT_BRANCH/cake-qos.sh | md5sum | awk '{print $1}')"
+		REMOTEMD5="$(/usr/sbin/curl -fsL --retry 3 https://raw.githubusercontent.com/ttgapers/cakeqos-merlin/$SCRIPT_BRANCH/$SCRIPT_NAME.sh | md5sum | awk '{print $1}')"
 
 		if [ "${LATEST_VERSION}" != "" ]; then
 			if [ "${LATEST_VERSION}" != "${SCRIPT_VERSION}" ]; then
