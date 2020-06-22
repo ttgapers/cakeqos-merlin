@@ -197,7 +197,7 @@ case $1 in
 	enable)
 		cake_stopif
 		# Start
-		# Remove from firewall-start
+		# Remove from firewall-start and services-start
 		if [ -f /jffs/scripts/firewall-start ]; then
 			LINECOUNT=$(grep -c '# '"$SCRIPT_NAME" /jffs/scripts/firewall-start)
 			LINECOUNTEX=$(grep -cx "/jffs/scripts/$SCRIPT_NAME start"' # '"$SCRIPT_NAME" /jffs/scripts/firewall-start)
@@ -206,7 +206,6 @@ case $1 in
 				sed -i -e '/# '"$SCRIPT_NAME"'/d' /jffs/scripts/firewall-start
 			fi
 		fi
-		# Add to services-start
 		if [ -f /jffs/scripts/services-start ]; then
 			LINECOUNT=$(grep -c '# '"$SCRIPT_NAME" /jffs/scripts/services-start)
 			LINECOUNTEX=$(grep -cx "/jffs/scripts/$SCRIPT_NAME start"' # '"$SCRIPT_NAME" /jffs/scripts/services-start)
@@ -214,15 +213,24 @@ case $1 in
 			if [ "$LINECOUNT" -gt 1 ] || { [ "$LINECOUNTEX" -eq 0 ] && [ "$LINECOUNT" -gt 0 ]; }; then
 				sed -i -e '/# '"$SCRIPT_NAME"'/d' /jffs/scripts/services-start
 			fi
+		fi		
+		# Add to nat-start
+		if [ -f /jffs/scripts/nat-start ]; then
+			LINECOUNT=$(grep -c '# '"$SCRIPT_NAME" /jffs/scripts/nat-start)
+			LINECOUNTEX=$(grep -cx "/jffs/scripts/$SCRIPT_NAME start"' # '"$SCRIPT_NAME" /jffs/scripts/nat-start)
+			
+			if [ "$LINECOUNT" -gt 1 ] || { [ "$LINECOUNTEX" -eq 0 ] && [ "$LINECOUNT" -gt 0 ]; }; then
+				sed -i -e '/# '"$SCRIPT_NAME"'/d' /jffs/scripts/nat-start
+			fi
 			
 			if [ "$LINECOUNTEX" -eq 0 ]; then
-				echo "/jffs/scripts/$SCRIPT_NAME start ${2} ${3} \"${4}\" &"' # '"$SCRIPT_NAME" >> /jffs/scripts/services-start
+				echo "/jffs/scripts/$SCRIPT_NAME start ${2} ${3} \"${4}\" &"' # '"$SCRIPT_NAME" >> /jffs/scripts/nat-start
 			fi
 		else
-			echo "#!/bin/sh" > /jffs/scripts/services-start
-			echo "" >> /jffs/scripts/services-start
-			echo "/jffs/scripts/$SCRIPT_NAME start ${2} ${3} \"${4}\" &"' # '"$SCRIPT_NAME" >> /jffs/scripts/services-start
-			chmod 0755 /jffs/scripts/services-start
+			echo "#!/bin/sh" > /jffs/scripts/nat-start
+			echo "" >> /jffs/scripts/nat-start
+			echo "/jffs/scripts/$SCRIPT_NAME start ${2} ${3} \"${4}\" &"' # '"$SCRIPT_NAME" >> /jffs/scripts/nat-start
+			chmod 0755 /jffs/scripts/nat-start
 		fi
 		# Stop
 		if [ -f /jffs/scripts/services-stop ]; then
