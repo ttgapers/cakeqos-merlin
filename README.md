@@ -51,9 +51,9 @@
 
 ```
 tc qdisc
+tc qdisc show | grep root
 tc -s qdisc show dev eth0 # for upload
 tc -s qdisc show dev ifb9eth0 # for download
-tc qdisc show | grep root
 ```
 ## Uninstall/Remove
 
