@@ -145,7 +145,7 @@ cake_start() {
 		if [ -f /opt/bin/sh ]; then
 			cru a "$SCRIPT_NAME" "*/30 * * * * $0 checkrun"
 			cake_serve "${@}"
-			exit
+			exit 0
 		else
 			Print_Output "true" "Entware isn't ready, waiting 10 sec - retry $i" "$ERR"
 			sleep 10
@@ -202,6 +202,7 @@ cake_stop() {
 	fc enable
 	runner enable
 	cru d "$SCRIPT_NAME"
+  > "$WDog"
 }
 
 ### Cake Disable
@@ -254,7 +255,8 @@ case $1 in
 		cake_download "${@}"
 		[ -f "/opt/bin/$SCRIPT_NAME" ] || ln -s "$0" "/opt/bin/$SCRIPT_NAME" >/dev/null 2>&1 # add to /opt/bin so it can be called only as "cake-qos param"
 		;;
-	enable)
+	enable|start)
+    [ -f "/opt/bin/$SCRIPT_NAME" ] || ln -s "$0" "/opt/bin/$SCRIPT_NAME" >/dev/null 2>&1 # add to /opt/bin so it can be called only as "cake-qos param"
 		cake_stopif
 		#check if bins are installed, for the sake of......
 		if [ ! -f "/opt/lib/modules/sch_cake.ko" ] || [ ! -f "/opt/sbin/tc" ]; then
@@ -291,7 +293,7 @@ case $1 in
 			LINECOUNTEX=$(grep -cx "/jffs/scripts/$SCRIPT_NAME start"' # '"$SCRIPT_NAME_FANCY" /jffs/scripts/nat-start)
 
 			if [ "$LINECOUNT" -gt 1 ] || { [ "$LINECOUNTEX" -eq 0 ] && [ "$LINECOUNT" -gt 0 ]; }; then
-				sed -i -e '/# '"$SCRIPT_NAME"'/d' /jffs/scripts/nat-start
+				sed -i -e '/# '"$SCRIPT_NAME_FANCY"'/d' /jffs/scripts/nat-start
 			fi
 
 			if [ "$LINECOUNTEX" -eq 0 ]; then
@@ -305,7 +307,7 @@ case $1 in
 		fi
 		# Stop
 		if [ -f /jffs/scripts/services-stop ]; then
-			LINECOUNT=$(grep -c '# '"$SCRIPT_NAME" /jffs/scripts/services-stop)
+			LINECOUNT=$(grep -c '# '"$SCRIPT_NAME_FANCY" /jffs/scripts/services-stop)
 			LINECOUNTEX=$(grep -cx "/jffs/scripts/$SCRIPT_NAME stop"' # '"$SCRIPT_NAME_FANCY" /jffs/scripts/services-stop)
 
 			if [ "$LINECOUNT" -gt 1 ] || { [ "$LINECOUNTEX" -eq 0 ] && [ "$LINECOUNT" -gt 0 ]; }; then
@@ -314,22 +316,14 @@ case $1 in
 
 			if [ "$LINECOUNTEX" -eq 0 ]; then
 				echo "/jffs/scripts/$SCRIPT_NAME stop"' # '"$SCRIPT_NAME_FANCY" >> /jffs/scripts/services-stop
-				echo "" >> "$WDog"
 			fi
 		else
 			SCRIPT_NAME="cake-qos"
 			printf "#!/bin/sh\n\n/jffs/scripts/$SCRIPT_NAME stop # $SCRIPT_NAME_FANCY" > /jffs/scripts/services-stop
-			echo "" >> "$WDog"
 			chmod 0755 /jffs/scripts/services-stop
 		fi
 		
 		Print_Output "true" "Enabled" "$PASS"
-		cake_start "${@}"
-		return 0
-		;;
-	start)
-		[ -f "/opt/bin/$SCRIPT_NAME" ] || ln -s "$0" "/opt/bin/$SCRIPT_NAME" >/dev/null 2>&1 # add to /opt/bin so it can be called only as "cake-qos param"
-		cake_stopif
 		cake_start "${@}"
 		return 0
 		;;
