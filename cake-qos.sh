@@ -130,7 +130,7 @@ cake_start() {
 ### Cake Serve
 cake_serve() {
 	options=${4}
-	case "${options}" in 
+	case "${options}" in
 		*diffserv3*|*diffserv4*|*diffserv8*|*besteffort*)
 			# priority queue specified
 			;;
@@ -221,7 +221,6 @@ case $1 in
 		;;
 	enable)
 		cake_stopif
-		[ -f "/opt/bin/$SCRIPT_NAME" ] || ln -s "$0" "/opt/bin/$SCRIPT_NAME" >/dev/null 2>&1 # add to /opt/bin so it can be called only as "cake-qos param"
 		# Start
 		# Remove from firewall-start and services-start
 		if [ -f /jffs/scripts/firewall-start ]; then
@@ -281,6 +280,7 @@ case $1 in
 		return 0
 		;;
 	start)
+		[ -f "/opt/bin/$SCRIPT_NAME" ] || ln -s "$0" "/opt/bin/$SCRIPT_NAME" >/dev/null 2>&1 # add to /opt/bin so it can be called only as "cake-qos param"
 		cake_stopif
 		cake_start "${@}"
 		return 0
