@@ -232,10 +232,13 @@ fi
 case $1 in
 	install|update)
 		cake_download "${@}"
-    [ -f "/opt/bin/$SCRIPT_NAME" ] || ln -s "$0" "/opt/bin/$SCRIPT_NAME" >/dev/null 2>&1 # add to /opt/bin so it can be called only as "cake-qos param"
+		[ -f "/opt/bin/$SCRIPT_NAME" ] || ln -s "$0" "/opt/bin/$SCRIPT_NAME" >/dev/null 2>&1 # add to /opt/bin so it can be called only as "cake-qos param"
 		;;
 	enable)
 		cake_stopif
+		if [ ! -f "/opt/lib/modules/sch_cake.ko" ] || [ ! -f "/opt/sbin/tc" ]; then
+				 cake_download "${@}"
+		fi
 		# Start
 
 		# Remove from firewall-start and services-start
