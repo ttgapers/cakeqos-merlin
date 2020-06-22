@@ -7,7 +7,7 @@
 readonly SCRIPT_VERSION="v0.0.5"
 readonly SCRIPT_NAME="cake-qos"
 readonly SCRIPT_NAME_FANCY="CakeQOS-Merlin"
-readonly SCRIPT_BRANCH="develop"
+readonly SCRIPT_BRANCH="master"
 
 readonly CRIT="\\e[41m"
 readonly ERR="\\e[31m"
@@ -319,6 +319,8 @@ case $1 in
 		opkg --autoremove remove sched-cake-oot
 		opkg --autoremove remove tc-adv
 		rm /jffs/scripts/$SCRIPT_NAME
+		return 0
+		;;
 	*)
 		Print_Output "false" "Usage: $SCRIPT_NAME {install|update|enable|start|status|stop|disable|uninstall} (enable and start have required parameters)" "$WARN"
 		Print_Output "false" "" "$PASS"
