@@ -58,9 +58,10 @@ cake_download() {
 				Print_Output "false" "You are running the latest CakeQOS-Merlin script (${LATEST_VERSION}, currently running ${SCRIPT_VERSION}), skipping..." "$PASS"
 			fi
 		fi
-	elif [ "${1}" = "install" ]; then
+	elif [ "${1}" = "install" ] || [ -z "$VERSION_LOCAL_CAKE" ] || [ -z "$VERSION_LOCAL_TC" ]; then
 		VERSION_LOCAL_CAKE="0"
 		VERSION_LOCAL_TC="0"
+                DOINSTALL="1"
 	fi
 
 	case "$RMODEL" in
@@ -81,7 +82,7 @@ cake_download() {
 		VERSION_ONLINE_TC=$(echo "$VERSIONS_ONLINE" | awk -F"|" '{print $2}')
 		VERSION_ONLINE_SUFFIX=$(echo "$VERSIONS_ONLINE" | awk -F"|" '{print $3}')
 		if [ "${VERSION_LOCAL_CAKE}" != "${VERSION_ONLINE_CAKE}" ] || [ "${VERSION_LOCAL_TC}" != "${VERSION_ONLINE_TC}" ]; then
-			Print_Output "true" "Updated cake binaries detected, updating..." "$PASS"
+			[ "$DOINSTALL" = "1" ] && Print_Output "true" "Installing cake binaries" "$WARN" || Print_Output "true" "Updated cake binaries detected, updating..." "$WARN"
 			FILE1="sched-cake-oot_${VERSION_ONLINE_CAKE}-${FILE1_TYPE}_${VERSION_ONLINE_SUFFIX}.ipk"
 			FILE2="tc-adv_${VERSION_ONLINE_TC}_${VERSION_ONLINE_SUFFIX}.ipk"
 			FILE1_OUT="sched-cake-oot.ipk"
