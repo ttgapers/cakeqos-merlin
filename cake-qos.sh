@@ -6,7 +6,7 @@
 
 readonly SCRIPT_VERSION="v0.0.5"
 readonly SCRIPT_NAME="cake-qos"
-readonly SCRIPT_NAME_FANCY="CakeQOS-Merlin ${SCRIPT_VERSION}"
+readonly SCRIPT_NAME_FANCY="CakeQOS-Merlin"
 readonly SCRIPT_BRANCH="develop"
 
 readonly CRIT="\\e[41m"
@@ -29,7 +29,7 @@ fi
 Print_Output(){
 	if [ "$1" = "true" ]; then
 		logger -t "$SCRIPT_NAME_FANCY" "$2"
-		printf "\\e[1m$3%s: $2\\e[0m\\n\\n" "$SCRIPT_NAME_FANCY"
+		printf "\\e[1m$3%s: $2\\e[0m\\n\\n" "$SCRIPT_NAME_FANCY - $SCRIPT_VERSION"
 	else
 		printf "\\e[1m$3%s: $2\\e[0m\\n\\n" "$SCRIPT_NAME_FANCY"
 	fi
