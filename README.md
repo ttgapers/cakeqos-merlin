@@ -58,4 +58,4 @@ tc -s qdisc show dev ifb9eth0 # for download
 ## Uninstall/Remove
 
 1. SSH to the router and execute:
-> /jffs/scripts/cake-qos uninstall
+> cake-qos uninstall

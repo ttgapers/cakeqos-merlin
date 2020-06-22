@@ -58,7 +58,7 @@ cake_download() {
 				Print_Output "false" "You are running the latest CakeQOS-Merlin script (${LATEST_VERSION}, currently running ${SCRIPT_VERSION}), skipping..." "$PASS"
 			fi
 		fi
-	elif [ "${1}" = "install" ] || [ -z "$VERSION_LOCAL_CAKE" ] || [ -z "$VERSION_LOCAL_TC" ]; then
+	elif [ "${1}" = "install" ]; then
 		VERSION_LOCAL_CAKE="0"
 		VERSION_LOCAL_TC="0"
                 DOINSTALL="1"
@@ -76,13 +76,17 @@ cake_download() {
 			exit 1
                       ;;
 	esac
-  
+
+        if [ ! -f "/opt/lib/modules/sch_cake.ko" ] || [ ! -f "/opt/sbin/tc" ]; then
+                 DOINSTALL="1"
+        fi
+
 	VERSIONS_ONLINE=$(/usr/sbin/curl --retry 3 -s "https://raw.githubusercontent.com/ttgapers/cakeqos-merlin/$SCRIPT_BRANCH/versions.txt")
-	if [ "${VERSIONS_ONLINE}" != "" ] && [ "${VERSION_LOCAL_CAKE}" != "" ] && [ "${VERSION_LOCAL_TC}" != "" ]; then
+	if [ "${VERSIONS_ONLINE}" != "" ]; then
 		VERSION_ONLINE_CAKE=$(echo "$VERSIONS_ONLINE" | awk -F"|" '{print $1}')
 		VERSION_ONLINE_TC=$(echo "$VERSIONS_ONLINE" | awk -F"|" '{print $2}')
 		VERSION_ONLINE_SUFFIX=$(echo "$VERSIONS_ONLINE" | awk -F"|" '{print $3}')
-		if [ "${VERSION_LOCAL_CAKE}" != "${VERSION_ONLINE_CAKE}" ] || [ "${VERSION_LOCAL_TC}" != "${VERSION_ONLINE_TC}" ]; then
+		if [ "${VERSION_LOCAL_CAKE}" != "${VERSION_ONLINE_CAKE}" ] || [ "${VERSION_LOCAL_TC}" != "${VERSION_ONLINE_TC}" ] || [ "$DOINSTALL" = "1" ]; then
 			[ "$DOINSTALL" = "1" ] && Print_Output "true" "Installing cake binaries" "$WARN" || Print_Output "true" "Updated cake binaries detected, updating..." "$WARN"
 			FILE1="sched-cake-oot_${VERSION_ONLINE_CAKE}-${FILE1_TYPE}_${VERSION_ONLINE_SUFFIX}.ipk"
 			FILE2="tc-adv_${VERSION_ONLINE_TC}_${VERSION_ONLINE_SUFFIX}.ipk"
