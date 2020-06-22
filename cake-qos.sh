@@ -25,7 +25,7 @@ if [ "${STATUS_UPLOAD}" != "" ] && [ "${STATUS_DOWNLOAD}" != "" ]; then
 	RUNNING="true"
 fi
 
-
+### Print_Output - Thanks @JackYaz
 Print_Output(){
 	if [ "$1" = "true" ]; then
 		logger -t "$SCRIPT_NAME_FANCY" "$2"
