@@ -33,7 +33,7 @@
 
 > cake-qos {install|update|enable|start|status|stop|disable|uninstall}
 
-(install, update, enable, and start have required parameters)
+(update, enable, and start have required parameters)
 
 - install: download and install necessary cake-qos binaries
 - update: update cake-qos binaries (if any available)

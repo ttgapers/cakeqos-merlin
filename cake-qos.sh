@@ -316,7 +316,7 @@ case $1 in
 		return 0
 		;;
 	*)
-		Print_Output "false" "Usage: $SCRIPT_NAME {install|update|enable|start|status|stop|disable|uninstall} (install, update, enable, and start have required parameters)" "$WARN"
+		Print_Output "false" "Usage: $SCRIPT_NAME {install|update|enable|start|status|stop|disable|uninstall} (update, enable, and start have required parameters)" "$WARN"
 		Print_Output "false" "" "$PASS"
 		Print_Output "false" "install:   download and install necessary $SCRIPT_NAME binaries" "$PASS"
 		Print_Output "false" "update:    update $SCRIPT_NAME binaries (if any available)" "$PASS"
