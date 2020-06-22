@@ -74,6 +74,7 @@ cake_download() {
 			Print_Output "false" "Cake isn't yet compatible with ASUS $RMODEL, keep watching our thread!" "$CRIT"
 			exit 1
 	esac
+  
 	VERSIONS_ONLINE=$(/usr/sbin/curl --retry 3 -s "https://raw.githubusercontent.com/ttgapers/cakeqos-merlin/$SCRIPT_BRANCH/versions.txt")
 	if [ "${VERSIONS_ONLINE}" != "" ] && [ "${VERSION_LOCAL_CAKE}" != "" ] && [ "${VERSION_LOCAL_TC}" != "" ]; then
 		VERSION_ONLINE_CAKE=$(echo "$VERSIONS_ONLINE" | awk -F"|" '{print $1}')
@@ -87,6 +88,7 @@ cake_download() {
 			FILE2_OUT="tc-adv.ipk"
 			/usr/sbin/curl --retry 3 "https://raw.githubusercontent.com/ttgapers/cakeqos-merlin/$SCRIPT_BRANCH/${FILE1}" -o "/tmp/home/root/${FILE1_OUT}"
 			/usr/sbin/curl --retry 3 "https://raw.githubusercontent.com/ttgapers/cakeqos-merlin/$SCRIPT_BRANCH/${FILE2}" -o "/tmp/home/root/${FILE2_OUT}"
+
 			if [ -f "/tmp/home/root/${FILE1_OUT}" ] && [ -f "/tmp/home/root/${FILE2_OUT}" ]; then
 				if [ "${1}" = "update" ]; then
 					opkg --autoremove remove sched-cake-oot
@@ -139,6 +141,7 @@ cake_serve() {
 			options="besteffort ${options}"
 			;;
 	esac
+
 	Print_Output "true" "Starting - settings: ${2} | ${3} | ${options}" "$PASS"
 	runner disable 2>/dev/null
 	fc disable 2>/dev/null
@@ -218,10 +221,12 @@ fi
 case $1 in
 	install|update)
 		cake_download "${@}"
+    [ -f "/opt/bin/$SCRIPT_NAME" ] || ln -s "$0" "/opt/bin/$SCRIPT_NAME" >/dev/null 2>&1 # add to /opt/bin so it can be called only as "cake-qos param"
 		;;
 	enable)
 		cake_stopif
 		# Start
+    
 		# Remove from firewall-start and services-start
 		if [ -f /jffs/scripts/firewall-start ]; then
 			LINECOUNT=$(grep -c '# '"$SCRIPT_NAME" /jffs/scripts/firewall-start)
@@ -231,6 +236,7 @@ case $1 in
 				sed -i -e '/# '"$SCRIPT_NAME"'/d' /jffs/scripts/firewall-start
 			fi
 		fi
+
 		if [ -f /jffs/scripts/services-start ]; then
 			LINECOUNT=$(grep -c '# '"$SCRIPT_NAME" /jffs/scripts/services-start)
 			LINECOUNTEX=$(grep -cx "/jffs/scripts/$SCRIPT_NAME start"' # '"$SCRIPT_NAME" /jffs/scripts/services-start)
@@ -313,9 +319,6 @@ case $1 in
 		opkg --autoremove remove sched-cake-oot
 		opkg --autoremove remove tc-adv
 		rm /jffs/scripts/$SCRIPT_NAME
-		rm /opt/bin/$SCRIPT_NAME
-		return 0
-		;;
 	*)
 		Print_Output "false" "Usage: $SCRIPT_NAME {install|update|enable|start|status|stop|disable|uninstall} (enable and start have required parameters)" "$WARN"
 		Print_Output "false" "" "$PASS"
