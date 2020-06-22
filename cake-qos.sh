@@ -156,7 +156,6 @@ cake_start() {
 		return 1
 	fi
 }
-set -x
 ### Cake Serve
 cake_serve() {
 	options=${4}
