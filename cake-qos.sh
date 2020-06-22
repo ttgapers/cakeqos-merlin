@@ -5,12 +5,7 @@
 # Credits: robcore, Odkrys, ttgapers, jackiechun
 
 readonly SCRIPT_NAME="cake-qos"
-readonly SCRIPT_NAME_FANCY="CakeQOS-Merlin"
 readonly SCRIPT_VERSION="v0.0.4"
-readonly CRIT="\\e[41m"
-readonly ERR="\\e[31m"
-readonly WARN="\\e[33m"
-readonly PASS="\\e[32m"
 
 ### Status
 readonly STATUS="$(tc qdisc)"
@@ -20,18 +15,6 @@ RUNNING="false"
 if [ "${STATUS_UPLOAD}" != "" ] && [ "${STATUS_DOWNLOAD}" != "" ]; then
 	RUNNING="true"
 fi
-[ -z "$(nvram get odmpid)" ] && RMODEL=$(nvram get productid) || RMODEL=$(nvram get odmpid) #get router model
-
-
-
-Print_Output(){
-	if [ "$1" = "true" ]; then
-		logger -t "$SCRIPT_NAME_FANCY" "$2"
-		printf "\\e[1m$3%s: $2\\e[0m\\n\\n" "$SCRIPT_NAME_FANCY"
-	else
-		printf "\\e[1m$3%s: $2\\e[0m\\n\\n" "$SCRIPT_NAME_FANCY"
-	fi
-}
 
 ### Cake Download
 cake_download() {
@@ -40,32 +23,23 @@ cake_download() {
 		VERSION_LOCAL_TC=$(opkg list_installed | grep "^tc-adv - " | awk -F" - " '{print $2}')
 		LATEST=$(/usr/sbin/curl --retry 3 -s "https://raw.githubusercontent.com/ttgapers/cakeqos-merlin/master/cake-qos.sh")
 		LATEST_VERSION=$(echo "$LATEST" | grep "^readonly SCRIPT_VERSION" | awk -F"=" '{print $2}' | cut -d "\"" -f 2)
-		LOCALMD5="$(md5sum "/jffs/scripts/${SCRIPT_NAME}" | awk '{print $1}')"
-		REMOTEMD5="$($LATEST | md5sum | awk '{print $1}')"
 		if [ "${LATEST_VERSION}" != "" ]; then
 			if [ "${LATEST_VERSION}" != "${SCRIPT_VERSION}" ]; then
-				Print_Output "true" "New CakeQOS-Merlin detected (${LATEST_VERSION}, currently running ${SCRIPT_VERSION}), updating..." "$PASS"
+				echo "New CakeQOS-Merlin detected (${LATEST_VERSION}, currently running ${SCRIPT_VERSION}), updating..."
 				echo "${LATEST}" > "/jffs/scripts/${SCRIPT_NAME}"
 				chmod 0755 "/jffs/scripts/${SCRIPT_NAME}"
-			elif [ "$LOCALMD5" != "$REMOTEMD5" ]; then
-				Print_Output "true" "Local and server md5 don't match, updating..." "$PASS"
-				echo "${LATEST}" > "/jffs/scripts/${SCRIPT_NAME}"
-				chmod 0755 "/jffs/scripts/${SCRIPT_NAME}"
-			else	
-				Print_Output "false" "You are running the latest CakeQOS-Merlin script (${LATEST_VERSION}, currently running ${SCRIPT_VERSION}), skipping..." "$PASS"
+			else
+				echo "You are running the latest CakeQOS-Merlin script (${LATEST_VERSION}, currently running ${SCRIPT_VERSION}), skipping..."
 			fi
 		fi
 	elif [ "${1}" = "install" ]; then
 		VERSION_LOCAL_CAKE="0"
 		VERSION_LOCAL_TC="0"
 	fi
-	if [ "$RMODEL" = "RT-AC86U" ]; then
+	if [ "${2}" = "ac86u" ]; then
 		FILE1_TYPE="1"
-	elif [ "$RMODEL" = "RT-AX88U" ]; then
+	elif [ "${2}" = "ax88u" ]; then
 		FILE1_TYPE="ax"
-	else
-		Print_Output "false" "Cake isn't yet compatible with ASUS $RMODEL, keep watching our thread!" "$CRIT"
-		exit 1
 	fi
 	VERSIONS_ONLINE=$(/usr/sbin/curl --retry 3 -s "https://raw.githubusercontent.com/ttgapers/cakeqos-merlin/master/versions.txt")
 	if [ "${VERSIONS_ONLINE}" != "" ] && [ "${VERSION_LOCAL_CAKE}" != "" ] && [ "${VERSION_LOCAL_TC}" != "" ]; then
@@ -73,7 +47,7 @@ cake_download() {
 		VERSION_ONLINE_TC=$(echo "$VERSIONS_ONLINE" | awk -F"|" '{print $2}')
 		VERSION_ONLINE_SUFFIX=$(echo "$VERSIONS_ONLINE" | awk -F"|" '{print $3}')
 		if [ "${VERSION_LOCAL_CAKE}" != "${VERSION_ONLINE_CAKE}" ] || [ "${VERSION_LOCAL_TC}" != "${VERSION_ONLINE_TC}" ]; then
-			Print_Output "true" "Updated cake binaries detected, updating..." "$PASS"
+			echo "Updated cake binaries detected, updating..."
 			FILE1="sched-cake-oot_${VERSION_ONLINE_CAKE}-${FILE1_TYPE}_${VERSION_ONLINE_SUFFIX}.ipk"
 			FILE2="tc-adv_${VERSION_ONLINE_TC}_${VERSION_ONLINE_SUFFIX}.ipk"
 			FILE1_OUT="sched-cake-oot.ipk"
@@ -91,11 +65,11 @@ cake_download() {
 				rm "/tmp/home/root/${FILE2_OUT}"
 				return 0
 			else
-				Print_Output "true" "There was an error downloading the cake binaries, please try again." "$ERR"
+				echo "There was an error downloading the cake binaries, please try again."
 				return 1
 			fi
 		else
-			Print_Output "false" "Your cake binaries are up-to-date." "$PASS"
+			echo "Your cake binaries are up-to-date."
 			return 0
 		fi
 	fi
@@ -110,12 +84,11 @@ cake_start() {
 			cake_serve "${@}"
 			exit
 		else
-			Print_Output "true" "Entware isn't ready, waiting 10 sec - retry $i" "$ERR"
 			sleep 10
 		fi
 	done
 	if [ ! -f /opt/bin/sh ]; then
-		Print_Output "true" "Entware didn't start in 100 seconds, please check" "$CRIT"
+		logger "CakeQOS-Merlin ${SCRIPT_VERSION} - Entware did not start in 100 seconds, please check"
 		return 1
 	fi
 }
@@ -132,17 +105,17 @@ cake_serve() {
 			options="besteffort ${options}"
 			;;
 	esac
-	Print_Output "true" "Starting - settings: ${2} | ${3} | ${options}" "$PASS"
+	logger "CakeQOS-Merlin ${SCRIPT_VERSION} Starting - settings: ${2} | ${3} | ${options}"
 	runner disable 2>/dev/null
 	fc disable 2>/dev/null
 	fc flush 2>/dev/null
 	insmod /opt/lib/modules/sch_cake.ko 2>/dev/null
-	/opt/sbin/tc qdisc replace dev eth0 root cake bandwidth "${3}" nat "${options}"
+	/opt/sbin/tc qdisc replace dev eth0 root cake bandwidth "${3}" nat ${options}
 	ip link add name ifb9eth0 type ifb
 	/opt/sbin/tc qdisc del dev eth0 ingress 2>/dev/null
 	/opt/sbin/tc qdisc add dev eth0 handle ffff: ingress
 	/opt/sbin/tc qdisc del dev ifb9eth0 root 2>/dev/null
-	/opt/sbin/tc qdisc add dev ifb9eth0 root cake bandwidth "${2}" nat wash ingress "${options}"
+	/opt/sbin/tc qdisc add dev ifb9eth0 root cake bandwidth "${2}" nat wash ingress ${options}
 	ifconfig ifb9eth0 up
 	/opt/sbin/tc filter add dev eth0 parent ffff: protocol all prio 10 u32 match u32 0 0 flowid 1:1 action mirred egress redirect dev ifb9eth0
 }
@@ -156,7 +129,7 @@ cake_stopif() {
 
 ### Cake Stop
 cake_stop() {
-	Print_Output "true" "Stopping" "$PASS"
+	logger "CakeQOS-Merlin ${SCRIPT_VERSION} Stopping"
 	/opt/sbin/tc qdisc del dev eth0 ingress 2>/dev/null
 	/opt/sbin/tc qdisc del dev ifb9eth0 root 2>/dev/null
 	/opt/sbin/tc qdisc del dev eth0 root 2>/dev/null
@@ -168,7 +141,7 @@ cake_stop() {
 
 ### Cake Disable
 cake_disable() {
-	Print_Output "true" "Disabled" "$PASS"
+	logger "CakeQOS-Merlin ${SCRIPT_VERSION} Disabled"
 	if [ -f /jffs/scripts/firewall-start ]; then
 		LINECOUNT=$(grep -c '# '"$SCRIPT_NAME" /jffs/scripts/firewall-start)
 		if [ "$LINECOUNT" -gt 0 ]; then
@@ -186,11 +159,11 @@ cake_disable() {
 ### Check Requirements
 FAIL="0"
 if [ "$(nvram get jffs2_scripts)" -ne 1 ]; then
-	Print_Output "true" "ERROR: Custom JFFS Scripts must be enabled." "$CRIT"
+	echo "ERROR: Custom JFFS Scripts must be enabled."
 	FAIL="1"
 fi
 if [ "${1}" != "start" ] && [ ! -f "/opt/bin/opkg" ]; then
-	Print_Output "true" "ERROR: Entware must be installed." "$CRIT"
+	echo "ERROR: Entware must be installed."
 	FAIL="1"
 fi
 if [ "${FAIL}" = "1" ]; then
@@ -200,12 +173,21 @@ fi
 ### Parameter Checks
 if [ "${1}" = "enable" ] || [ "${1}" = "start" ]; then
 	if [ -z "$2" ] || [ -z "$3" ]; then
-		Print_Output "false" "Required parameters missing: $SCRIPT_NAME ${1} dlspeed upspeed \"optional extra parameters\"" "$WARN"
-		Print_Output "false" ""
-		Print_Output "false" "Example #1: $SCRIPT_NAME ${1} 30Mbit 5000Kbit"
-		Print_Output "false" "Example #2: $SCRIPT_NAME ${1} 30Mbit 5Mbit \"diffserv4 docsis ack-filter\""
+		echo "Required parameters missing: $SCRIPT_NAME ${1} dlspeed upspeed \"optional extra parameters\""
+		echo ""
+		echo "Example #1: $SCRIPT_NAME ${1} 30Mbit 5000Kbit"
+		echo "Example #2: $SCRIPT_NAME ${1} 30Mbit 5Mbit \"diffserv4 docsis ack-filter\""
 		return 1
 	fi	
+fi
+if [ "${1}" = "install" ] || [ "${1}" = "update" ]; then
+	if [ -z "$2" ]; then
+		echo "Required model missing: $SCRIPT_NAME ${1} {ac86u|ax88u}"
+		echo ""
+		echo "Example #1: $SCRIPT_NAME ${1} ac86u"
+		echo "Example #2: $SCRIPT_NAME ${1} ax88u"
+		return 1
+	fi
 fi
 
 case $1 in
@@ -214,9 +196,8 @@ case $1 in
 		;;
 	enable)
 		cake_stopif
-		[ -f "/opt/bin/$SCRIPT_NAME" ] || ln -s "$0" "/opt/bin/$SCRIPT_NAME" >/dev/null 2>&1 # add to /opt/bin so it can be called only as "cake-qos param"
 		# Start
-		# Remove from firewall-start and services-start
+		# Remove from firewall-start
 		if [ -f /jffs/scripts/firewall-start ]; then
 			LINECOUNT=$(grep -c '# '"$SCRIPT_NAME" /jffs/scripts/firewall-start)
 			LINECOUNTEX=$(grep -cx "/jffs/scripts/$SCRIPT_NAME start"' # '"$SCRIPT_NAME" /jffs/scripts/firewall-start)
@@ -225,6 +206,7 @@ case $1 in
 				sed -i -e '/# '"$SCRIPT_NAME"'/d' /jffs/scripts/firewall-start
 			fi
 		fi
+		# Add to services-start
 		if [ -f /jffs/scripts/services-start ]; then
 			LINECOUNT=$(grep -c '# '"$SCRIPT_NAME" /jffs/scripts/services-start)
 			LINECOUNTEX=$(grep -cx "/jffs/scripts/$SCRIPT_NAME start"' # '"$SCRIPT_NAME" /jffs/scripts/services-start)
@@ -232,24 +214,15 @@ case $1 in
 			if [ "$LINECOUNT" -gt 1 ] || { [ "$LINECOUNTEX" -eq 0 ] && [ "$LINECOUNT" -gt 0 ]; }; then
 				sed -i -e '/# '"$SCRIPT_NAME"'/d' /jffs/scripts/services-start
 			fi
-		fi		
-		# Add to nat-start
-		if [ -f /jffs/scripts/nat-start ]; then
-			LINECOUNT=$(grep -c '# '"$SCRIPT_NAME" /jffs/scripts/nat-start)
-			LINECOUNTEX=$(grep -cx "/jffs/scripts/$SCRIPT_NAME start"' # '"$SCRIPT_NAME" /jffs/scripts/nat-start)
-			
-			if [ "$LINECOUNT" -gt 1 ] || { [ "$LINECOUNTEX" -eq 0 ] && [ "$LINECOUNT" -gt 0 ]; }; then
-				sed -i -e '/# '"$SCRIPT_NAME"'/d' /jffs/scripts/nat-start
-			fi
 			
 			if [ "$LINECOUNTEX" -eq 0 ]; then
-				echo "/jffs/scripts/$SCRIPT_NAME start ${2} ${3} \"${4}\" &"' # '"$SCRIPT_NAME" >> /jffs/scripts/nat-start
+				echo "/jffs/scripts/$SCRIPT_NAME start ${2} ${3} \"${4}\" &"' # '"$SCRIPT_NAME" >> /jffs/scripts/services-start
 			fi
 		else
-			echo "#!/bin/sh" > /jffs/scripts/nat-start
-			echo "" >> /jffs/scripts/nat-start
-			echo "/jffs/scripts/$SCRIPT_NAME start ${2} ${3} \"${4}\" &"' # '"$SCRIPT_NAME" >> /jffs/scripts/nat-start
-			chmod 0755 /jffs/scripts/nat-start
+			echo "#!/bin/sh" > /jffs/scripts/services-start
+			echo "" >> /jffs/scripts/services-start
+			echo "/jffs/scripts/$SCRIPT_NAME start ${2} ${3} \"${4}\" &"' # '"$SCRIPT_NAME" >> /jffs/scripts/services-start
+			chmod 0755 /jffs/scripts/services-start
 		fi
 		# Stop
 		if [ -f /jffs/scripts/services-stop ]; then
@@ -269,7 +242,7 @@ case $1 in
 			echo "/jffs/scripts/$SCRIPT_NAME stop"' # '"$SCRIPT_NAME" >> /jffs/scripts/services-stop
 			chmod 0755 /jffs/scripts/services-stop
 		fi
-		Print_Output "true" "Enabled" "$PASS"
+		logger "CakeQOS-Merlin ${SCRIPT_VERSION} Enabled"
 		cake_start "${@}"
 		return 0
 		;;
@@ -280,14 +253,14 @@ case $1 in
 		;;
 	status)
 		if [ "${RUNNING}" = "true" ]; then
-			Print_Output "true" "Running..." "$WARN"
-			Print_Output "false" "> Download Status:" "$PASS"
-			Print_Output "false" "${STATUS_DOWNLOAD}"
-			Print_Output "false" "> Upload Status:" "$PASS"
-			Print_Output "false" "${STATUS_UPLOAD}"
+			echo "> CakeQOS-Merlin ${SCRIPT_VERSION} is running"
+			echo "> Download Status:"
+			echo "${STATUS_DOWNLOAD}"
+			echo "> Upload Status:"
+			echo "${STATUS_UPLOAD}"
 			return 0
 		else
-			Print_Output "true" "Not running..." "$PASS"
+			echo "> CakeQOS-Merlin ${SCRIPT_VERSION} is not running..."
 			return 1
 		fi
 		;;
@@ -306,20 +279,19 @@ case $1 in
 		opkg --autoremove remove sched-cake-oot
 		opkg --autoremove remove tc-adv
 		rm /jffs/scripts/$SCRIPT_NAME
-		rm /opt/bin/$SCRIPT_NAME
 		return 0
 		;;
 	*)
-		Print_Output "false" "Usage: $SCRIPT_NAME {install|update|enable|start|status|stop|disable|uninstall} (install, update, enable, and start have required parameters)" "$WARN"
-		Print_Output "false" "" "$PASS"
-		Print_Output "false" "install:   download and install necessary $SCRIPT_NAME binaries" "$PASS"
-		Print_Output "false" "update:    update $SCRIPT_NAME binaries (if any available)" "$PASS"
-		Print_Output "false" "enable:    start $SCRIPT_NAME and add to startup" "$PASS"
-		Print_Output "false" "start:     start $SCRIPT_NAME" "$PASS"
-		Print_Output "false" "status:    check the current status of $SCRIPT_NAME" "$PASS"
-		Print_Output "false" "stop:      stop $SCRIPT_NAME" "$PASS"
-		Print_Output "false" "disable:   stop $SCRIPT_NAME and remove from startup" "$PASS"
-		Print_Output "false" "uninstall: stop $SCRIPT_NAME, remove from startup, and remove cake binaries" "$PASS"
+		echo "Usage: $SCRIPT_NAME {install|update|enable|start|status|stop|disable|uninstall} (install, update, enable, and start have required parameters)"
+		echo ""
+		echo "install:   download and install necessary $SCRIPT_NAME binaries"
+		echo "update:    update $SCRIPT_NAME binaries (if any available)"
+		echo "enable:    start $SCRIPT_NAME and add to startup"
+		echo "start:     start $SCRIPT_NAME"
+		echo "status:    check the current status of $SCRIPT_NAME"
+		echo "stop:      stop $SCRIPT_NAME"
+		echo "disable:   stop $SCRIPT_NAME and remove from startup"
+		echo "uninstall: stop $SCRIPT_NAME, remove from startup, and remove cake binaries"
 		return 1
 		;;
 esac

@@ -21,17 +21,17 @@
 
 1. Download and apply permissions:
 > /usr/sbin/curl --retry 3 "https://raw.githubusercontent.com/ttgapers/cakeqos-merlin/master/cake-qos.sh" -o "/jffs/scripts/cake-qos" && chmod 0755 /jffs/scripts/cake-qos
-2. Run the install command (installer will detect your router model). If you receive any errors (e.g. libnl-tiny package size mismatch) please ensure your Entware instance is up-to-date:
-> /jffs/scripts/cake-qos install
+2. Run the install command, change for your router model (`ac86u` or `ax88u`). If you receive any errors (e.g. libnl-tiny package size mismatch) please ensure your Entware instance is up-to-date:
+> /jffs/scripts/cake-qos install **ac86u**
 3. Change for your linespeed and any overhead (assuming 135Mbit download, 13Mbit upload, "docsis ack-filter" as optional extra parameters; speeds can also be specified in `Kbit` units):
 > /jffs/scripts/cake-qos enable **135Mbit 13Mbit "besteffort docsis ack-filter"**
 4. Reboot your router
 5. Check System Log entries in web interface for **CakeQOS-Merlin (vx.x.x) Starting**
-6. To check that CakeQOS-Merlin is running, run `cake-qos status` and/or do a bufferbloat test on https://www.dslreports.com/speedtest
+6. To check that CakeQOS-Merlin is running, run `/jffs/scripts/cake-qos status` and/or do a bufferbloat test on https://www.dslreports.com/speedtest
 
 ## Usage
 
-> cake-qos {install|update|enable|start|status|stop|disable|uninstall}
+> /jffs/scripts/cake-qos {install|update|enable|start|status|stop|disable|uninstall}
 
 (install, update, enable, and start have required parameters)
 
