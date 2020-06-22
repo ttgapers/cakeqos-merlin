@@ -15,6 +15,8 @@ RUNNING="false"
 if [ "${STATUS_UPLOAD}" != "" ] && [ "${STATUS_DOWNLOAD}" != "" ]; then
 	RUNNING="true"
 fi
+[ -z "$(nvram get odmpid)" ] && RMODEL=$(nvram get productid) || RMODEL=$(nvram get odmpid) #get router model
+
 
 ### Cake Download
 cake_download() {
@@ -36,10 +38,13 @@ cake_download() {
 		VERSION_LOCAL_CAKE="0"
 		VERSION_LOCAL_TC="0"
 	fi
-	if [ "${2}" = "ac86u" ]; then
+	if [ "$RMODEL" = "RT-AC86U" ]; then
 		FILE1_TYPE="1"
-	elif [ "${2}" = "ax88u" ]; then
+	elif [ "$RMODEL" = "RT-AX88U" ]; then
 		FILE1_TYPE="ax"
+	else
+		Print_Output "false" "Cake isn't yet compatible with ASUS $RMODEL, keep watching our thread!" "$CRIT"
+		exit 1
 	fi
 	VERSIONS_ONLINE=$(/usr/sbin/curl --retry 3 -s "https://raw.githubusercontent.com/ttgapers/cakeqos-merlin/master/versions.txt")
 	if [ "${VERSIONS_ONLINE}" != "" ] && [ "${VERSION_LOCAL_CAKE}" != "" ] && [ "${VERSION_LOCAL_TC}" != "" ]; then
@@ -179,15 +184,6 @@ if [ "${1}" = "enable" ] || [ "${1}" = "start" ]; then
 		echo "Example #2: $SCRIPT_NAME ${1} 30Mbit 5Mbit \"diffserv4 docsis ack-filter\""
 		return 1
 	fi	
-fi
-if [ "${1}" = "install" ] || [ "${1}" = "update" ]; then
-	if [ -z "$2" ]; then
-		echo "Required model missing: $SCRIPT_NAME ${1} {ac86u|ax88u}"
-		echo ""
-		echo "Example #1: $SCRIPT_NAME ${1} ac86u"
-		echo "Example #2: $SCRIPT_NAME ${1} ax88u"
-		return 1
-	fi
 fi
 
 case $1 in
