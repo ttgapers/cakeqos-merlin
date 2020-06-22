@@ -4,14 +4,16 @@
 # Thread: https://www.snbforums.com/threads/release-cakeqos-merlin.64800/
 # Credits: robcore, Odkrys, ttgapers, jackiechun
 
-readonly SCRIPT_NAME="cake-qos"
-readonly SCRIPT_NAME_FANCY="CakeQOS-Merlin"
 readonly SCRIPT_VERSION="v0.0.5"
+readonly SCRIPT_NAME="cake-qos"
+readonly SCRIPT_NAME_FANCY="CakeQOS-Merlin ${SCRIPT_VERSION}"
 readonly SCRIPT_BRANCH="develop"
+
 readonly CRIT="\\e[41m"
 readonly ERR="\\e[31m"
 readonly WARN="\\e[33m"
 readonly PASS="\\e[32m"
+
 [ -z "$(nvram get odmpid)" ] && RMODEL=$(nvram get productid) || RMODEL=$(nvram get odmpid) #get router model
 
 ### Status
