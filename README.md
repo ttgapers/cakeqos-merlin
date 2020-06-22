@@ -26,12 +26,12 @@
 3. Change for your linespeed and any overhead (assuming 135Mbit download, 13Mbit upload, "docsis ack-filter" as optional extra parameters; speeds can also be specified in `Kbit` units):
 > /jffs/scripts/cake-qos enable **135Mbit 13Mbit "besteffort docsis ack-filter"**
 4. Reboot your router
-5. Check System Log in web interface for **Cake Queue Management Starting**
-6. (optional) To test, run the commands under **CLI** below and/or do a bufferbloat test on https://www.dslreports.com/speedtest
+5. Check System Log entries in web interface for **CakeQOS-Merlin (vx.x.x) Starting**
+6. To check that CakeQOS-Merlin is running, run `/jffs/scripts/cake-qos status` and/or do a bufferbloat test on https://www.dslreports.com/speedtest
 
 ## Usage
 
-> /jffs/scripts/cake-qos {install|update|enable|start|stop|disable|uninstall}
+> /jffs/scripts/cake-qos {install|update|enable|start|status|stop|disable|uninstall}
 
 (install, update, enable, and start have required parameters)
 
@@ -39,13 +39,12 @@
 - update: update cake-qos binaries (if any available)
 - enable:  start cake-qos and add to startup
 - start:   start cake-qos
+- status:   check the current status of cake-qos
 - stop:    stop cake-qos
 - disable: stop cake-qos and remove from startup
 - uninstall: stop cake-qos, remove from startup, and remove cake binaries
 
 **Note:** defaults to `besteffort` priority queue if none specified in `enable`/`start` options.
-
-**Tip:** if you are seeing `RTNETLINK answers: File exists` messages when running `enable`/`start` commands, run `stop` then try again.
     
 ## CLI
 
