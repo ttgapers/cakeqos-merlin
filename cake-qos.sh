@@ -202,6 +202,7 @@ cake_stop() {
 	rmmod sch_cake 2>/dev/null
 	fc enable
 	runner enable
+	cru d "$SCRIPT_NAME"
 }
 
 ### Cake Disable
