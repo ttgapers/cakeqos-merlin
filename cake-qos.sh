@@ -17,7 +17,7 @@ readonly PASS="\\e[32m"
 [ -z "$(nvram get odmpid)" ] && RMODEL=$(nvram get productid) || RMODEL=$(nvram get odmpid) #get router model
 
 ### Status
-readonly STATUS="$(tc qdisc)"
+readonly STATUS="$(tc qdisc | grep '^qdisc cake ')"
 readonly STATUS_UPLOAD=$(echo "${STATUS}" | grep "dev eth0 root")
 readonly STATUS_DOWNLOAD=$(echo "${STATUS}" | grep "dev ifb9eth0 root")
 RUNNING="false"
