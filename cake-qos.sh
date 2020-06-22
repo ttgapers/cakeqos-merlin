@@ -219,6 +219,9 @@ cake_disable() {
 			sed -i -e '/# '"$SCRIPT_NAME"'/d' /jffs/scripts/services-stop
 		fi
 	fi
+	if [ -f "$WDogdir" ]; then
+		rm -r "$Wdogdir"
+	fi
 }
 
 ### Check Requirements
@@ -263,7 +266,7 @@ case $1 in
 ####### remove from here after a while....
 		# Remove from firewall-start and services-start
 		if [ -f /jffs/scripts/firewall-start ]; then
-			LINECOUNT=$(grep -c '# '"$SCRIPT_NAME" /jffs/scripts/firewall-start)
+			LINECOUNT=$(grep -c '# '"$SCRIPT_NAME_FANCY" /jffs/scripts/firewall-start)
 			LINECOUNTEX=$(grep -cx "/jffs/scripts/$SCRIPT_NAME start"' # '"$SCRIPT_NAME" /jffs/scripts/firewall-start)
 
 			if [ "$LINECOUNT" -gt 1 ] || { [ "$LINECOUNTEX" -eq 0 ] && [ "$LINECOUNT" -gt 0 ]; }; then
@@ -272,7 +275,7 @@ case $1 in
 		fi
 
 		if [ -f /jffs/scripts/services-start ]; then
-			LINECOUNT=$(grep -c '# '"$SCRIPT_NAME" /jffs/scripts/services-start)
+			LINECOUNT=$(grep -c '# '"$SCRIPT_NAME_FANCY" /jffs/scripts/services-start)
 			LINECOUNTEX=$(grep -cx "/jffs/scripts/$SCRIPT_NAME start"' # '"$SCRIPT_NAME" /jffs/scripts/services-start)
 
 			if [ "$LINECOUNT" -gt 1 ] || { [ "$LINECOUNTEX" -eq 0 ] && [ "$LINECOUNT" -gt 0 ]; }; then
@@ -284,7 +287,7 @@ case $1 in
 
 		# Add to nat-start
 		if [ -f /jffs/scripts/nat-start ]; then
-			LINECOUNT=$(grep -c '# '"$SCRIPT_NAME" /jffs/scripts/nat-start)
+			LINECOUNT=$(grep -c '# '"$SCRIPT_NAME_FANCY" /jffs/scripts/nat-start)
 			LINECOUNTEX=$(grep -cx "/jffs/scripts/$SCRIPT_NAME start"' # '"$SCRIPT_NAME_FANCY" /jffs/scripts/nat-start)
 
 			if [ "$LINECOUNT" -gt 1 ] || { [ "$LINECOUNTEX" -eq 0 ] && [ "$LINECOUNT" -gt 0 ]; }; then
