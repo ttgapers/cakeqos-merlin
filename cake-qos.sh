@@ -280,6 +280,7 @@ case $1 in
 		opkg --autoremove remove sched-cake-oot
 		opkg --autoremove remove tc-adv
 		rm /jffs/scripts/$SCRIPT_NAME
+		rm /opt/bin/$SCRIPT_NAME
 		return 0
 		;;
 	*)
