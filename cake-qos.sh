@@ -319,6 +319,7 @@ case $1 in
 		opkg --autoremove remove sched-cake-oot
 		opkg --autoremove remove tc-adv
 		rm /jffs/scripts/$SCRIPT_NAME
+		return 0
 		;;
 	*)
 		Print_Output "false" "Usage: $SCRIPT_NAME {install|update|enable|start|status|stop|disable|uninstall} (enable and start have required parameters)" "$WARN"
