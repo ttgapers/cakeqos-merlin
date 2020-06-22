@@ -23,10 +23,14 @@ cake_download() {
 		VERSION_LOCAL_TC=$(opkg list_installed | grep "^tc-adv - " | awk -F" - " '{print $2}')
 		LATEST=$(/usr/sbin/curl --retry 3 -s "https://raw.githubusercontent.com/ttgapers/cakeqos-merlin/develop/cake-qos.sh")
 		LATEST_VERSION=$(echo "$LATEST" | grep "^readonly SCRIPT_VERSION" | awk -F"=" '{print $2}' | cut -d "\"" -f 2)
-		if [ "${LATEST_VERSION}" != "" ] && [ "${LATEST_VERSION}" != "${SCRIPT_VERSION}" ]; then
-			echo "New CakeQOS-Merlin detected (${LATEST_VERSION}, currently running ${SCRIPT_VERSION}), updating..."
-			echo "${LATEST}" > "/jffs/scripts/${SCRIPT_NAME}"
-			chmod 0755 "/jffs/scripts/${SCRIPT_NAME}"
+		if [ "${LATEST_VERSION}" != "" ]; then
+			if [ "${LATEST_VERSION}" != "${SCRIPT_VERSION}" ]; then
+				echo "New CakeQOS-Merlin detected (${LATEST_VERSION}, currently running ${SCRIPT_VERSION}), updating..."
+				echo "${LATEST}" > "/jffs/scripts/${SCRIPT_NAME}"
+				chmod 0755 "/jffs/scripts/${SCRIPT_NAME}"
+			else
+				echo "You are running the latest CakeQOS-Merlin script (${LATEST_VERSION}, currently running ${SCRIPT_VERSION}), skipping..."
+			fi
 		fi
 	elif [ "${1}" = "install" ]; then
 		VERSION_LOCAL_CAKE="0"
