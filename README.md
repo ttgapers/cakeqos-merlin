@@ -27,11 +27,11 @@
 > /jffs/scripts/cake-qos enable **135Mbit 13Mbit "besteffort docsis ack-filter"**
 4. Reboot your router
 5. Check System Log entries in web interface for **CakeQOS-Merlin (vx.x.x) Starting**
-6. To check that CakeQOS-Merlin is running, run `/jffs/scripts/cake-qos status` and/or do a bufferbloat test on https://www.dslreports.com/speedtest
+6. To check that CakeQOS-Merlin is running, run `cake-qos status` and/or do a bufferbloat test on https://www.dslreports.com/speedtest
 
 ## Usage
 
-> /jffs/scripts/cake-qos {install|update|enable|start|status|stop|disable|uninstall}
+> cake-qos {install|update|enable|start|status|stop|disable|uninstall}
 
 (install, update, enable, and start have required parameters)
 
