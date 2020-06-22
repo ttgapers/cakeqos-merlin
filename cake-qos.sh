@@ -143,7 +143,7 @@ cake_start() {
 	for i in 1 2 3 4 5 6 7 8 9 10
 	do
 		if [ -f /opt/bin/sh ]; then
-			cru a "$SCRIPT_NAME" "*/30 * * * * $0 checkrun"
+			cru a "$SCRIPT_NAME_FANCY" "*/30 * * * * $0 checkrun"
 			cake_serve "${@}"
 			exit 0
 		else
@@ -201,7 +201,7 @@ cake_stop() {
 	rmmod sch_cake 2>/dev/null
 	fc enable
 	runner enable
-	cru d "$SCRIPT_NAME"
+	cru d "$SCRIPT_NAME_FANCY"
   > "$WDog"
 }
 
@@ -209,15 +209,15 @@ cake_stop() {
 cake_disable() {
 	Print_Output "true" "Disabled" "$PASS"
 	if [ -f /jffs/scripts/firewall-start ]; then
-		LINECOUNT=$(grep -c '# '"$SCRIPT_NAME" /jffs/scripts/firewall-start)
+		LINECOUNT=$(grep -c '# '"$SCRIPT_NAME_FANCY" /jffs/scripts/nat-start)
 		if [ "$LINECOUNT" -gt 0 ]; then
-			sed -i -e '/# '"$SCRIPT_NAME"'/d' /jffs/scripts/firewall-start
+			sed -i -e '/# '"$SCRIPT_NAME_FANCY"'/d' /jffs/scripts/nat-start
 		fi
 	fi
 	if [ -f /jffs/scripts/services-stop ]; then
-		LINECOUNT=$(grep -c '# '"$SCRIPT_NAME" /jffs/scripts/services-stop)
+		LINECOUNT=$(grep -c '# '"$SCRIPT_NAME_FANCY" /jffs/scripts/services-stop)
 		if [ "$LINECOUNT" -gt 0 ]; then
-			sed -i -e '/# '"$SCRIPT_NAME"'/d' /jffs/scripts/services-stop
+			sed -i -e '/# '"$SCRIPT_NAME_FANCY"'/d' /jffs/scripts/services-stop
 		fi
 	fi
 	if [ -f "$WDogdir" ]; then
