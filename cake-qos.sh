@@ -10,7 +10,7 @@ readonly SCRIPT_NAME="cake-qos"
 readonly SCRIPT_NAME_FANCY="CakeQOS-Merlin"
 readonly SCRIPT_BRANCH="develop"
 WDogdir="/jffs/addons/$SCRIPT_NAME.d"
-WDog="${CFGdir}/cake-watchdog.sh"
+WDog="${WDogdir}/cake-watchdog.sh"
 
 readonly CRIT="\\e[41m"
 readonly ERR="\\e[31m"
@@ -31,9 +31,9 @@ Print_Output(){
 
 ### Status
 isrunning() {
-	readonly STATUS="$(tc qdisc | grep '^qdisc cake ')"
-	readonly STATUS_UPLOAD=$(echo "${STATUS}" | grep "dev eth0 root")
-	readonly STATUS_DOWNLOAD=$(echo "${STATUS}" | grep "dev ifb9eth0 root")
+	STATUS="$(tc qdisc | grep '^qdisc cake ')"
+	STATUS_UPLOAD=$(echo "${STATUS}" | grep "dev eth0 root")
+	STATUS_DOWNLOAD=$(echo "${STATUS}" | grep "dev ifb9eth0 root")
 	if [ "${STATUS_UPLOAD}" != "" ] && [ "${STATUS_DOWNLOAD}" != "" ]; then
 		echo "true"
 	else
@@ -143,6 +143,7 @@ cake_start() {
 	for i in 1 2 3 4 5 6 7 8 9 10
 	do
 		if [ -f /opt/bin/sh ]; then
+			cru a "$SCRIPT_NAME" "*/30 * * * * $0 checkrun"
 			cake_serve "${@}"
 			exit
 		else
@@ -154,9 +155,8 @@ cake_start() {
 		Print_Output "true" "Entware didn't start in 100 seconds, please check" "$CRIT"
 		return 1
 	fi
-cru a "$SCRIPT_NAME" "*/30 * * * * $0 checkrun"
 }
-
+set -x
 ### Cake Serve
 cake_serve() {
 	options=${4}
@@ -332,11 +332,12 @@ case $1 in
 		;;
 	status)
 		if [ "$(isrunning)" = "true" ]; then
+			isrunning >/dev/null 2>&1
 			Print_Output "true" "Running..." "$WARN"
 			Print_Output "false" "> Download Status:" "$PASS"
-			Print_Output "false" "${STATUS_DOWNLOAD}"
+			echo "$STATUS_DOWNLOAD"
 			Print_Output "false" "> Upload Status:" "$PASS"
-			Print_Output "false" "${STATUS_UPLOAD}"
+			echo "$STATUS_UPLOAD"
 			return 0
 		else
 			Print_Output "true" "Not running..." "$PASS"
@@ -379,3 +380,5 @@ case $1 in
 		return 1
 		;;
 esac
+
+exit 0
