@@ -38,7 +38,7 @@
 ## Usage
 
 ```sh
-cake-qos {install|update|start|status|stop|disable|uninstall}
+cake-qos {install|update|start|status|stop|uninstall}
 ```
 (start has required parameters)
 
@@ -47,7 +47,6 @@ cake-qos {install|update|start|status|stop|disable|uninstall}
 -   start:   configure and start cake-qos
 -   status:   check the current status of cake-qos
 -   stop:    stop cake-qos
--   disable: stop cake-qos and remove from startup
 -   uninstall: stop cake-qos, remove from startup, and remove cake binaries
 
 **Note:** defaults to `besteffort` priority queue if none specified in `start` option.
