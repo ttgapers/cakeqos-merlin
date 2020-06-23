@@ -354,7 +354,9 @@ case $1 in
 		fi
 		;;
 	checkrun)
+		Print_Output "true" "Checking if needing doctor..." "$WARN"
 		if [ "$(isrunning)" = "false" ]; then
+			Print_Output "true" "Something's wrong, giving cake for treatment!" "$CRIT"
 			. "$WDog"
 		fi
 		;;
