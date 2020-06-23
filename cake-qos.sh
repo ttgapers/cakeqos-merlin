@@ -77,21 +77,21 @@ cake_download() {
 				exit 1
 				;;
 			esac
-			FILE1="sched-cake-oot_${VERSION_ONLINE_CAKE}-${FILE1_TYPE}_${VERSION_ONLINE_SUFFIX}.ipk"
-			FILE2="tc-adv_${VERSION_ONLINE_TC}_${VERSION_ONLINE_SUFFIX}.ipk"
+			FILE1="sched-cake-oot_$VERSION_ONLINE_CAKE-$FILE1_TYPE""_""$VERSION_ONLINE_SUFFIX.ipk"
+			FILE2="tc-adv_$VERSION_ONLINE_TC""_""$VERSION_ONLINE_SUFFIX.ipk"
 			FILE1_OUT="sched-cake-oot.ipk"
 			FILE2_OUT="tc-adv.ipk"
-			/usr/sbin/curl -fsL --retry 3 --connect-timeout 3 "https://raw.githubusercontent.com/$MAINTAINER/$SCRIPT_NAME_GITHUB/$SCRIPT_BRANCH/${FILE1}" -o "/opt/tmp/${FILE1_OUT}"
-			/usr/sbin/curl -fsL --retry 3 --connect-timeout 3 "https://raw.githubusercontent.com/$MAINTAINER/$SCRIPT_NAME_GITHUB/$SCRIPT_BRANCH/${FILE2}" -o "/opt/tmp/${FILE2_OUT}"
+			/usr/sbin/curl -fsL --retry 3 --connect-timeout 3 "https://raw.githubusercontent.com/$MAINTAINER/$SCRIPT_NAME_GITHUB/$SCRIPT_BRANCH/$FILE1" -o "/opt/tmp/$FILE1_OUT"
+			/usr/sbin/curl -fsL --retry 3 --connect-timeout 3 "https://raw.githubusercontent.com/$MAINTAINER/$SCRIPT_NAME_GITHUB/$SCRIPT_BRANCH/$FILE2" -o "/opt/tmp/$FILE2_OUT"
 
-			if [ -f "/opt/tmp/${FILE1_OUT}" ] && [ -f "/opt/tmp/${FILE2_OUT}" ]; then
+			if [ -f "/opt/tmp/$FILE1_OUT" ] && [ -f "/opt/tmp/$FILE2_OUT" ]; then
 				if [ "$1" = "update" ]; then
 					opkg --autoremove remove sched-cake-oot
 					opkg --autoremove remove tc-adv
 				fi
-				/opt/bin/opkg install "/opt/tmp/${FILE1_OUT}"
-				/opt/bin/opkg install "/opt/tmp/${FILE2_OUT}"
-				rm "/opt/tmp/${FILE1_OUT}" "/opt/tmp/${FILE2_OUT}"
+				/opt/bin/opkg install "/opt/tmp/$FILE1_OUT"
+				/opt/bin/opkg install "/opt/tmp/$FILE2_OUT"
+				rm "/opt/tmp/$FILE1_OUT" "/opt/tmp/$FILE2_OUT"
 			else
 				Print_Output "true" "There was an error downloading the cake binaries, please try again." "$ERR"
 				exit 1
@@ -109,15 +109,15 @@ cake_download() {
 		if [ -n "$REMOTE_VERSION" ]; then
 			if [ "$LOCALMD5" != "$REMOTEMD5" ]; then
 				if [ "$SCRIPT_VERSION" != "$REMOTE_VERSION" ]; then
-					Print_Output "true" "New CakeQOS-Merlin detected (${REMOTE_VERSION}, currently running ${SCRIPT_VERSION}), updating..." "$WARN"
+					Print_Output "true" "New CakeQOS-Merlin detected ($REMOTE_VERSION, currently running $SCRIPT_VERSION), updating..." "$WARN"
 				else
 					Print_Output "true" "Local and server md5 don't match, updating..." "$WARN"
 				fi
-				/usr/sbin/curl -fsL --retry 3 https://raw.githubusercontent.com/$MAINTAINER/$SCRIPT_NAME_GITHUB/$SCRIPT_BRANCH/$SCRIPT_NAME.sh -o "/jffs/scripts/${SCRIPT_NAME}"
-				chmod 0755 "/jffs/scripts/${SCRIPT_NAME}"
+				/usr/sbin/curl -fsL --retry 3 https://raw.githubusercontent.com/$MAINTAINER/$SCRIPT_NAME_GITHUB/$SCRIPT_BRANCH/$SCRIPT_NAME.sh -o "/jffs/scripts/$SCRIPT_NAME"
+				chmod 0755 "/jffs/scripts/$SCRIPT_NAME"
 				exit 0
 			else
-				Print_Output "false" "You are running the latest $SCRIPT_NAME_FANCY script (${REMOTE_VERSION}, currently running ${SCRIPT_VERSION}), skipping..." "$PASS"
+				Print_Output "false" "You are running the latest $SCRIPT_NAME_FANCY script ($REMOTE_VERSION, currently running $SCRIPT_VERSION), skipping..." "$PASS"
 			fi
 		fi
 	fi
@@ -127,14 +127,14 @@ cake_start() {
 	entwaretimer="0"
 	while [ ! -f "/opt/bin/sh" ] && [ "$entwaretimer" -lt "10" ]; do
 		entwaretimer="$((entwaretimer + 1))"
-		Print_Output "true" "Entware isn't ready, waiting 10 sec - Attempt #${entwaretimer}" "$WARN"
+		Print_Output "true" "Entware isn't ready, waiting 10 sec - Attempt #$entwaretimer" "$WARN"
 		sleep 10
 	done
 	if [ "$entwaretimer" -ge "100" ]; then
 		Print_Output "true" "Entware didn't start in 100 seconds, please check" "$CRIT"
 		exit 1
 	else
-		cru a "$SCRIPT_NAME_FANCY" "*/30 * * * * /jffs/scripts/$SCRIPT_NAME checkrun ${2} ${3} \"${4}\""
+		cru a "$SCRIPT_NAME_FANCY" "*/30 * * * * /jffs/scripts/$SCRIPT_NAME checkrun $2 $3 \"$4\""
 		options="$4"
 		case "$options" in
 			*diffserv3*|*diffserv4*|*diffserv8*|*besteffort*)
@@ -142,21 +142,21 @@ cake_start() {
 				;;
 			*)
 				# priority queue not specified, default to besteffort
-				options="besteffort ${options}"
+				options="besteffort $options"
 				;;
 		esac
 
-		Print_Output "true" "Starting - settings: ${2} | ${3} | ${options}" "$PASS"
+		Print_Output "true" "Starting - settings: $2 | $3 | $options" "$PASS"
 		runner disable 2>/dev/null
 		fc disable 2>/dev/null
 		fc flush 2>/dev/null
 		insmod /opt/lib/modules/sch_cake.ko 2>/dev/null
-		/opt/sbin/tc qdisc replace dev eth0 root cake bandwidth "${3}" nat ${options} # options needs to be left unquoted to support multiple extra parameters
+		/opt/sbin/tc qdisc replace dev eth0 root cake bandwidth "$3" nat $options # options needs to be left unquoted to support multiple extra parameters
 		ip link add name ifb9eth0 type ifb
 		/opt/sbin/tc qdisc del dev eth0 ingress 2>/dev/null
 		/opt/sbin/tc qdisc add dev eth0 handle ffff: ingress
 		/opt/sbin/tc qdisc del dev ifb9eth0 root 2>/dev/null
-		/opt/sbin/tc qdisc add dev ifb9eth0 root cake bandwidth "${2}" nat wash ingress ${options} # options needs to be left unquoted to support multiple extra parameters
+		/opt/sbin/tc qdisc add dev ifb9eth0 root cake bandwidth "$2" nat wash ingress $options # options needs to be left unquoted to support multiple extra parameters
 		ifconfig ifb9eth0 up
 		/opt/sbin/tc filter add dev eth0 parent ffff: protocol all prio 10 u32 match u32 0 0 flowid 1:1 action mirred egress redirect dev ifb9eth0
 	fi
@@ -264,10 +264,10 @@ MainMenu(){
 
 Menu_Start(){
 	if [ -z "$2" ] || [ -z "$3" ]; then
-		Print_Output "false" "Required parameters missing: $SCRIPT_NAME ${1} dlspeed upspeed \"optional extra parameters\"" "$WARN"
+		Print_Output "false" "Required parameters missing: $SCRIPT_NAME $1 dlspeed upspeed \"optional extra parameters\"" "$WARN"
 		Print_Output "false" ""
-		Print_Output "false" "Example #1: $SCRIPT_NAME ${1} 30Mbit 5000Kbit"
-		Print_Output "false" "Example #2: $SCRIPT_NAME ${1} 30Mbit 5Mbit \"diffserv4 docsis ack-filter\""
+		Print_Output "false" "Example #1: $SCRIPT_NAME $1 30Mbit 5000Kbit"
+		Print_Output "false" "Example #2: $SCRIPT_NAME $1 30Mbit 5Mbit \"diffserv4 docsis ack-filter\""
 		exit 1
 	fi
 	cake_stop
@@ -289,7 +289,7 @@ Menu_Start(){
 		sed -i '1s~^~#!/bin/sh\n~' /jffs/scripts/nat-start
 	fi
 	if ! grep -qF "# CakeQOS-Merlin" /jffs/scripts/nat-start; then
-		echo "/jffs/scripts/$SCRIPT_NAME start ${2} ${3} \"${4}\" &"' # '"$SCRIPT_NAME_FANCY" >> /jffs/scripts/nat-start
+		echo "/jffs/scripts/$SCRIPT_NAME start $2 $3 \"$4\" &"' # '"$SCRIPT_NAME_FANCY" >> /jffs/scripts/nat-start
 		chmod 0755 /jffs/scripts/nat-start
 	fi
 
@@ -305,7 +305,7 @@ Menu_Start(){
 		chmod 0755 /jffs/scripts/services-stop
 	fi
 	Print_Output "true" "Enabled" "$PASS"
-	cake_start "${@}"
+	cake_start "$@"
 }
 
 Menu_Install(){
@@ -370,7 +370,7 @@ case $1 in
 		Menu_Update
 	;;
 	start)
-		Menu_Start "${@}"
+		Menu_Start "$@"
 	;;
 	status)
 		Menu_Status
@@ -379,7 +379,7 @@ case $1 in
 		Print_Output "true" "Checking if running..." "$WARN" #remove this when we see that it's working OK. It isn't needed to spam log each 30 min
 		if ! cake_check; then
 			Print_Output "true" "Not running, starting..." "$CRIT"
-			cake_start "${@}"
+			cake_start "$@"
 		else
 			Print_Output "true" "Running successfully" "$PASS" #remove this when we see that it's working OK. It isn't needed to spam log each 30 min
 		fi
