@@ -170,7 +170,7 @@ case $1 in
 			Print_Output "true" "Custom JFFS scripts enabled - Please manually reboot to apply changes - Exiting" "$CRIT"
 			exit 1
 		fi
-		cake_download "{@}"
+		cake_download "${@}"
 		[ -L "/opt/bin/$SCRIPT_NAME" ] || ln -s "$0" /opt/bin
 		;;
 	start)
@@ -185,7 +185,7 @@ case $1 in
 
 		if [ ! -f "/opt/lib/modules/sch_cake.ko" ] || [ ! -f "/opt/sbin/tc" ]; then
 			Print_Output "true" "Cake binaries missing - Installing" "$ERR"
-			cake_download "{@}"
+			cake_download "${@}"
 		fi
 
 		# Cleanup old script entries
