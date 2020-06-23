@@ -32,7 +32,7 @@ Change for your linespeed and any overhead (assuming 135Mbit download, 13Mbit up
 
 > cake-qos {install|update|start|status|stop|disable|uninstall}
 
-(enable and start have required parameters)
+(start has required parameters)
 
 - install: only download and install necessary cake-qos binaries
 - update: update cake-qos binaries and installer (if any available)

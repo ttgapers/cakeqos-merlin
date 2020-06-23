@@ -8,9 +8,7 @@
 readonly SCRIPT_VERSION="v0.0.6"
 readonly SCRIPT_NAME="cake-qos"
 readonly SCRIPT_NAME_FANCY="CakeQOS-Merlin"
-readonly SCRIPT_BRANCH="master"
-WDogdir="/jffs/addons/$SCRIPT_NAME.d"
-WDog="${WDogdir}/cake-watchdog.sh"
+readonly SCRIPT_BRANCH="develop"
 
 readonly CRIT="\\e[41m"
 readonly ERR="\\e[31m"
@@ -39,18 +37,6 @@ isrunning() {
 	else
 		echo "false"
 	fi
-}
-
-install_watchdog() {
-  if [ ! -f "$WDog" ]; then
-  	Print_Output "true" "Installing cake-watchdog..." "$PASS"
-  	if [ ! -d "$WDogdir" ]; then
-  	   mkdir "$WDogdir"
-  	   chmod 0777 "$WDogdir"
-  	fi
-  	printf "" > "$WDog"
-  	chmod 0755 "$WDog"
-  fi
 }
 
 ### Cake Download
@@ -95,9 +81,9 @@ cake_download() {
 			;;
 	esac
 
-        if [ ! -f "/opt/lib/modules/sch_cake.ko" ] || [ ! -f "/opt/sbin/tc" ]; then
-                 DOINSTALL="1"
-        fi
+	if [ ! -f "/opt/lib/modules/sch_cake.ko" ] || [ ! -f "/opt/sbin/tc" ]; then
+		DOINSTALL="1"
+	fi
 
 	VERSIONS_ONLINE=$(/usr/sbin/curl --retry 3 -s "https://raw.githubusercontent.com/ttgapers/cakeqos-merlin/$SCRIPT_BRANCH/versions.txt")
 	if [ "${VERSIONS_ONLINE}" != "" ]; then
@@ -108,7 +94,7 @@ cake_download() {
 			if [ "$DOINSTALL" = "1" ]; then
 				Print_Output "true" "Installing cake binaries" "$WARN"
 			else
-				Print_Output "true" "Updated cake binaries detected, updating..." "$WARN"
+				Print_Output "true" "New cake binaries detected, updating..." "$WARN"
 			fi
 			FILE1="sched-cake-oot_${VERSION_ONLINE_CAKE}-${FILE1_TYPE}_${VERSION_ONLINE_SUFFIX}.ipk"
 			FILE2="tc-adv_${VERSION_ONLINE_TC}_${VERSION_ONLINE_SUFFIX}.ipk"
@@ -136,7 +122,6 @@ cake_download() {
 			return 0
 		fi
 	fi
-
 }
 
 ### Cake Start
@@ -145,11 +130,11 @@ cake_start() {
 	for i in 1 2 3 4 5 6 7 8 9 10
 	do
 		if [ -f /opt/bin/sh ]; then
-			cru a "$SCRIPT_NAME_FANCY" "*/30 * * * * $0 checkrun"
+			cru a "$SCRIPT_NAME_FANCY" "*/30 * * * * /jffs/scripts/$SCRIPT_NAME checkrun ${2} ${3} \"${4}\""
 			cake_serve "${@}"
 			exit 0
 		else
-			Print_Output "true" "Entware isn't ready, waiting 10 sec - retry $i" "$ERR"
+			Print_Output "true" "Entware isn't ready, waiting 10 sec - retry $i" "$WARN"
 			sleep 10
 		fi
 	done
@@ -158,6 +143,7 @@ cake_start() {
 		return 1
 	fi
 }
+
 ### Cake Serve
 cake_serve() {
 	options=${4}
@@ -196,6 +182,7 @@ cake_stopif() {
 ### Cake Stop
 cake_stop() {
 	Print_Output "true" "Stopping" "$PASS"
+	cru d "$SCRIPT_NAME_FANCY"
 	/opt/sbin/tc qdisc del dev eth0 ingress 2>/dev/null
 	/opt/sbin/tc qdisc del dev ifb9eth0 root 2>/dev/null
 	/opt/sbin/tc qdisc del dev eth0 root 2>/dev/null
@@ -203,8 +190,6 @@ cake_stop() {
 	rmmod sch_cake 2>/dev/null
 	fc enable
 	runner enable
-	cru d "$SCRIPT_NAME_FANCY"
-  > "$WDog"
 }
 
 ### Cake Disable
@@ -221,9 +206,6 @@ cake_disable() {
 		if [ "$LINECOUNT" -gt 0 ]; then
 			sed -i -e '/# '"$SCRIPT_NAME_FANCY"'/d' /jffs/scripts/services-stop
 		fi
-	fi
-	if [ -d "$WDogdir" ]; then
-		rm -r "$WDogdir"
 	fi
 }
 
@@ -254,22 +236,23 @@ fi
 
 case $1 in
 	install|update)
-		install_watchdog
 		cake_download "${@}"
 		[ -f "/opt/bin/$SCRIPT_NAME" ] || ln -s "$0" "/opt/bin/$SCRIPT_NAME" >/dev/null 2>&1 # add to /opt/bin so it can be called only as "cake-qos param"
 		;;
 	enable|start)
-		install_watchdog
 		[ -f "/opt/bin/$SCRIPT_NAME" ] || ln -s "$0" "/opt/bin/$SCRIPT_NAME" >/dev/null 2>&1 # add to /opt/bin so it can be called only as "cake-qos param"
 		cake_stopif
 		#check if bins are installed, for the sake of......
 		if [ ! -f "/opt/lib/modules/sch_cake.ko" ] || [ ! -f "/opt/sbin/tc" ]; then
-				 cake_download "${@}"
+			cake_download "${@}"
 		fi
-		
 		
 		# Start
 ####### remove from here after a while....
+		# Remove watchdog folder
+		if [ -d "/jffs/addons/$SCRIPT_NAME.d" ]; then
+			rm -r "/jffs/addons/$SCRIPT_NAME.d"
+		fi
 		# Remove from firewall-start, services-start, and nat-start
 		if [ -f /jffs/scripts/firewall-start ]; then
 			LINECOUNT=$(grep -c '# '"$SCRIPT_NAME" /jffs/scripts/firewall-start)
@@ -310,11 +293,9 @@ case $1 in
 
 			if [ "$LINECOUNTEX" -eq 0 ]; then
 				echo "/jffs/scripts/$SCRIPT_NAME start ${2} ${3} \"${4}\" &"' # '"$SCRIPT_NAME_FANCY" >> /jffs/scripts/nat-start
-				echo "/jffs/scripts/$SCRIPT_NAME start ${2} ${3} \"${4}\" &"' # '"$SCRIPT_NAME_FANCY" >> "$WDog"
 			fi
 		else
-			printf "#!/bin/sh\n\n/jffs/scripts/$SCRIPT_NAME start ${2} ${3} \"${4}\" & # $SCRIPT_NAME_FANCY\n" >> /jffs/scripts/nat-start
-			echo "/jffs/scripts/$SCRIPT_NAME start ${2} ${3} \"${4}\" &"' # '"$SCRIPT_NAME_FANCY" >> "$WDog"
+			printf "#!/bin/sh\n\n/jffs/scripts/%s start %s %s \"%s\" & # %s\n" "${SCRIPT_NAME}" "${2}" "${3}" "${4}" "${SCRIPT_NAME_FANCY}" >> /jffs/scripts/nat-start
 			chmod 0755 /jffs/scripts/nat-start
 		fi
 		# Stop
@@ -330,8 +311,7 @@ case $1 in
 				echo "/jffs/scripts/$SCRIPT_NAME stop"' # '"$SCRIPT_NAME_FANCY" >> /jffs/scripts/services-stop
 			fi
 		else
-			SCRIPT_NAME="cake-qos"
-			printf "#!/bin/sh\n\n/jffs/scripts/$SCRIPT_NAME stop # $SCRIPT_NAME_FANCY\n" >> /jffs/scripts/services-stop
+			printf "#!/bin/sh\n\n/jffs/scripts/%s stop # %s\n" "${SCRIPT_NAME}" "${SCRIPT_NAME_FANCY}" >> /jffs/scripts/services-stop
 			chmod 0755 /jffs/scripts/services-stop
 		fi
 		
@@ -342,22 +322,24 @@ case $1 in
 	status)
 		if [ "$(isrunning)" = "true" ]; then
 			isrunning >/dev/null 2>&1
-			Print_Output "true" "Running..." "$WARN"
+			Print_Output "true" "Running..." "$PASS"
 			Print_Output "false" "> Download Status:" "$PASS"
 			echo "$STATUS_DOWNLOAD"
 			Print_Output "false" "> Upload Status:" "$PASS"
 			echo "$STATUS_UPLOAD"
 			return 0
 		else
-			Print_Output "true" "Not running..." "$PASS"
+			Print_Output "true" "Not running..." "$WARN"
 			return 1
 		fi
 		;;
 	checkrun)
-		Print_Output "true" "Checking if needing doctor..." "$WARN"
+		Print_Output "true" "Checking if running..." "$WARN" #remove this when we see that it's working OK. It isn't needed to spam log each 30 min
 		if [ "$(isrunning)" = "false" ]; then
-			Print_Output "true" "Something's wrong, giving cake for treatment!" "$CRIT"
-			. "$WDog"
+			Print_Output "true" "Not running, starting..." "$CRIT"
+			cake_start "${@}"
+		else
+			Print_Output "true" "Running successfully" "$PASS"
 		fi
 		;;
 	stop)
@@ -379,7 +361,7 @@ case $1 in
 		;;
 	*)
 		Print_Output "false" "Usage: $SCRIPT_NAME {install|update|start|status|stop|disable|uninstall} (start has required parameters)" "$WARN"
-		Print_Output "false" "" "$PASS"
+		echo ""
 		Print_Output "false" "install:   only downloads and installs necessary $SCRIPT_NAME binaries" "$PASS"
 		Print_Output "false" "update:    update $SCRIPT_NAME binaries (if any available)" "$PASS"
 		Print_Output "false" "start:     configure and start $SCRIPT_NAME" "$PASS"
