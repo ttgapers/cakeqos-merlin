@@ -311,8 +311,7 @@ case $1 in
 				echo "/jffs/scripts/$SCRIPT_NAME stop"' # '"$SCRIPT_NAME_FANCY" >> /jffs/scripts/services-stop
 			fi
 		else
-			SCRIPT_NAME="cake-qos"
-			printf "#!/bin/sh\n\n/jffs/scripts/%s stop # %s\n" "${SCRIPT_NAME}" "${SCRIPT_NAME_FANCY}" >> /jffs/scripts/nat-start
+			printf "#!/bin/sh\n\n/jffs/scripts/%s stop # %s\n" "${SCRIPT_NAME}" "${SCRIPT_NAME_FANCY}" >> /jffs/scripts/services-stop
 			chmod 0755 /jffs/scripts/services-stop
 		fi
 		
