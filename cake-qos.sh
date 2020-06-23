@@ -47,7 +47,7 @@ Filter_Version(){
 }
 
 Validate_Bandwidth(){
-	if [ -n "$(echo "$1" | /bin/grep -o "^[1-9][0-9]*\.\?[0-9]*$")" ]; then
+	if echo "$1" | /bin/grep -oq "^[1-9][0-9]*\.\?[0-9]*$"; then
 		return 0
 	else
 		return 1
@@ -305,14 +305,14 @@ Menu_Start(){
 		queueprio=""
 		
 		while true; do
-			printf "\\n\\e[1mPlease enter your download speed (Mbps, max 2 decimal places):\\e[0m    "
+			printf "\\n\\e[1mPlease enter your download speed (Mbps):\\e[0m    "
 			read -r "dl_choice"
 			
 			if [ "$dl_choice" = "e" ]; then
 				exitmenu="exit"
 				break
 			elif ! Validate_Bandwidth "$dl_choice"; then
-				printf "\\n\\e[31mPlease enter a valid number (max 2 decimal places)\\e[0m\\n"
+				printf "\\n\\e[31mPlease enter a valid number\\e[0m\\n"
 			else
 				dlspeed="$dl_choice""Mbit"
 				printf "\\n"
@@ -322,14 +322,14 @@ Menu_Start(){
 		
 		if [ "$exitmenu" != "exit" ]; then
 			while true; do
-				printf "\\n\\e[1mPlease enter your upload speed (Mbps, max 2 decimal places):\\e[0m    "
+				printf "\\n\\e[1mPlease enter your upload speed (Mbps):\\e[0m    "
 				read -r "up_choice"
 				
 				if [ "$up_choice" = "e" ]; then
 					exitmenu="exit"
 					break
 				elif ! Validate_Bandwidth "$up_choice"; then
-					printf "\\n\\e[31mPlease enter a valid number (max 2 decimal places)\\e[0m\\n"
+					printf "\\n\\e[31mPlease enter a valid number\\e[0m\\n"
 				else
 					upspeed="$up_choice""Mbit"
 					printf "\\n"
