@@ -30,20 +30,20 @@ Print_Output(){
 }
 
 ### Status
-isrunning() {
+cake_check() {
 	STATUS="$(tc qdisc | grep '^qdisc cake ')"
-	STATUS_UPLOAD=$(echo "${STATUS}" | grep "dev eth0 root")
-	STATUS_DOWNLOAD=$(echo "${STATUS}" | grep "dev ifb9eth0 root")
-	if [ "${STATUS_UPLOAD}" != "" ] && [ "${STATUS_DOWNLOAD}" != "" ]; then
-		echo "true"
+	STATUS_UPLOAD=$(echo "$STATUS" | grep "dev eth0 root")
+	STATUS_DOWNLOAD=$(echo "$STATUS" | grep "dev ifb9eth0 root")
+	if [ -n "$STATUS_UPLOAD" ] && [ -n "$STATUS_DOWNLOAD" ]; then
+		return 0
 	else
-		echo "false"
+		return 1
 	fi
 }
 
 ### Cake Download
 cake_download() {
-	if [ "${1}" = "update" ]; then
+	if [ "$1}" = "update" ]; then
 		VERSION_LOCAL_CAKE=$(opkg list_installed | grep "^sched-cake-oot - " | awk -F" - " '{print $2}' | cut -d- -f-4)
 		VERSION_LOCAL_TC=$(opkg list_installed | grep "^tc-adv - " | awk -F" - " '{print $2}')
 		LATEST="$(/usr/sbin/curl -fsL --retry 3 https://raw.githubusercontent.com/$MAINTAINER/$SCRIPT_NAME_GITHUB/$SCRIPT_BRANCH/$SCRIPT_NAME.sh)"
@@ -51,20 +51,20 @@ cake_download() {
 		LOCALMD5="$(md5sum "/jffs/scripts/$SCRIPT_NAME" | awk '{print $1}')"
 		REMOTEMD5="$(/usr/sbin/curl -fsL --retry 3 https://raw.githubusercontent.com/$MAINTAINER/$SCRIPT_NAME_GITHUB/$SCRIPT_BRANCH/$SCRIPT_NAME.sh | md5sum | awk '{print $1}')"
 
-		if [ "${LATEST_VERSION}" != "" ]; then
-			if [ "${LATEST_VERSION}" != "${SCRIPT_VERSION}" ] && [ "$LOCALMD5" != "$REMOTEMD5" ]; then
+		if [ "$LATEST_VERSION" != "" ]; then
+			if [ "$LATEST_VERSION" != "$SCRIPT_VERSION" ] && [ "$LOCALMD5" != "$REMOTEMD5" ]; then
 				Print_Output "true" "New CakeQOS-Merlin detected (${LATEST_VERSION}, currently running ${SCRIPT_VERSION}), updating..." "$WARN"
 				echo "${LATEST}" > "/jffs/scripts/${SCRIPT_NAME}"
 				chmod 0755 "/jffs/scripts/${SCRIPT_NAME}"
-			elif [ "${LATEST_VERSION}" = "${SCRIPT_VERSION}" ] && [ "$LOCALMD5" != "$REMOTEMD5" ]; then
+			elif [ "$LATEST_VERSION" = "$SCRIPT_VERSION" ] && [ "$LOCALMD5" != "$REMOTEMD5" ]; then
 				Print_Output "true" "Local and server md5 don't match, updating..." "$WARN"
-				echo "${LATEST}" > "/jffs/scripts/${SCRIPT_NAME}"
+				echo "$LATEST" > "/jffs/scripts/${SCRIPT_NAME}"
 				chmod 0755 "/jffs/scripts/${SCRIPT_NAME}"
 			else
 				Print_Output "false" "You are running the latest $SCRIPT_NAME_FANCY script (${LATEST_VERSION}, currently running ${SCRIPT_VERSION}), skipping..." "$PASS"
 			fi
 		fi
-	elif [ "${1}" = "install" ]; then
+	elif [ "$1" = "install" ]; then
 		VERSION_LOCAL_CAKE="0"
 		VERSION_LOCAL_TC="0"
 		DOINSTALL="1"
@@ -88,11 +88,11 @@ cake_download() {
 	fi
 
 	VERSIONS_ONLINE=$(/usr/sbin/curl --retry 3 -s "https://raw.githubusercontent.com/$MAINTAINER/$SCRIPT_NAME_GITHUB/$SCRIPT_BRANCH/versions.txt")
-	if [ "${VERSIONS_ONLINE}" != "" ]; then
+	if [ "$VERSIONS_ONLINE" != "" ]; then
 		VERSION_ONLINE_CAKE=$(echo "$VERSIONS_ONLINE" | awk -F"|" '{print $1}')
 		VERSION_ONLINE_TC=$(echo "$VERSIONS_ONLINE" | awk -F"|" '{print $2}')
 		VERSION_ONLINE_SUFFIX=$(echo "$VERSIONS_ONLINE" | awk -F"|" '{print $3}')
-		if [ "${VERSION_LOCAL_CAKE}" != "${VERSION_ONLINE_CAKE}" ] || [ "${VERSION_LOCAL_TC}" != "${VERSION_ONLINE_TC}" ] || [ "$DOINSTALL" = "1" ]; then
+		if [ "$VERSION_LOCAL_CAKE" != "$VERSION_ONLINE_CAKE" ] || [ "$VERSION_LOCAL_TC" != "$VERSION_ONLINE_TC" ] || [ "$DOINSTALL" = "1" ]; then
 			if [ "$DOINSTALL" = "1" ]; then
 				Print_Output "true" "Installing cake binaries" "$WARN"
 			else
@@ -106,7 +106,7 @@ cake_download() {
 			/usr/sbin/curl --retry 3 "https://raw.githubusercontent.com/$MAINTAINER/$SCRIPT_NAME_GITHUB/$SCRIPT_BRANCH/${FILE2}" -o "/tmp/home/root/${FILE2_OUT}"
 
 			if [ -f "/tmp/home/root/${FILE1_OUT}" ] && [ -f "/tmp/home/root/${FILE2_OUT}" ]; then
-				if [ "${1}" = "update" ]; then
+				if [ "$1" = "update" ]; then
 					opkg --autoremove remove sched-cake-oot
 					opkg --autoremove remove tc-adv
 				fi
@@ -148,8 +148,8 @@ cake_start() {
 
 ### Cake Serve
 cake_serve() {
-	options=${4}
-	case "${options}" in
+	options=$4
+	case "$options" in
 		*diffserv3*|*diffserv4*|*diffserv8*|*besteffort*)
 			# priority queue specified
 			;;
@@ -176,7 +176,7 @@ cake_serve() {
 
 ### Cake Stop If
 cake_stopif() {
-	if [ "$(isrunning)" = "true" ]; then
+	if cake_check; then
 		cake_stop
 	fi
 }
@@ -217,16 +217,16 @@ if [ "$(nvram get jffs2_scripts)" -ne 1 ]; then
 	Print_Output "true" "ERROR: Custom JFFS Scripts must be enabled." "$CRIT"
 	FAIL="1"
 fi
-if [ "${1}" != "start" ] && [ ! -f "/opt/bin/opkg" ]; then
+if [ "$1" != "start" ] && [ ! -f "/opt/bin/opkg" ]; then
 	Print_Output "true" "ERROR: Entware must be installed." "$CRIT"
 	FAIL="1"
 fi
-if [ "${FAIL}" = "1" ]; then
+if [ "$FAIL" = "1" ]; then
 	return 1
 fi
 
 ### Parameter Checks
-if [ "${1}" = "enable" ] || [ "${1}" = "start" ]; then
+if [ "$1" = "enable" ] || [ "$1" = "start" ]; then
 	if [ -z "$2" ] || [ -z "$3" ]; then
 		Print_Output "false" "Required parameters missing: $SCRIPT_NAME ${1} dlspeed upspeed \"optional extra parameters\"" "$WARN"
 		Print_Output "false" ""
@@ -248,7 +248,7 @@ case $1 in
 		if [ ! -f "/opt/lib/modules/sch_cake.ko" ] || [ ! -f "/opt/sbin/tc" ]; then
 			cake_download "${@}"
 		fi
-		
+
 		# Start
 ####### remove from here after a while....
 		# Remove watchdog folder
@@ -273,7 +273,7 @@ case $1 in
 				sed -i -e '/# '"$SCRIPT_NAME"'/d' /jffs/scripts/services-start
 			fi
 		fi
-		
+
 		if [ -f /jffs/scripts/nat-start ]; then
 			LINECOUNT=$(grep -c '# '"$SCRIPT_NAME" /jffs/scripts/nat-start)
 			LINECOUNTEX=$(grep -cx "/jffs/scripts/$SCRIPT_NAME start"' # '"$SCRIPT_NAME" /jffs/scripts/nat-start)
@@ -281,7 +281,7 @@ case $1 in
 			if [ "$LINECOUNT" -gt 1 ] || { [ "$LINECOUNTEX" -eq 0 ] && [ "$LINECOUNT" -gt 0 ]; }; then
 				sed -i -e '/# '"$SCRIPT_NAME"'/d' /jffs/scripts/nat-start
 			fi
-		fi		
+		fi
 ####### until here.....
 
 		# Add to nat-start
@@ -316,14 +316,13 @@ case $1 in
 			printf "#!/bin/sh\n\n/jffs/scripts/%s stop # %s\n" "${SCRIPT_NAME}" "${SCRIPT_NAME_FANCY}" >> /jffs/scripts/services-stop
 			chmod 0755 /jffs/scripts/services-stop
 		fi
-		
+
 		Print_Output "true" "Enabled" "$PASS"
 		cake_start "${@}"
 		return 0
 		;;
 	status)
-		if [ "$(isrunning)" = "true" ]; then
-			isrunning >/dev/null 2>&1
+		if cake_check; then
 			Print_Output "true" "Running..." "$PASS"
 			Print_Output "false" "> Download Status:" "$PASS"
 			echo "$STATUS_DOWNLOAD"
@@ -337,7 +336,7 @@ case $1 in
 		;;
 	checkrun)
 		Print_Output "true" "Checking if running..." "$WARN" #remove this when we see that it's working OK. It isn't needed to spam log each 30 min
-		if [ "$(isrunning)" = "false" ]; then
+		if ! cake_check; then
 			Print_Output "true" "Not running, starting..." "$CRIT"
 			cake_start "${@}"
 		else
