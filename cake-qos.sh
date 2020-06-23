@@ -19,7 +19,6 @@ readonly PASS="\\e[32m"
 
 [ -z "$(nvram get odmpid)" ] && RMODEL=$(nvram get productid) || RMODEL=$(nvram get odmpid) #get router model
 
-### Print_Output - Thanks @JackYaz
 Print_Output(){
 	if [ "$1" = "true" ]; then
 		logger -t "$SCRIPT_NAME_FANCY" "$2"
@@ -29,7 +28,6 @@ Print_Output(){
 	fi
 }
 
-### Status
 cake_check() {
 	STATUS_UPLOAD=$(tc qdisc | grep -E '^qdisc cake .* dev eth0 root')
 	STATUS_DOWNLOAD=$(tc qdisc | grep -E '^qdisc cake .* dev ifb9eth0 root')
@@ -40,7 +38,6 @@ cake_check() {
 	fi
 }
 
-### Cake Download
 cake_download() {
 	if [ "$1" = "update" ]; then
 		VERSION_LOCAL_CAKE=$(opkg list_installed | grep "^sched-cake-oot - " | awk -F" - " '{print $2}' | cut -d- -f-4)
@@ -165,7 +162,6 @@ cake_start() {
 	fi
 }
 
-### Cake Stop
 cake_stop() {
 	if cake_check; then
 		Print_Output "true" "Stopping" "$PASS"
@@ -180,42 +176,35 @@ cake_stop() {
 	fi
 }
 
-### Check Requirements
-if [ "$(nvram get jffs2_scripts)" != "1" ]; then
-	nvram set jffs2_scripts=1
-	nvram commit
-	Print_Output "true" "Custom JFFS Scripts Enabled - Please Manually Reboot To Apply Changes" "$CRIT"
-	exit 1
-fi
-
-### Parameter Checks
-if [ "$1" = "start" ]; then
-	if [ -z "$2" ] || [ -z "$3" ]; then
-		Print_Output "false" "Required parameters missing: $SCRIPT_NAME ${1} dlspeed upspeed \"optional extra parameters\"" "$WARN"
-		Print_Output "false" ""
-		Print_Output "false" "Example #1: $SCRIPT_NAME ${1} 30Mbit 5000Kbit"
-		Print_Output "false" "Example #2: $SCRIPT_NAME ${1} 30Mbit 5Mbit \"diffserv4 docsis ack-filter\""
-		return 1
-	fi
-fi
-
 case $1 in
 	install|update)
+		if [ "$(nvram get jffs2_scripts)" != "1" ]; then
+			nvram set jffs2_scripts=1
+			nvram commit
+			Print_Output "true" "Custom JFFS scripts enabled - Please manually reboot to apply changes - Exiting" "$CRIT"
+			exit 1
+		fi
 		cake_download "${@}"
-		[ -f "/opt/bin/$SCRIPT_NAME" ] || ln -s "$0" "/opt/bin/$SCRIPT_NAME" >/dev/null 2>&1 # add to /opt/bin so it can be called only as "cake-qos param"
+		[ -L "/opt/bin/$SCRIPT_NAME" ] || ln -s "$0" /opt/bin
 		;;
 	start)
-		[ -f "/opt/bin/$SCRIPT_NAME" ] || ln -s "$0" "/opt/bin/$SCRIPT_NAME" >/dev/null 2>&1 # add to /opt/bin so it can be called only as "cake-qos param"
+		if [ -z "$2" ] || [ -z "$3" ]; then
+			Print_Output "false" "Required parameters missing: $SCRIPT_NAME ${1} dlspeed upspeed \"optional extra parameters\"" "$WARN"
+			Print_Output "false" ""
+			Print_Output "false" "Example #1: $SCRIPT_NAME ${1} 30Mbit 5000Kbit"
+			Print_Output "false" "Example #2: $SCRIPT_NAME ${1} 30Mbit 5Mbit \"diffserv4 docsis ack-filter\""
+			exit 1
+		fi
 		cake_stop
-		#check if bins are installed, for the sake of......
-		# Why? If binaries don't exist we should prevent install
+
 		if [ ! -f "/opt/lib/modules/sch_cake.ko" ] || [ ! -f "/opt/sbin/tc" ]; then
-			cake_download "${@}"
+			Print_Output "true" "Cake binaries missing - Exiting" "$CRIT"
+			exit 1
 		fi
 
 		# Cleanup old script entries
 		rm -r "/jffs/addons/$SCRIPT_NAME.d"
-		sed -i '\~# CakeQOS-Merlin~d' /jffs/scripts/firewall-start /jffs/scripts/services-start /jffs/scripts/nat-start
+		sed -i '\~# CakeQOS-Merlin~d' /jffs/scripts/firewall-start /jffs/scripts/services-start
 
 		# Add to nat-start
 		if [ ! -f "/jffs/scripts/nat-start" ]; then
@@ -224,9 +213,10 @@ case $1 in
 		elif [ -f "/jffs/scripts/nat-start" ] && ! head -1 /jffs/scripts/nat-start | grep -qE "^#!/bin/sh"; then
 			sed -i '1s~^~#!/bin/sh\n~' /jffs/scripts/nat-start
 		fi
-		sed -i '\~# CakeQOS-Merlin~d' /jffs/scripts/nat-start
-		echo "/jffs/scripts/$SCRIPT_NAME start ${2} ${3} \"${4}\" &"' # '"$SCRIPT_NAME_FANCY" >> /jffs/scripts/nat-start
-		chmod 0755 /jffs/scripts/nat-start
+		if ! grep -qF "# CakeQOS-Merlin" /jffs/scripts/nat-start; then
+			echo "/jffs/scripts/$SCRIPT_NAME start ${2} ${3} \"${4}\" &"' # '"$SCRIPT_NAME_FANCY" >> /jffs/scripts/nat-start
+			chmod 0755 /jffs/scripts/nat-start
+		fi
 
 		# Add to services-stop
 		if [ ! -f "/jffs/scripts/services-stop" ]; then
@@ -235,10 +225,10 @@ case $1 in
 		elif [ -f "/jffs/scripts/services-stop" ] && ! head -1 /jffs/scripts/services-stop | grep -qE "^#!/bin/sh"; then
 			sed -i '1s~^~#!/bin/sh\n~' /jffs/scripts/services-stop
 		fi
-		sed -i '\~# CakeQOS-Merlin~d' /jffs/scripts/services-stop
-		echo "/jffs/scripts/$SCRIPT_NAME stop"' # '"$SCRIPT_NAME_FANCY" >> /jffs/scripts/services-stop
-		chmod 0755 /jffs/scripts/services-stop
-
+		if ! grep -qF "# CakeQOS-Merlin" /jffs/scripts/services-stop; then
+			echo "/jffs/scripts/$SCRIPT_NAME stop"' # '"$SCRIPT_NAME_FANCY" >> /jffs/scripts/services-stop
+			chmod 0755 /jffs/scripts/services-stop
+		fi
 		Print_Output "true" "Enabled" "$PASS"
 		cake_start "${@}"
 		return 0
