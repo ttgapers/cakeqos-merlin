@@ -51,7 +51,7 @@ cake_download() {
 		LOCALMD5="$(md5sum "/jffs/scripts/$SCRIPT_NAME" | awk '{print $1}')"
 		REMOTEMD5="$(/usr/sbin/curl -fsL --retry 3 https://raw.githubusercontent.com/$MAINTAINER/$SCRIPT_NAME_GITHUB/$SCRIPT_BRANCH/$SCRIPT_NAME.sh | md5sum | awk '{print $1}')"
 
-		if [ "$LATEST_VERSION" != "" ]; then
+		if [ -n "$LATEST_VERSION" ]; then
 			if [ "$LATEST_VERSION" != "$SCRIPT_VERSION" ] && [ "$LOCALMD5" != "$REMOTEMD5" ]; then
 				Print_Output "true" "New CakeQOS-Merlin detected (${LATEST_VERSION}, currently running ${SCRIPT_VERSION}), updating..." "$WARN"
 				echo "${LATEST}" > "/jffs/scripts/${SCRIPT_NAME}"
@@ -88,7 +88,7 @@ cake_download() {
 	fi
 
 	VERSIONS_ONLINE=$(/usr/sbin/curl --retry 3 -s "https://raw.githubusercontent.com/$MAINTAINER/$SCRIPT_NAME_GITHUB/$SCRIPT_BRANCH/versions.txt")
-	if [ "$VERSIONS_ONLINE" != "" ]; then
+	if [ -n "$VERSIONS_ONLINE" ]; then
 		VERSION_ONLINE_CAKE=$(echo "$VERSIONS_ONLINE" | awk -F"|" '{print $1}')
 		VERSION_ONLINE_TC=$(echo "$VERSIONS_ONLINE" | awk -F"|" '{print $2}')
 		VERSION_ONLINE_SUFFIX=$(echo "$VERSIONS_ONLINE" | awk -F"|" '{print $3}')
