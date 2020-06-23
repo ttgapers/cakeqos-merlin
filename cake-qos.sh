@@ -198,8 +198,7 @@ ScriptHeader(){
 }
 
 MainMenu(){
-	printf "\\e[1mServices\\e[0m\\n"
-	printf "\\e[1m(selecting an option will restart the service)\\e[0m\\n\\n"
+	printf "\\e[1mSelect an option\\e[0m\\n"
 	printf "1.    Start cake\\n"
 	printf "2.    Stop cake\\n"
 	printf "3.    Check cake status\\n"
