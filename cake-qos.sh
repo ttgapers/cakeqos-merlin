@@ -141,8 +141,8 @@ cake_start(){
 		Print_Output "true" "Entware didn't start in 100 seconds, please check" "$CRIT"
 		exit 1
 	else
-		cru a "$SCRIPT_NAME_FANCY" "*/30 * * * * /jffs/scripts/$SCRIPT_NAME checkrun $2 $3 \"$4\""
-		options="$4"
+		cru a "$SCRIPT_NAME_FANCY" "*/30 * * * * /jffs/scripts/$SCRIPT_NAME checkrun $1 $2 \"$3\""
+		options="$3"
 		case "$options" in
 			*diffserv3*|*diffserv4*|*diffserv8*|*besteffort*)
 				# priority queue specified
@@ -153,17 +153,17 @@ cake_start(){
 				;;
 		esac
 		
-		Print_Output "true" "Starting - settings: $2 | $3 | $options" "$PASS"
+		Print_Output "true" "Starting - settings: $1 | $2 | $options" "$PASS"
 		runner disable 2>/dev/null
 		fc disable 2>/dev/null
 		fc flush 2>/dev/null
 		insmod /opt/lib/modules/sch_cake.ko 2>/dev/null
-		/opt/sbin/tc qdisc replace dev eth0 root cake bandwidth "$3" nat $options # options needs to be left unquoted to support multiple extra parameters
+		/opt/sbin/tc qdisc replace dev eth0 root cake bandwidth "$2" nat $options # options needs to be left unquoted to support multiple extra parameters
 		ip link add name ifb9eth0 type ifb
 		/opt/sbin/tc qdisc del dev eth0 ingress 2>/dev/null
 		/opt/sbin/tc qdisc add dev eth0 handle ffff: ingress
 		/opt/sbin/tc qdisc del dev ifb9eth0 root 2>/dev/null
-		/opt/sbin/tc qdisc add dev ifb9eth0 root cake bandwidth "$2" nat wash ingress $options # options needs to be left unquoted to support multiple extra parameters
+		/opt/sbin/tc qdisc add dev ifb9eth0 root cake bandwidth "$1" nat wash ingress $options # options needs to be left unquoted to support multiple extra parameters
 		ifconfig ifb9eth0 up
 		/opt/sbin/tc filter add dev eth0 parent ffff: protocol all prio 10 u32 match u32 0 0 flowid 1:1 action mirred egress redirect dev ifb9eth0
 	fi
@@ -414,7 +414,7 @@ Menu_Start(){
 	fi
 	
 	# Cleanup old script entries
-	rm -r "/jffs/addons/$SCRIPT_NAME.d"
+	rm -rf "/jffs/addons/$SCRIPT_NAME.d" 2> /dev/null
 	sed -i '\~# CakeQOS-Merlin~d' /jffs/scripts/firewall-start /jffs/scripts/services-start
 	
 	# Add to nat-start
@@ -441,7 +441,7 @@ Menu_Start(){
 		chmod 0755 /jffs/scripts/services-stop
 	fi
 	Print_Output "true" "Enabled" "$PASS"
-	cake_start "$@"
+	cake_start "$dlspeed" "$upspeed" "$options"
 }
 
 Menu_Install(){
@@ -522,7 +522,7 @@ case $1 in
 		Print_Output "true" "Checking if running..." "$WARN" #remove this when we see that it's working OK. It isn't needed to spam log each 30 min
 		if ! cake_check; then
 			Print_Output "true" "Not running, starting..." "$CRIT"
-			cake_start "$@"
+			cake_start "$2" "$3" "$4"
 		else
 			Print_Output "true" "Running successfully" "$PASS" #remove this when we see that it's working OK. It isn't needed to spam log each 30 min
 		fi
