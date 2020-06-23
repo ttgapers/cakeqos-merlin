@@ -324,14 +324,14 @@ case $1 in
 	status)
 		if [ "$(isrunning)" = "true" ]; then
 			isrunning >/dev/null 2>&1
-			Print_Output "true" "Running..." "$PASS"
+			Print_Output "false" "Running..." "$PASS"
 			Print_Output "false" "> Download Status:" "$PASS"
 			echo "$STATUS_DOWNLOAD"
 			Print_Output "false" "> Upload Status:" "$PASS"
 			echo "$STATUS_UPLOAD"
 			return 0
 		else
-			Print_Output "true" "Not running..." "$WARN"
+			Print_Output "false" "Not running..." "$WARN"
 			return 1
 		fi
 		;;
