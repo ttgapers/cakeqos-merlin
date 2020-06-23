@@ -127,9 +127,9 @@ cake_download() {
 
 cake_start() {
 	entwaretimer="0"
-	while [ ! -f "/opt/bin/sh" ] && [ "$entwaretimer" -lt "100" ]; do
-		entwaretimer="$((entwaretimer + 10))"
-		Print_Output "true" "Entware isn't ready, waiting 10 sec" "$WARN"
+	while [ ! -f "/opt/bin/sh" ] && [ "$entwaretimer" -lt "10" ]; do
+		entwaretimer="$((entwaretimer + 1))"
+		Print_Output "true" "Entware isn't ready, waiting 10 sec - Attempt #${entwaretimer}" "$WARN"
 		sleep 10
 	done
 	if [ "$entwaretimer" -ge "100" ]; then
@@ -137,37 +137,32 @@ cake_start() {
 		exit 1
 	else
 		cru a "$SCRIPT_NAME_FANCY" "*/30 * * * * /jffs/scripts/$SCRIPT_NAME checkrun ${2} ${3} \"${4}\""
-		cake_serve "${@}"
+		options="$4"
+		case "$options" in
+			*diffserv3*|*diffserv4*|*diffserv8*|*besteffort*)
+				# priority queue specified
+				;;
+			*)
+				# priority queue not specified, default to besteffort
+				options="besteffort ${options}"
+				;;
+		esac
+
+		Print_Output "true" "Starting - settings: ${2} | ${3} | ${options}" "$PASS"
+		runner disable 2>/dev/null
+		fc disable 2>/dev/null
+		fc flush 2>/dev/null
+		insmod /opt/lib/modules/sch_cake.ko 2>/dev/null
+		/opt/sbin/tc qdisc replace dev eth0 root cake bandwidth "${3}" nat ${options} # options needs to be left unquoted to support multiple extra parameters
+		ip link add name ifb9eth0 type ifb
+		/opt/sbin/tc qdisc del dev eth0 ingress 2>/dev/null
+		/opt/sbin/tc qdisc add dev eth0 handle ffff: ingress
+		/opt/sbin/tc qdisc del dev ifb9eth0 root 2>/dev/null
+		/opt/sbin/tc qdisc add dev ifb9eth0 root cake bandwidth "${2}" nat wash ingress ${options} # options needs to be left unquoted to support multiple extra parameters
+		ifconfig ifb9eth0 up
+		/opt/sbin/tc filter add dev eth0 parent ffff: protocol all prio 10 u32 match u32 0 0 flowid 1:1 action mirred egress redirect dev ifb9eth0
 		exit 0 # Why do we exit here? All functions should be contained
 	fi
-}
-
-### Cake Serve
-cake_serve() {
-	options=$4
-	case "$options" in
-		*diffserv3*|*diffserv4*|*diffserv8*|*besteffort*)
-			# priority queue specified
-			;;
-		*)
-			# priority queue not specified, default to besteffort
-			options="besteffort ${options}"
-			;;
-	esac
-
-	Print_Output "true" "Starting - settings: ${2} | ${3} | ${options}" "$PASS"
-	runner disable 2>/dev/null
-	fc disable 2>/dev/null
-	fc flush 2>/dev/null
-	insmod /opt/lib/modules/sch_cake.ko 2>/dev/null
-	/opt/sbin/tc qdisc replace dev eth0 root cake bandwidth "${3}" nat ${options} # options needs to be left unquoted to support multiple extra parameters
-	ip link add name ifb9eth0 type ifb
-	/opt/sbin/tc qdisc del dev eth0 ingress 2>/dev/null
-	/opt/sbin/tc qdisc add dev eth0 handle ffff: ingress
-	/opt/sbin/tc qdisc del dev ifb9eth0 root 2>/dev/null
-	/opt/sbin/tc qdisc add dev ifb9eth0 root cake bandwidth "${2}" nat wash ingress ${options} # options needs to be left unquoted to support multiple extra parameters
-	ifconfig ifb9eth0 up
-	/opt/sbin/tc filter add dev eth0 parent ffff: protocol all prio 10 u32 match u32 0 0 flowid 1:1 action mirred egress redirect dev ifb9eth0
 }
 
 ### Cake Stop
@@ -185,23 +180,6 @@ cake_stop() {
 	fi
 }
 
-### Cake Disable
-cake_disable() {
-	Print_Output "true" "Disabled" "$PASS"
-	if [ -f /jffs/scripts/firewall-start ]; then
-		LINECOUNT=$(grep -c '# '"$SCRIPT_NAME_FANCY" /jffs/scripts/nat-start)
-		if [ "$LINECOUNT" -gt 0 ]; then
-			sed -i -e '/# '"$SCRIPT_NAME_FANCY"'/d' /jffs/scripts/nat-start
-		fi
-	fi
-	if [ -f /jffs/scripts/services-stop ]; then
-		LINECOUNT=$(grep -c '# '"$SCRIPT_NAME_FANCY" /jffs/scripts/services-stop)
-		if [ "$LINECOUNT" -gt 0 ]; then
-			sed -i -e '/# '"$SCRIPT_NAME_FANCY"'/d' /jffs/scripts/services-stop
-		fi
-	fi
-}
-
 ### Check Requirements
 if [ "$(nvram get jffs2_scripts)" != "1" ]; then
 	Print_Output "true" "ERROR: Custom JFFS Scripts must be enabled." "$CRIT"
@@ -216,7 +194,7 @@ if [ "$FAIL" = "1" ]; then
 fi
 
 ### Parameter Checks
-if [ "$1" = "enable" ] || [ "$1" = "start" ]; then
+if [ "$1" = "start" ]; then
 	if [ -z "$2" ] || [ -z "$3" ]; then
 		Print_Output "false" "Required parameters missing: $SCRIPT_NAME ${1} dlspeed upspeed \"optional extra parameters\"" "$WARN"
 		Print_Output "false" ""
@@ -231,7 +209,7 @@ case $1 in
 		cake_download "${@}"
 		[ -f "/opt/bin/$SCRIPT_NAME" ] || ln -s "$0" "/opt/bin/$SCRIPT_NAME" >/dev/null 2>&1 # add to /opt/bin so it can be called only as "cake-qos param"
 		;;
-	enable|start)
+	start)
 		[ -f "/opt/bin/$SCRIPT_NAME" ] || ln -s "$0" "/opt/bin/$SCRIPT_NAME" >/dev/null 2>&1 # add to /opt/bin so it can be called only as "cake-qos param"
 		cake_stop
 		#check if bins are installed, for the sake of......
@@ -243,7 +221,6 @@ case $1 in
 		# Cleanup old script entries
 		rm -r "/jffs/addons/$SCRIPT_NAME.d"
 		sed -i '\~# CakeQOS-Merlin~d' /jffs/scripts/firewall-start /jffs/scripts/services-start /jffs/scripts/nat-start
-
 
 		# Add to nat-start
 		if [ ! -f "/jffs/scripts/nat-start" ]; then
@@ -297,14 +274,9 @@ case $1 in
 		cake_stop
 		return 0
 		;;
-	disable)
-		cake_stop
-		cake_disable
-		return 0
-		;;
 	uninstall)
 		cake_stop
-		cake_disable
+		sed -i '\~# CakeQOS-Merlin~d' /jffs/scripts/nat-start /jffs/scripts/services-stop
 		opkg --autoremove remove sched-cake-oot
 		opkg --autoremove remove tc-adv
 		rm /jffs/scripts/"$SCRIPT_NAME"
