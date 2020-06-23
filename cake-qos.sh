@@ -94,7 +94,7 @@ cake_download() {
 			if [ "$DOINSTALL" = "1" ]; then
 				Print_Output "true" "Installing cake binaries" "$WARN"
 			else
-				Print_Output "true" "Updated cake binaries detected, updating..." "$WARN"
+				Print_Output "true" "New cake binaries detected, updating..." "$WARN"
 			fi
 			FILE1="sched-cake-oot_${VERSION_ONLINE_CAKE}-${FILE1_TYPE}_${VERSION_ONLINE_SUFFIX}.ipk"
 			FILE2="tc-adv_${VERSION_ONLINE_TC}_${VERSION_ONLINE_SUFFIX}.ipk"
@@ -334,7 +334,7 @@ case $1 in
 		fi
 		;;
 	checkrun)
-		Print_Output "true" "Checking if running..." "$WARN"
+		Print_Output "true" "Checking if running..." "$WARN" #remove this when we see that it's working OK. It isn't needed to spam log each 30 min
 		if [ "$(isrunning)" = "false" ]; then
 			Print_Output "true" "Not running, starting..." "$CRIT"
 			cake_start "${@}"
@@ -361,7 +361,7 @@ case $1 in
 		;;
 	*)
 		Print_Output "false" "Usage: $SCRIPT_NAME {install|update|start|status|stop|disable|uninstall} (start has required parameters)" "$WARN"
-		Print_Output "false" "" "$PASS"
+		echo ""
 		Print_Output "false" "install:   only downloads and installs necessary $SCRIPT_NAME binaries" "$PASS"
 		Print_Output "false" "update:    update $SCRIPT_NAME binaries (if any available)" "$PASS"
 		Print_Output "false" "start:     configure and start $SCRIPT_NAME" "$PASS"
