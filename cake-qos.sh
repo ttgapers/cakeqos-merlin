@@ -2,7 +2,7 @@
 # CakeQOS-Merlin - port for Merlin firmware supported routers
 # Site: https://github.com/ttgapers/cakeqos-merlin
 # Thread: https://www.snbforums.com/threads/release-cakeqos-merlin.64800/
-# Credits: robcore, Odkrys, ttgapers, jackiechun, maghuro
+# Credits: robcore, Odkrys, ttgapers, jackiechun, maghuro, Jack Yaz
 
 #########################################################
 ##               _                                     ##
@@ -415,7 +415,7 @@ Menu_Start(){
 	
 	# Cleanup old script entries
 	rm -rf "/jffs/addons/$SCRIPT_NAME.d" 2> /dev/null
-	sed -i '\~# CakeQOS-Merlin~d' /jffs/scripts/firewall-start /jffs/scripts/services-start
+	sed -i '\~# cake-qos~d' /jffs/scripts/firewall-start /jffs/scripts/services-start
 	
 	# Add to nat-start
 	if [ ! -f "/jffs/scripts/nat-start" ]; then
