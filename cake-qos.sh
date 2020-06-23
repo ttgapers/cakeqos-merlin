@@ -176,6 +176,19 @@ cake_stop() {
 	fi
 }
 
+PressEnter(){
+	while true; do
+		printf "Press enter to continue..."
+		read -r "key"
+		case "$key" in
+			*)
+				break
+			;;
+		esac
+	done
+	return 0
+}
+
 ScriptHeader(){
 	clear
 	printf "\\n"
