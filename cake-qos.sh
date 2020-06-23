@@ -314,7 +314,7 @@ Menu_Start(){
 			elif ! Validate_Bandwidth "$dl_choice"; then
 				printf "\\n\\e[31mPlease enter a valid number (max 2 decimal places)\\e[0m\\n"
 			else
-				dlspeed="$dl_choice"
+				dlspeed="$dl_choice""Mbit"
 				printf "\\n"
 				break
 			fi
@@ -331,7 +331,7 @@ Menu_Start(){
 				elif ! Validate_Bandwidth "$up_choice"; then
 					printf "\\n\\e[31mPlease enter a valid number (max 2 decimal places)\\e[0m\\n"
 				else
-					upspeed="$up_choice"
+					upspeed="$up_choice""Mbit"
 					printf "\\n"
 					break
 				fi
