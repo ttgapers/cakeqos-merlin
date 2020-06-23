@@ -342,9 +342,9 @@ Menu_Start(){
 			while true; do
 				printf "\\n\\e[1mPlease choose a queue priority:\\e[0m\\n"
 				printf "    1. besteffort (default)\\n"
-				printf "    2. diffserv3\\n\\n"
+				printf "    2. diffserv3\\n"
 				printf "    3. diffserv4 (default)\\n"
-				printf "    4. diffserv8 (default)\\n"
+				printf "    4. diffserv8 (default)\\n\\n"
 				printf "Choose an option:    "
 				read -r "priomenu"
 				case "$priomenu" in
