@@ -12,9 +12,11 @@
 1.  If you use connections like ADSL, VDSL, Docsis, learn about the overhead keyword.
     
     [https://man7.org/linux/man-pages/man8/tc-cake.8.html](https://man7.org/linux/man-pages/man8/tc-cake.8.html)
+    
 2.  If you want to understand and change Priority Queue Parameters.
     
     [https://man7.org/linux/man-pages/man8/tc-cake.8.html#PRIORITY_QUEUE_PARAMETERS](https://man7.org/linux/man-pages/man8/tc-cake.8.html#PRIORITY_QUEUE_PARAMETERS)
+    
 3.  Use 90-95% of your line speed as upload/download limits
 
 ## Install Example
@@ -32,7 +34,9 @@
     /jffs/scripts/cake-qos start **135Mbit 13Mbit "besteffort docsis ack-filter"**
     ```
 3.  Reboot your router
+
 4.  Check System Log entries in web interface for **CakeQOS-Merlin**
+
 5.  To check that CakeQOS-Merlin is running, run `cake-qos status` and/or do a bufferbloat test on [dslreports](https://www.dslreports.com/speedtest)
 
 ## Usage
