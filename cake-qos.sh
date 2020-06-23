@@ -190,7 +190,7 @@ case $1 in
 
 		# Cleanup old script entries
 		rm -r "/jffs/addons/$SCRIPT_NAME.d" 2>/dev/null
-		sed -i '\~# CakeQOS-Merlin~d' /jffs/scripts/firewall-start /jffs/scripts/services-start
+		sed -i '\~# cake-qos~d' /jffs/scripts/firewall-start /jffs/scripts/services-start
 
 		# Add to nat-start
 		if [ ! -f "/jffs/scripts/nat-start" ]; then
