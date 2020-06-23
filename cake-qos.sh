@@ -126,23 +126,20 @@ cake_download() {
 	fi
 }
 
-### Cake Start
 cake_start() {
-	# Thanks @JGrana
-	for i in 1 2 3 4 5 6 7 8 9 10
-	do
-		if [ -f /opt/bin/sh ]; then
-			cru a "$SCRIPT_NAME_FANCY" "*/30 * * * * /jffs/scripts/$SCRIPT_NAME checkrun ${2} ${3} \"${4}\""
-			cake_serve "${@}"
-			exit 0
-		else
-			Print_Output "true" "Entware isn't ready, waiting 10 sec - retry $i" "$WARN"
-			sleep 10
-		fi
+	entwaretimer="0"
+	while [ ! -f "/opt/bin/sh" ] && [ "$entwaretimer" -lt "100" ]; do
+		entwaretimer="$((entwaretimer + 10))"
+		Print_Output "true" "Entware isn't ready, waiting 10 sec - retry $i" "$WARN"
+		sleep 10
 	done
-	if [ ! -f /opt/bin/sh ]; then
+	if [ "$entwaretimer" -ge "100" ]; then
 		Print_Output "true" "Entware didn't start in 100 seconds, please check" "$CRIT"
-		return 1
+		exit 1
+	else
+		cru a "$SCRIPT_NAME_FANCY" "*/30 * * * * /jffs/scripts/$SCRIPT_NAME checkrun ${2} ${3} \"${4}\""
+		cake_serve "${@}"
+		exit 0 # Why do we exit here? All functions should be contained
 	fi
 }
 
@@ -212,7 +209,7 @@ cake_disable() {
 }
 
 ### Check Requirements
-if [ "$(nvram get jffs2_scripts)" -ne 1 ]; then
+if [ "$(nvram get jffs2_scripts)" != "1" ]; then
 	Print_Output "true" "ERROR: Custom JFFS Scripts must be enabled." "$CRIT"
 	FAIL="1"
 fi
@@ -244,6 +241,7 @@ case $1 in
 		[ -f "/opt/bin/$SCRIPT_NAME" ] || ln -s "$0" "/opt/bin/$SCRIPT_NAME" >/dev/null 2>&1 # add to /opt/bin so it can be called only as "cake-qos param"
 		cake_stopif
 		#check if bins are installed, for the sake of......
+		# Why? If binaries don't exist we should prevent install
 		if [ ! -f "/opt/lib/modules/sch_cake.ko" ] || [ ! -f "/opt/sbin/tc" ]; then
 			cake_download "${@}"
 		fi
@@ -320,7 +318,7 @@ case $1 in
 		;;
 	*)
 		Print_Output "false" "Usage: $SCRIPT_NAME {install|update|start|status|stop|disable|uninstall} (start has required parameters)" "$WARN"
-		echo ""
+		echo
 		Print_Output "false" "install:   only downloads and installs necessary $SCRIPT_NAME binaries" "$PASS"
 		Print_Output "false" "update:    update $SCRIPT_NAME binaries (if any available)" "$PASS"
 		Print_Output "false" "start:     configure and start $SCRIPT_NAME" "$PASS"
