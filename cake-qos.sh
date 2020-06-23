@@ -4,6 +4,20 @@
 # Thread: https://www.snbforums.com/threads/release-cakeqos-merlin.64800/
 # Credits: robcore, Odkrys, ttgapers, jackiechun, maghuro
 
+#########################################################
+##               _                                     ##
+##              | |                                    ##
+##    ___  __ _ | | __ ___          __ _   ___   ___   ##
+##   / __|/ _` || |/ // _ \ ______ / _` | / _ \ / __|  ##
+##  | (__| (_| ||   <|  __/|______| (_| || (_) |\__ \  ##
+##   \___|\__,_||_|\_\\___|        \__, | \___/ |___/  ##
+##                                    | |              ##
+##                                    |_|              ##
+##                                                     ##
+##      https://github.com/ttgapers/cakeqos-merlin     ##
+##                                                     ##
+#########################################################
+
 # shellcheck disable=SC2086
 readonly SCRIPT_VERSION="v0.0.6"
 readonly SCRIPT_NAME="cake-qos"
@@ -165,19 +179,21 @@ cake_stop() {
 ScriptHeader(){
 	clear
 	printf "\\n"
-	printf "\\e[1m#####################################################\\e[0m\\n"
-	printf "\\e[1m##               __  __              _  _          ##\\e[0m\\n"
-	printf "\\e[1m##              |  \/  |            | |(_)         ##\\e[0m\\n"
-	printf "\\e[1m##    ___   ___ | \  / |  ___  _ __ | | _  _ __    ##\\e[0m\\n"
-	printf "\\e[1m##   / __| / __|| |\/| | / _ \| '__|| || || '_ \   ##\\e[0m\\n"
-	printf "\\e[1m##   \__ \| (__ | |  | ||  __/| |   | || || | | |  ##\\e[0m\\n"
-	printf "\\e[1m##   |___/ \___||_|  |_| \___||_|   |_||_||_| |_|  ##\\e[0m\\n"
-	printf "\\e[1m##                                                 ##\\e[0m\\n"
+	printf "\\e[1m#########################################################\\e[0m\\n"
+	printf "\\e[1m##               _                                     ##\\e[0m\\n"
+	printf "\\e[1m##              | |                                    ##\\e[0m\\n"
+	printf "\\e[1m##    ___  __ _ | | __ ___          __ _   ___   ___   ##\\e[0m\\n"
+	printf "\\e[1m##   / __|/ _  || |/ // _ \ ______ / _  | / _ \ / __|  ##\\e[0m\\n"
+	printf "\\e[1m##  | (__| (_| ||   <|  __/|______| (_| || (_) |\__ \  ##\\e[0m\\n"
+	printf "\\e[1m##   \___|\__,_||_|\_\\___|        \__, | \___/ |___/  ##\\e[0m\\n"
+	printf "\\e[1m##                                    | |              ##\\e[0m\\n"
+	printf "\\e[1m##                                    |_|              ##\\e[0m\\n"
+	printf "\\e[1m##                                                     ##\\e[0m\\n"
 	printf "\\e[1m##               %s on %-9s               ##\\e[0m\\n" "$SCRIPT_VERSION" "$RMODEL"
-	printf "\\e[1m##                                                 ##\\e[0m\\n"
-	printf "\\e[1m##       https://github.com/ttapers/%s       ##\\e[0m\\n" "$SCRIPT_NAME"
-	printf "\\e[1m##                                                 ##\\e[0m\\n"
-	printf "\\e[1m#####################################################\\e[0m\\n"
+	printf "\\e[1m##                                                     ##\\e[0m\\n"
+	printf "\\e[1m##      https://github.com/ttgapers/cakeqos-merlin     ##\\e[0m\\n"
+	printf "\\e[1m##                                                     ##\\e[0m\\n"
+	printf "\\e[1m#########################################################\\e[0m\\n"
 	printf "\\n"
 }
 
@@ -186,7 +202,7 @@ MainMenu(){
 	printf "\\e[1m(selecting an option will restart the service)\\e[0m\\n\\n"
 	printf "1.    Start cake\\n"
 	printf "2.    Stop cake\\n"
-	printf "4.    Check cake status\\n"
+	printf "3.    Check cake status\\n"
 	printf "u.    Check for updates\\n"
 	printf "e.    Exit %s\\n\\n" "$SCRIPT_NAME_FANCY"
 	printf "z.    Uninstall %s\\n" "$SCRIPT_NAME_FANCY"
@@ -207,7 +223,7 @@ MainMenu(){
 				PressEnter
 				break
 			;;
-			4)
+			3)
 				Menu_Status
 				PressEnter
 				break
