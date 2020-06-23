@@ -162,74 +162,204 @@ cake_stop() {
 	fi
 }
 
+ScriptHeader(){
+	clear
+	printf "\\n"
+	printf "\\e[1m#####################################################\\e[0m\\n"
+	printf "\\e[1m##               __  __              _  _          ##\\e[0m\\n"
+	printf "\\e[1m##              |  \/  |            | |(_)         ##\\e[0m\\n"
+	printf "\\e[1m##    ___   ___ | \  / |  ___  _ __ | | _  _ __    ##\\e[0m\\n"
+	printf "\\e[1m##   / __| / __|| |\/| | / _ \| '__|| || || '_ \   ##\\e[0m\\n"
+	printf "\\e[1m##   \__ \| (__ | |  | ||  __/| |   | || || | | |  ##\\e[0m\\n"
+	printf "\\e[1m##   |___/ \___||_|  |_| \___||_|   |_||_||_| |_|  ##\\e[0m\\n"
+	printf "\\e[1m##                                                 ##\\e[0m\\n"
+	printf "\\e[1m##               %s on %-9s               ##\\e[0m\\n" "$SCRIPT_VERSION" "$RMODEL"
+	printf "\\e[1m##                                                 ##\\e[0m\\n"
+	printf "\\e[1m##       https://github.com/ttapers/%s       ##\\e[0m\\n" "$SCRIPT_NAME"
+	printf "\\e[1m##                                                 ##\\e[0m\\n"
+	printf "\\e[1m#####################################################\\e[0m\\n"
+	printf "\\n"
+}
+
+MainMenu(){
+	printf "\\e[1mServices\\e[0m\\n"
+	printf "\\e[1m(selecting an option will restart the service)\\e[0m\\n\\n"
+	printf "1.    Start cake\\n"
+	printf "2.    Stop cake\\n"
+	printf "4.    Check cake status\\n"
+	printf "u.    Check for updates\\n"
+	printf "e.    Exit %s\\n\\n" "$SCRIPT_NAME_FANCY"
+	printf "z.    Uninstall %s\\n" "$SCRIPT_NAME_FANCY"
+	printf "\\n"
+	printf "\\e[1m#####################################################\\e[0m\\n"
+	printf "\\n"
+	while true; do
+		printf "Choose an option:    "
+		read -r "menu"
+		case "$menu" in
+			1)
+				Menu_Start
+				PressEnter
+				break
+			;;
+			2)
+				Menu_Stop
+				PressEnter
+				break
+			;;
+			4)
+				Menu_Status
+				PressEnter
+				break
+			;;
+			u)
+				Menu_Update
+				PressEnter
+				break
+			;;
+			e)
+				ScriptHeader
+				printf "\\n\\e[1mThanks for using %s!\\e[0m\\n\\n\\n" "$SCRIPT_NAME_FANCY"
+				exit 0
+			;;
+			z)
+				while true; do
+					printf "\\n\\e[1mAre you sure you want to uninstall %s? (y/n)\\e[0m\\n" "$SCRIPT_NAME_FANCY"
+					read -r "confirm"
+					case "$confirm" in
+						y|Y)
+							Menu_Uninstall
+							exit 0
+						;;
+						*)
+							break
+						;;
+					esac
+				done
+			;;
+			*)
+				printf "\\nPlease choose a valid option\\n\\n"
+			;;
+		esac
+	done
+	
+	ScriptHeader
+	MainMenu
+}
+
+Menu_Start(){
+	if [ -z "$2" ] || [ -z "$3" ]; then
+		Print_Output "false" "Required parameters missing: $SCRIPT_NAME ${1} dlspeed upspeed \"optional extra parameters\"" "$WARN"
+		Print_Output "false" ""
+		Print_Output "false" "Example #1: $SCRIPT_NAME ${1} 30Mbit 5000Kbit"
+		Print_Output "false" "Example #2: $SCRIPT_NAME ${1} 30Mbit 5Mbit \"diffserv4 docsis ack-filter\""
+		exit 1
+	fi
+	cake_stop
+
+	if [ ! -f "/opt/lib/modules/sch_cake.ko" ] || [ ! -f "/opt/sbin/tc" ]; then
+		Print_Output "true" "Cake binaries missing - Exiting" "$CRIT"
+		exit 1
+	fi
+
+	# Cleanup old script entries
+	rm -r "/jffs/addons/$SCRIPT_NAME.d"
+	sed -i '\~# CakeQOS-Merlin~d' /jffs/scripts/firewall-start /jffs/scripts/services-start
+
+	# Add to nat-start
+	if [ ! -f "/jffs/scripts/nat-start" ]; then
+		echo "#!/bin/sh" > /jffs/scripts/nat-start
+		echo >> /jffs/scripts/nat-start
+	elif [ -f "/jffs/scripts/nat-start" ] && ! head -1 /jffs/scripts/nat-start | grep -qE "^#!/bin/sh"; then
+		sed -i '1s~^~#!/bin/sh\n~' /jffs/scripts/nat-start
+	fi
+	if ! grep -qF "# CakeQOS-Merlin" /jffs/scripts/nat-start; then
+		echo "/jffs/scripts/$SCRIPT_NAME start ${2} ${3} \"${4}\" &"' # '"$SCRIPT_NAME_FANCY" >> /jffs/scripts/nat-start
+		chmod 0755 /jffs/scripts/nat-start
+	fi
+
+	# Add to services-stop
+	if [ ! -f "/jffs/scripts/services-stop" ]; then
+		echo "#!/bin/sh" > /jffs/scripts/services-stop
+		echo >> /jffs/scripts/services-stop
+	elif [ -f "/jffs/scripts/services-stop" ] && ! head -1 /jffs/scripts/services-stop | grep -qE "^#!/bin/sh"; then
+		sed -i '1s~^~#!/bin/sh\n~' /jffs/scripts/services-stop
+	fi
+	if ! grep -qF "# CakeQOS-Merlin" /jffs/scripts/services-stop; then
+		echo "/jffs/scripts/$SCRIPT_NAME stop"' # '"$SCRIPT_NAME_FANCY" >> /jffs/scripts/services-stop
+		chmod 0755 /jffs/scripts/services-stop
+	fi
+	Print_Output "true" "Enabled" "$PASS"
+	cake_start "${@}"
+}
+
+Menu_Install(){
+	if [ "$(nvram get jffs2_scripts)" != "1" ]; then
+		nvram set jffs2_scripts=1
+		nvram commit
+		Print_Output "true" "Custom JFFS scripts enabled - Please manually reboot to apply changes - Exiting" "$CRIT"
+		exit 1
+	fi
+	cake_download "install"
+	[ -f "/opt/bin/$SCRIPT_NAME" ] || ln -s "$0" "/opt/bin/$SCRIPT_NAME" >/dev/null 2>&1 # add to /opt/bin so it can be called only as "cake-qos param"
+}
+
+Menu_Update(){
+	if [ "$(nvram get jffs2_scripts)" != "1" ]; then
+		nvram set jffs2_scripts=1
+		nvram commit
+		Print_Output "true" "Custom JFFS scripts enabled - Please manually reboot to apply changes - Exiting" "$CRIT"
+		exit 1
+	fi
+	cake_download "update"
+	[ -f "/opt/bin/$SCRIPT_NAME" ] || ln -s "$0" "/opt/bin/$SCRIPT_NAME" >/dev/null 2>&1 # add to /opt/bin so it can be called only as "cake-qos param"
+}
+
+Menu_Status(){
+	if cake_check; then
+		Print_Output "false" "Running..." "$PASS"
+		Print_Output "false" "> Download Status:" "$PASS"
+		echo "$STATUS_DOWNLOAD"
+		Print_Output "false" "> Upload Status:" "$PASS"
+		echo "$STATUS_UPLOAD"
+	else
+		Print_Output "false" "Not running..." "$WARN"
+	fi
+}
+
+Menu_Stop(){
+	cake_stop
+	return 0
+}
+
+Menu_Uninstall(){
+	cake_stop
+	sed -i '\~# CakeQOS-Merlin~d' /jffs/scripts/nat-start /jffs/scripts/services-stop
+	opkg --autoremove remove sched-cake-oot
+	opkg --autoremove remove tc-adv
+	rm /jffs/scripts/"$SCRIPT_NAME"
+	exit 0
+}
+
+if [ -z "$1" ]; then
+	ScriptHeader
+	MainMenu
+	exit 0
+fi
+
 case $1 in
-	install|update)
-		if [ "$(nvram get jffs2_scripts)" != "1" ]; then
-			nvram set jffs2_scripts=1
-			nvram commit
-			Print_Output "true" "Custom JFFS scripts enabled - Please manually reboot to apply changes - Exiting" "$CRIT"
-			exit 1
-		fi
-		cake_download "${@}"
-		[ -L "/opt/bin/$SCRIPT_NAME" ] || ln -s "$0" /opt/bin
-		;;
+	install)
+		Menu_Install
+	;;
+	update)
+		Menu_Update
+	;;
 	start)
-		if [ -z "$2" ] || [ -z "$3" ]; then
-			Print_Output "false" "Required parameters missing: $SCRIPT_NAME ${1} dlspeed upspeed \"optional extra parameters\"" "$WARN"
-			Print_Output "false" ""
-			Print_Output "false" "Example #1: $SCRIPT_NAME ${1} 30Mbit 5000Kbit"
-			Print_Output "false" "Example #2: $SCRIPT_NAME ${1} 30Mbit 5Mbit \"diffserv4 docsis ack-filter\""
-			exit 1
-		fi
-		cake_stop
-
-		if [ ! -f "/opt/lib/modules/sch_cake.ko" ] || [ ! -f "/opt/sbin/tc" ]; then
-			Print_Output "true" "Cake binaries missing - Exiting" "$CRIT"
-			exit 1
-		fi
-
-		# Cleanup old script entries
-		rm -r "/jffs/addons/$SCRIPT_NAME.d"
-		sed -i '\~# CakeQOS-Merlin~d' /jffs/scripts/firewall-start /jffs/scripts/services-start
-
-		# Add to nat-start
-		if [ ! -f "/jffs/scripts/nat-start" ]; then
-			echo "#!/bin/sh" > /jffs/scripts/nat-start
-			echo >> /jffs/scripts/nat-start
-		elif [ -f "/jffs/scripts/nat-start" ] && ! head -1 /jffs/scripts/nat-start | grep -qE "^#!/bin/sh"; then
-			sed -i '1s~^~#!/bin/sh\n~' /jffs/scripts/nat-start
-		fi
-		if ! grep -qF "# CakeQOS-Merlin" /jffs/scripts/nat-start; then
-			echo "/jffs/scripts/$SCRIPT_NAME start ${2} ${3} \"${4}\" &"' # '"$SCRIPT_NAME_FANCY" >> /jffs/scripts/nat-start
-			chmod 0755 /jffs/scripts/nat-start
-		fi
-
-		# Add to services-stop
-		if [ ! -f "/jffs/scripts/services-stop" ]; then
-			echo "#!/bin/sh" > /jffs/scripts/services-stop
-			echo >> /jffs/scripts/services-stop
-		elif [ -f "/jffs/scripts/services-stop" ] && ! head -1 /jffs/scripts/services-stop | grep -qE "^#!/bin/sh"; then
-			sed -i '1s~^~#!/bin/sh\n~' /jffs/scripts/services-stop
-		fi
-		if ! grep -qF "# CakeQOS-Merlin" /jffs/scripts/services-stop; then
-			echo "/jffs/scripts/$SCRIPT_NAME stop"' # '"$SCRIPT_NAME_FANCY" >> /jffs/scripts/services-stop
-			chmod 0755 /jffs/scripts/services-stop
-		fi
-		Print_Output "true" "Enabled" "$PASS"
-		cake_start "${@}"
-		;;
+		Menu_Start "${@}"
+	;;
 	status)
-		if cake_check; then
-			Print_Output "false" "Running..." "$PASS"
-			Print_Output "false" "> Download Status:" "$PASS"
-			echo "$STATUS_DOWNLOAD"
-			Print_Output "false" "> Upload Status:" "$PASS"
-			echo "$STATUS_UPLOAD"
-		else
-			Print_Output "false" "Not running..." "$WARN"
-			return 1
-		fi
-		;;
+		Menu_Status
+	;;
 	checkrun)
 		Print_Output "true" "Checking if running..." "$WARN" #remove this when we see that it's working OK. It isn't needed to spam log each 30 min
 		if ! cake_check; then
@@ -238,18 +368,13 @@ case $1 in
 		else
 			Print_Output "true" "Running successfully" "$PASS" #remove this when we see that it's working OK. It isn't needed to spam log each 30 min
 		fi
-		;;
+	;;
 	stop)
-		cake_stop
-		;;
+		Menu_Stop
+	;;
 	uninstall)
-		cake_stop
-		sed -i '\~# CakeQOS-Merlin~d' /jffs/scripts/nat-start /jffs/scripts/services-stop
-		opkg --autoremove remove sched-cake-oot
-		opkg --autoremove remove tc-adv
-		rm /jffs/scripts/"$SCRIPT_NAME"
-		exit 0
-		;;
+		Menu_Uninstall
+	;;
 	*)
 		Print_Output "false" "Usage: $SCRIPT_NAME {install|update|start|status|stop|uninstall} (start has required parameters)" "$WARN"
 		echo
@@ -260,5 +385,5 @@ case $1 in
 		Print_Output "false" "stop:      stop $SCRIPT_NAME" "$PASS"
 		Print_Output "false" "uninstall: stop $SCRIPT_NAME, remove from startup, and remove cake binaries" "$PASS"
 		return 1
-		;;
+	;;
 esac
