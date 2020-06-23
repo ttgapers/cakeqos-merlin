@@ -9,7 +9,7 @@
 6. jffs
 
 ## Tips
-1. If you use connections like ADSL, VDSL, Docsis, learn about the overhead keyword. 
+1. If you use connections like ADSL, VDSL, Docsis, learn about the overhead keyword.
     https://man7.org/linux/man-pages/man8/tc-cake.8.html
 2. If you want to understand and change Priority Queue Parameters.
     https://man7.org/linux/man-pages/man8/tc-cake.8.html#PRIORITY_QUEUE_PARAMETERS
@@ -30,7 +30,7 @@ Change for your linespeed and any overhead (assuming 135Mbit download, 13Mbit up
 
 ## Usage
 
-> cake-qos {install|update|start|status|stop|disable|uninstall}
+> cake-qos {install|update|start|status|stop|uninstall}
 
 (start has required parameters)
 
@@ -39,11 +39,10 @@ Change for your linespeed and any overhead (assuming 135Mbit download, 13Mbit up
 - start:   configure and start cake-qos
 - status:   check the current status of cake-qos
 - stop:    stop cake-qos
-- disable: stop cake-qos and remove from startup
 - uninstall: stop cake-qos, remove from startup, and remove cake binaries
 
 **Note:** defaults to `besteffort` priority queue if none specified in `start` option.
-    
+
 ## CLI
 
 ```
