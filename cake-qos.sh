@@ -5,11 +5,11 @@
 # Credits: robcore, Odkrys, ttgapers, jackiechun
 
 # shellcheck disable=SC2086
-readonly SCRIPT_VERSION="v0.0.6"
+readonly SCRIPT_VERSION="v0.1.0"
 readonly SCRIPT_NAME="cake-qos"
 readonly SCRIPT_NAME_FANCY="CakeQOS-Merlin"
 readonly SCRIPT_NAME_GITHUB="cakeqos-merlin"
-readonly SCRIPT_BRANCH="develop"
+readonly SCRIPT_BRANCH="master"
 readonly MAINTAINER="ttgapers"
 
 readonly CRIT="\\e[41m"
@@ -184,12 +184,12 @@ case $1 in
 		cake_stop
 
 		if [ ! -f "/opt/lib/modules/sch_cake.ko" ] || [ ! -f "/opt/sbin/tc" ]; then
-			Print_Output "true" "Cake binaries missing - Exiting" "$CRIT"
-			exit 1
+			Print_Output "true" "Cake binaries missing - Installing" "$ERR"
+			cake_download "${@}"
 		fi
 
 		# Cleanup old script entries
-		rm -r "/jffs/addons/$SCRIPT_NAME.d"
+		rm -r "/jffs/addons/$SCRIPT_NAME.d" 2>/dev/null
 		sed -i '\~# CakeQOS-Merlin~d' /jffs/scripts/firewall-start /jffs/scripts/services-start
 
 		# Add to nat-start
