@@ -85,17 +85,6 @@ cake_download() {
         if [ ! -f "/opt/lib/modules/sch_cake.ko" ] || [ ! -f "/opt/sbin/tc" ]; then
                  DOINSTALL="1"
         fi
-#add watchdog
-
-if [ ! -f "$WDog" ]; then
-	Print_Output "true" "Installing cake-watchdog..." "$WARN"
-	if [ ! -d "$WDogdir" ]; then
-       mkdir "$WDogdir"
-       chmod 0777 "$WDogdir"
-	fi
-	printf "" > "$WDog"
-	chmod 0755 "$WDog"
-fi
 
 	VERSIONS_ONLINE=$(/usr/sbin/curl --retry 3 -s "https://raw.githubusercontent.com/ttgapers/cakeqos-merlin/$SCRIPT_BRANCH/versions.txt")
 	if [ "${VERSIONS_ONLINE}" != "" ]; then
@@ -145,6 +134,17 @@ cake_start() {
 		if [ -f /opt/bin/sh ]; then
 			cru a "$SCRIPT_NAME_FANCY" "*/30 * * * * $0 checkrun"
 			cake_serve "${@}"
+			
+			#add watchdog
+			if [ ! -f "$WDog" ]; then
+				Print_Output "true" "Installing cake-watchdog..." "$WARN"
+				if [ ! -d "$WDogdir" ]; then
+				   mkdir "$WDogdir"
+				   chmod 0777 "$WDogdir"
+				fi
+				printf "" > "$WDog"
+				chmod 0755 "$WDog"
+			fi
 			exit 0
 		else
 			Print_Output "true" "Entware isn't ready, waiting 10 sec - retry $i" "$ERR"
@@ -221,7 +221,7 @@ cake_disable() {
 		fi
 	fi
 	if [ -f "$WDogdir" ]; then
-		rm -r "$Wdogdir"
+		rm -r "$WDogdir"
 	fi
 }
 
