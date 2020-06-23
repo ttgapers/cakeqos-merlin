@@ -178,7 +178,7 @@ cake_stop() {
 
 PressEnter(){
 	while true; do
-		printf "Press enter to continue..."
+		printf "\\nPress enter to continue..."
 		read -r "key"
 		case "$key" in
 			*)
@@ -226,21 +226,25 @@ MainMenu(){
 		read -r "menu"
 		case "$menu" in
 			1)
+				printf "\\n"
 				Menu_Start
 				PressEnter
 				break
 			;;
 			2)
+				printf "\\n"
 				Menu_Stop
 				PressEnter
 				break
 			;;
 			3)
+				printf "\\n"
 				Menu_Status
 				PressEnter
 				break
 			;;
 			u)
+				printf "\\n"
 				Menu_Update
 				PressEnter
 				break
