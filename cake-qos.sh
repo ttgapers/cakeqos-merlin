@@ -42,11 +42,18 @@ Print_Output(){
 	fi
 }
 
-Filter_Version() {
+Filter_Version(){
 	grep -m1 -oE 'v[0-9]{1,2}([.][0-9]{1,2})([.][0-9]{1,2})'
 }
 
-cake_check() {
+Validate_Bandwidth(){
+	if [ -n "$(echo "$1" | /bin/grep -o "^[1-9][0-9]*\.\?[0-9]*$")" ]; then
+		return 0
+	else
+		return 1
+	fi
+}
+cake_check(){
 	STATUS_UPLOAD=$(tc qdisc | grep -E '^qdisc cake .* dev eth0 root')
 	STATUS_DOWNLOAD=$(tc qdisc | grep -E '^qdisc cake .* dev ifb9eth0 root')
 	if [ -n "$STATUS_UPLOAD" ] && [ -n "$STATUS_DOWNLOAD" ]; then
@@ -56,7 +63,7 @@ cake_check() {
 	fi
 }
 
-cake_download() {
+cake_download(){
 	VERSIONS_ONLINE=$(/usr/sbin/curl -fsL --retry 3 --connect-timeout 3 "https://raw.githubusercontent.com/$MAINTAINER/$SCRIPT_NAME_GITHUB/$SCRIPT_BRANCH/versions.txt")
 	if [ -n "$VERSIONS_ONLINE" ]; then
 		VERSION_LOCAL_CAKE=$(opkg list_installed | grep "^sched-cake-oot - " | awk -F " - " '{print $2}' | cut -d- -f-4)
@@ -123,7 +130,7 @@ cake_download() {
 	fi
 }
 
-cake_start() {
+cake_start(){
 	entwaretimer="0"
 	while [ ! -f "/opt/bin/sh" ] && [ "$entwaretimer" -lt "10" ]; do
 		entwaretimer="$((entwaretimer + 1))"
@@ -145,7 +152,7 @@ cake_start() {
 				options="besteffort $options"
 				;;
 		esac
-
+		
 		Print_Output "true" "Starting - settings: $2 | $3 | $options" "$PASS"
 		runner disable 2>/dev/null
 		fc disable 2>/dev/null
@@ -162,7 +169,7 @@ cake_start() {
 	fi
 }
 
-cake_stop() {
+cake_stop(){
 	if cake_check; then
 		Print_Output "true" "Stopping" "$PASS"
 		cru d "$SCRIPT_NAME_FANCY"
@@ -227,7 +234,7 @@ MainMenu(){
 		case "$menu" in
 			1)
 				printf "\\n"
-				Menu_Start
+				Menu_Start "menu"
 				PressEnter
 				break
 			;;
@@ -280,24 +287,136 @@ MainMenu(){
 }
 
 Menu_Start(){
-	if [ -z "$2" ] || [ -z "$3" ]; then
-		Print_Output "false" "Required parameters missing: $SCRIPT_NAME $1 dlspeed upspeed \"optional extra parameters\"" "$WARN"
-		Print_Output "false" ""
-		Print_Output "false" "Example #1: $SCRIPT_NAME $1 30Mbit 5000Kbit"
-		Print_Output "false" "Example #2: $SCRIPT_NAME $1 30Mbit 5Mbit \"diffserv4 docsis ack-filter\""
-		exit 1
+	dlspeed=""
+	upspeed=""
+	options=""
+	
+	if [ "$1" = "menu" ]; then
+		ScriptHeader
+		printf "Choose options as follows:\\n"
+		printf "    - download speed [Mbps]\\n"
+		printf "    - upload speed [Mbps]\\n"
+		printf "    - queue priority [choice]\\n"
+		printf "    - other options [optional]\\n"
+		printf "\\n"
+		printf "\\e[1m#########################################################\\e[0m\\n"
+		
+		exitmenu=""
+		queueprio=""
+		
+		while true; do
+			printf "\\n\\e[1mPlease enter your download speed (Mbps, max 2 decimal places):\\e[0m    "
+			read -r "dl_choice"
+			
+			if [ "$dl_choice" = "e" ]; then
+				exitmenu="exit"
+				break
+			elif ! Validate_Bandwidth "$dl_choice"; then
+				printf "\\n\\e[31mPlease enter a valid number (max 2 decimal places)\\e[0m\\n"
+			else
+				dlspeed="$dl_choice"
+				printf "\\n"
+				break
+			fi
+		done
+		
+		if [ "$exitmenu" = "exit" ]; then
+			while true; do
+				printf "\\n\\e[1mPlease enter your upload speed (Mbps, max 2 decimal places):\\e[0m    "
+				read -r "up_choice"
+				
+				if [ "$up_choice" = "e" ]; then
+					exitmenu="exit"
+					break
+				elif ! Validate_Bandwidth "$up_choice"; then
+					printf "\\n\\e[31mPlease enter a valid number (max 2 decimal places)\\e[0m\\n"
+				else
+					upspeed="$up_choice"
+					printf "\\n"
+					break
+				fi
+			done
+		fi
+		
+		if [ "$exitmenu" = "exit" ]; then
+			while true; do
+				printf "\\n\\e[1mPlease choose a queue priority:\\e[0m\\n"
+				printf "    1. besteffort (default)\\n"
+				printf "    2. diffserv3\\n\\n"
+				printf "    3. diffserv4 (default)\\n"
+				printf "    4. diffserv8 (default)\\n"
+				printf "Choose an option:    "
+				read -r "priomenu"
+				case "$priomenu" in
+					1)
+						queueprio="besteffort"
+						printf "\\n"
+						break
+					;;
+					2)
+						queueprio="diffserv3"
+						printf "\\n"
+						break
+					;;
+					3)
+						queueprio="diffserv4"
+						printf "\\n"
+						break
+					;;
+					4)
+						queueprio="diffserv8"
+						printf "\\n"
+						break
+					;;
+					e)
+						exitmenu="exit"
+						break
+					;;
+					*)
+						printf "\\n\\e[31mPlease enter a valid choice (1-4)\\e[0m\\n"
+					;;
+				esac
+			done
+		fi
+		
+		if [ "$exitmenu" = "exit" ]; then
+			while true; do
+				printf "\\n\\e[1mPlease enter any other options for cake:\\e[0m    "
+				read -r "opt_choice"
+				
+				if [ "$opt_choice" = "e" ]; then
+					exitmenu="exit"
+					break
+				else
+					options="$queueprio $opt_choice"
+					printf "\\n"
+					break
+				fi
+			done
+		fi
+		
+		if [ "$exitmenu" = "exit" ]; then
+			printf "\\n"
+			Print_Output "false" "Cake configuration cancelled" "$WARN"
+			return 1
+		fi
+	else
+		dlspeed="$2"
+		upspeed="$3"
+		options="$4"
 	fi
+	
 	cake_stop
-
+	
 	if [ ! -f "/opt/lib/modules/sch_cake.ko" ] || [ ! -f "/opt/sbin/tc" ]; then
 		Print_Output "true" "Cake binaries missing - Exiting" "$CRIT"
 		exit 1
 	fi
-
+	
 	# Cleanup old script entries
 	rm -r "/jffs/addons/$SCRIPT_NAME.d"
 	sed -i '\~# CakeQOS-Merlin~d' /jffs/scripts/firewall-start /jffs/scripts/services-start
-
+	
 	# Add to nat-start
 	if [ ! -f "/jffs/scripts/nat-start" ]; then
 		echo "#!/bin/sh" > /jffs/scripts/nat-start
@@ -306,10 +425,10 @@ Menu_Start(){
 		sed -i '1s~^~#!/bin/sh\n~' /jffs/scripts/nat-start
 	fi
 	if ! grep -qF "# CakeQOS-Merlin" /jffs/scripts/nat-start; then
-		echo "/jffs/scripts/$SCRIPT_NAME start $2 $3 \"$4\" &"' # '"$SCRIPT_NAME_FANCY" >> /jffs/scripts/nat-start
+		echo "/jffs/scripts/$SCRIPT_NAME start $dlspeed $upspeed \"$options\" &"' # '"$SCRIPT_NAME_FANCY" >> /jffs/scripts/nat-start
 		chmod 0755 /jffs/scripts/nat-start
 	fi
-
+	
 	# Add to services-stop
 	if [ ! -f "/jffs/scripts/services-stop" ]; then
 		echo "#!/bin/sh" > /jffs/scripts/services-stop
@@ -387,6 +506,13 @@ case $1 in
 		Menu_Update
 	;;
 	start)
+		if [ -z "$2" ] || [ -z "$3" ]; then
+			Print_Output "false" "Required parameters missing: $SCRIPT_NAME start dlspeed upspeed \"optional extra parameters\"" "$WARN"
+			Print_Output "false" ""
+			Print_Output "false" "Example #1: $SCRIPT_NAME start 30Mbit 5000Kbit"
+			Print_Output "false" "Example #2: $SCRIPT_NAME start 30Mbit 5Mbit \"diffserv4 docsis ack-filter\""
+			exit 1
+		fi
 		Menu_Start "$@"
 	;;
 	status)
