@@ -370,10 +370,9 @@ case $1 in
 	*)
 		Print_Output "false" "Usage: $SCRIPT_NAME {install|update|enable|start|status|stop|disable|uninstall} (enable and start have required parameters)" "$WARN"
 		Print_Output "false" "" "$PASS"
-		Print_Output "false" "install:   download and install necessary $SCRIPT_NAME binaries" "$PASS"
+		Print_Output "false" "install:   only downloads and installs necessary $SCRIPT_NAME binaries" "$PASS"
 		Print_Output "false" "update:    update $SCRIPT_NAME binaries (if any available)" "$PASS"
-		Print_Output "false" "enable:    start $SCRIPT_NAME and add to startup" "$PASS"
-		Print_Output "false" "start:     start $SCRIPT_NAME" "$PASS"
+		Print_Output "false" "start:     configure and start $SCRIPT_NAME" "$PASS"
 		Print_Output "false" "status:    check the current status of $SCRIPT_NAME" "$PASS"
 		Print_Output "false" "stop:      stop $SCRIPT_NAME" "$PASS"
 		Print_Output "false" "disable:   stop $SCRIPT_NAME and remove from startup" "$PASS"
