@@ -19,12 +19,12 @@
 #########################################################
 
 # shellcheck disable=SC2086
-readonly SCRIPT_VERSION="v0.0.6"
+readonly SCRIPT_VERSION="v0.0.7"
 readonly SCRIPT_NAME="cake-qos"
 readonly SCRIPT_NAME_FANCY="CakeQOS-Merlin"
 readonly SCRIPT_NAME_GITHUB="cakeqos-merlin"
-readonly SCRIPT_BRANCH="master"
-readonly MAINTAINER="ttgapers"
+readonly SCRIPT_BRANCH="menu"
+readonly MAINTAINER="jackyaz"
 
 readonly CRIT="\\e[41m"
 readonly ERR="\\e[31m"
