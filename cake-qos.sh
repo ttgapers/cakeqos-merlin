@@ -254,13 +254,13 @@ fi
 
 case $1 in
 	install|update)
-    install_watchdog
+		install_watchdog
 		cake_download "${@}"
 		[ -f "/opt/bin/$SCRIPT_NAME" ] || ln -s "$0" "/opt/bin/$SCRIPT_NAME" >/dev/null 2>&1 # add to /opt/bin so it can be called only as "cake-qos param"
 		;;
 	enable|start)
-    install_watchdog
-    [ -f "/opt/bin/$SCRIPT_NAME" ] || ln -s "$0" "/opt/bin/$SCRIPT_NAME" >/dev/null 2>&1 # add to /opt/bin so it can be called only as "cake-qos param"
+		install_watchdog
+		[ -f "/opt/bin/$SCRIPT_NAME" ] || ln -s "$0" "/opt/bin/$SCRIPT_NAME" >/dev/null 2>&1 # add to /opt/bin so it can be called only as "cake-qos param"
 		cake_stopif
 		#check if bins are installed, for the sake of......
 		if [ ! -f "/opt/lib/modules/sch_cake.ko" ] || [ ! -f "/opt/sbin/tc" ]; then
@@ -270,9 +270,9 @@ case $1 in
 		
 		# Start
 ####### remove from here after a while....
-		# Remove from firewall-start and services-start
+		# Remove from firewall-start, services-start, and nat-start
 		if [ -f /jffs/scripts/firewall-start ]; then
-			LINECOUNT=$(grep -c '# '"$SCRIPT_NAME_FANCY" /jffs/scripts/firewall-start)
+			LINECOUNT=$(grep -c '# '"$SCRIPT_NAME" /jffs/scripts/firewall-start)
 			LINECOUNTEX=$(grep -cx "/jffs/scripts/$SCRIPT_NAME start"' # '"$SCRIPT_NAME" /jffs/scripts/firewall-start)
 
 			if [ "$LINECOUNT" -gt 1 ] || { [ "$LINECOUNTEX" -eq 0 ] && [ "$LINECOUNT" -gt 0 ]; }; then
@@ -281,15 +281,23 @@ case $1 in
 		fi
 
 		if [ -f /jffs/scripts/services-start ]; then
-			LINECOUNT=$(grep -c '# '"$SCRIPT_NAME_FANCY" /jffs/scripts/services-start)
+			LINECOUNT=$(grep -c '# '"$SCRIPT_NAME" /jffs/scripts/services-start)
 			LINECOUNTEX=$(grep -cx "/jffs/scripts/$SCRIPT_NAME start"' # '"$SCRIPT_NAME" /jffs/scripts/services-start)
 
 			if [ "$LINECOUNT" -gt 1 ] || { [ "$LINECOUNTEX" -eq 0 ] && [ "$LINECOUNT" -gt 0 ]; }; then
 				sed -i -e '/# '"$SCRIPT_NAME"'/d' /jffs/scripts/services-start
 			fi
+		fi
+		
+		if [ -f /jffs/scripts/nat-start ]; then
+			LINECOUNT=$(grep -c '# '"$SCRIPT_NAME" /jffs/scripts/nat-start)
+			LINECOUNTEX=$(grep -cx "/jffs/scripts/$SCRIPT_NAME start"' # '"$SCRIPT_NAME" /jffs/scripts/nat-start)
+
+			if [ "$LINECOUNT" -gt 1 ] || { [ "$LINECOUNTEX" -eq 0 ] && [ "$LINECOUNT" -gt 0 ]; }; then
+				sed -i -e '/# '"$SCRIPT_NAME"'/d' /jffs/scripts/nat-start
+			fi
 		fi		
 ####### until here.....
-
 
 		# Add to nat-start
 		if [ -f /jffs/scripts/nat-start ]; then
@@ -368,7 +376,7 @@ case $1 in
 		return 0
 		;;
 	*)
-		Print_Output "false" "Usage: $SCRIPT_NAME {install|update|enable|start|status|stop|disable|uninstall} (enable and start have required parameters)" "$WARN"
+		Print_Output "false" "Usage: $SCRIPT_NAME {install|update|start|status|stop|disable|uninstall} (start has required parameters)" "$WARN"
 		Print_Output "false" "" "$PASS"
 		Print_Output "false" "install:   only downloads and installs necessary $SCRIPT_NAME binaries" "$PASS"
 		Print_Output "false" "update:    update $SCRIPT_NAME binaries (if any available)" "$PASS"
