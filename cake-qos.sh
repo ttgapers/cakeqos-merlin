@@ -64,11 +64,11 @@ cake_download() {
 		REMOTEMD5="$(/usr/sbin/curl -fsL --retry 3 https://raw.githubusercontent.com/ttgapers/cakeqos-merlin/$SCRIPT_BRANCH/$SCRIPT_NAME.sh | md5sum | awk '{print $1}')"
 
 		if [ "${LATEST_VERSION}" != "" ]; then
-			if [ "${LATEST_VERSION}" != "${SCRIPT_VERSION}" ]; then
+			if [ "${LATEST_VERSION}" != "${SCRIPT_VERSION}" ] && [ "$LOCALMD5" != "$REMOTEMD5" ]; then
 				Print_Output "true" "New CakeQOS-Merlin detected (${LATEST_VERSION}, currently running ${SCRIPT_VERSION}), updating..." "$WARN"
 				echo "${LATEST}" > "/jffs/scripts/${SCRIPT_NAME}"
 				chmod 0755 "/jffs/scripts/${SCRIPT_NAME}"
-			elif [ "$LOCALMD5" != "$REMOTEMD5" ]; then
+			elif [ "${LATEST_VERSION}" == "${SCRIPT_VERSION}" ] && [ "$LOCALMD5" != "$REMOTEMD5" ]; then
 				Print_Output "true" "Local and server md5 don't match, updating..." "$WARN"
 				echo "${LATEST}" > "/jffs/scripts/${SCRIPT_NAME}"
 				chmod 0755 "/jffs/scripts/${SCRIPT_NAME}"
