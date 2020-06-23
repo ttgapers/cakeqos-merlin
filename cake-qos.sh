@@ -2,7 +2,7 @@
 # CakeQOS-Merlin - port for Merlin firmware supported routers
 # Site: https://github.com/ttgapers/cakeqos-merlin
 # Thread: https://www.snbforums.com/threads/release-cakeqos-merlin.64800/
-# Credits: robcore, Odkrys, ttgapers, jackiechun, maghuro, Jack Yaz
+# Credits: robcore, Odkrys, ttgapers, jackiechun, maghuro, Adamm, Jack Yaz
 
 #########################################################
 ##               _                                     ##
