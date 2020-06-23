@@ -182,15 +182,10 @@ cake_stop() {
 
 ### Check Requirements
 if [ "$(nvram get jffs2_scripts)" != "1" ]; then
-	Print_Output "true" "ERROR: Custom JFFS Scripts must be enabled." "$CRIT"
-	FAIL="1"
-fi
-if [ "$1" != "start" ] && [ ! -f "/opt/bin/opkg" ]; then
-	Print_Output "true" "ERROR: Entware must be installed." "$CRIT"
-	FAIL="1"
-fi
-if [ "$FAIL" = "1" ]; then
-	return 1
+	nvram set jffs2_scripts=1
+	nvram commit
+	Print_Output "true" "Custom JFFS Scripts Enabled - Please Manually Reboot To Apply Changes" "$CRIT"
+	exit 1
 fi
 
 ### Parameter Checks
