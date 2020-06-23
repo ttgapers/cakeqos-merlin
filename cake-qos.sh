@@ -5,10 +5,10 @@
 # Credits: robcore, Odkrys, ttgapers, jackiechun
 
 # shellcheck disable=SC2086
-readonly SCRIPT_VERSION="v0.0.5"
+readonly SCRIPT_VERSION="v0.0.6"
 readonly SCRIPT_NAME="cake-qos"
 readonly SCRIPT_NAME_FANCY="CakeQOS-Merlin"
-readonly SCRIPT_BRANCH="develop"
+readonly SCRIPT_BRANCH="master"
 WDogdir="/jffs/addons/$SCRIPT_NAME.d"
 WDog="${WDogdir}/cake-watchdog.sh"
 
