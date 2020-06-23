@@ -40,6 +40,19 @@ isrunning() {
 		echo "false"
 	fi
 }
+
+install_watchdog() {
+  if [ ! -f "$WDog" ]; then
+  	Print_Output "true" "Installing cake-watchdog..." "$PASS"
+  	if [ ! -d "$WDogdir" ]; then
+  	   mkdir "$WDogdir"
+  	   chmod 0777 "$WDogdir"
+  	fi
+  	printf "" > "$WDog"
+  	chmod 0755 "$WDog"
+  fi
+}
+
 ### Cake Download
 cake_download() {
 	if [ "${1}" = "update" ]; then
@@ -134,17 +147,6 @@ cake_start() {
 		if [ -f /opt/bin/sh ]; then
 			cru a "$SCRIPT_NAME_FANCY" "*/30 * * * * $0 checkrun"
 			cake_serve "${@}"
-			
-			#add watchdog
-			if [ ! -f "$WDog" ]; then
-				Print_Output "true" "Installing cake-watchdog..." "$WARN"
-				if [ ! -d "$WDogdir" ]; then
-				   mkdir "$WDogdir"
-				   chmod 0777 "$WDogdir"
-				fi
-				printf "" > "$WDog"
-				chmod 0755 "$WDog"
-			fi
 			exit 0
 		else
 			Print_Output "true" "Entware isn't ready, waiting 10 sec - retry $i" "$ERR"
@@ -220,7 +222,7 @@ cake_disable() {
 			sed -i -e '/# '"$SCRIPT_NAME_FANCY"'/d' /jffs/scripts/services-stop
 		fi
 	fi
-	if [ -f "$WDogdir" ]; then
+	if [ -d "$WDogdir" ]; then
 		rm -r "$WDogdir"
 	fi
 }
@@ -252,10 +254,12 @@ fi
 
 case $1 in
 	install|update)
+    install_watchdog
 		cake_download "${@}"
 		[ -f "/opt/bin/$SCRIPT_NAME" ] || ln -s "$0" "/opt/bin/$SCRIPT_NAME" >/dev/null 2>&1 # add to /opt/bin so it can be called only as "cake-qos param"
 		;;
 	enable|start)
+    install_watchdog
     [ -f "/opt/bin/$SCRIPT_NAME" ] || ln -s "$0" "/opt/bin/$SCRIPT_NAME" >/dev/null 2>&1 # add to /opt/bin so it can be called only as "cake-qos param"
 		cake_stopif
 		#check if bins are installed, for the sake of......
