@@ -341,7 +341,7 @@ case $1 in
 			Print_Output "true" "Not running, starting..." "$CRIT"
 			cake_start "${@}"
 		else
-			Print_Output "true" "Running successfully" "$PASS"
+			Print_Output "true" "Running successfully" "$PASS" #remove this when we see that it's working OK. It isn't needed to spam log each 30 min
 		fi
 		;;
 	stop)
