@@ -21,13 +21,14 @@
     ```sh
     /usr/sbin/curl --retry 3 "https://raw.githubusercontent.com/ttgapers/cakeqos-merlin/master/cake-qos.sh" -o "/jffs/scripts/cake-qos" && chmod 0755 /jffs/scripts/cake-qos
     ```
-    
+
 2.  Run the start command with the params you want (installer will detect your router model). If you receive any errors (e.g. libnl-tiny package size mismatch) please ensure your Entware instance is up-to-date.
 
     Change for your linespeed and any overhead (assuming 135Mbit download, 13Mbit upload, "besteffort docsis ack-filter" as optional extra parameters; speeds can also be specified in `Kbit` units):
     ```sh
     /jffs/scripts/cake-qos start **135Mbit 13Mbit "besteffort docsis ack-filter"**
     ```
+
 3.  Reboot your router
 
 4.  Check System Log entries in web interface for **CakeQOS-Merlin**
