@@ -43,7 +43,7 @@ cake_check() {
 
 ### Cake Download
 cake_download() {
-	if [ "$1}" = "update" ]; then
+	if [ "$1" = "update" ]; then
 		VERSION_LOCAL_CAKE=$(opkg list_installed | grep "^sched-cake-oot - " | awk -F" - " '{print $2}' | cut -d- -f-4)
 		VERSION_LOCAL_TC=$(opkg list_installed | grep "^tc-adv - " | awk -F" - " '{print $2}')
 		LATEST="$(/usr/sbin/curl -fsL --retry 3 https://raw.githubusercontent.com/$MAINTAINER/$SCRIPT_NAME_GITHUB/$SCRIPT_BRANCH/$SCRIPT_NAME.sh)"
@@ -212,7 +212,6 @@ cake_disable() {
 }
 
 ### Check Requirements
-FAIL="0"
 if [ "$(nvram get jffs2_scripts)" -ne 1 ]; then
 	Print_Output "true" "ERROR: Custom JFFS Scripts must be enabled." "$CRIT"
 	FAIL="1"
@@ -249,73 +248,32 @@ case $1 in
 			cake_download "${@}"
 		fi
 
-		# Start
-####### remove from here after a while....
-		# Remove watchdog folder
-		if [ -d "/jffs/addons/$SCRIPT_NAME.d" ]; then
-			rm -r "/jffs/addons/$SCRIPT_NAME.d"
-		fi
-		# Remove from firewall-start, services-start, and nat-start
-		if [ -f /jffs/scripts/firewall-start ]; then
-			LINECOUNT=$(grep -c '# '"$SCRIPT_NAME" /jffs/scripts/firewall-start)
-			LINECOUNTEX=$(grep -cx "/jffs/scripts/$SCRIPT_NAME start"' # '"$SCRIPT_NAME" /jffs/scripts/firewall-start)
+		# Cleanup old script entries
+		rm -r "/jffs/addons/$SCRIPT_NAME.d"
+		sed -i '\~# CakeQOS-Merlin~d' /jffs/scripts/firewall-start /jffs/scripts/services-start /jffs/scripts/nat-start
 
-			if [ "$LINECOUNT" -gt 1 ] || { [ "$LINECOUNTEX" -eq 0 ] && [ "$LINECOUNT" -gt 0 ]; }; then
-				sed -i -e '/# '"$SCRIPT_NAME"'/d' /jffs/scripts/firewall-start
-			fi
-		fi
-
-		if [ -f /jffs/scripts/services-start ]; then
-			LINECOUNT=$(grep -c '# '"$SCRIPT_NAME" /jffs/scripts/services-start)
-			LINECOUNTEX=$(grep -cx "/jffs/scripts/$SCRIPT_NAME start"' # '"$SCRIPT_NAME" /jffs/scripts/services-start)
-
-			if [ "$LINECOUNT" -gt 1 ] || { [ "$LINECOUNTEX" -eq 0 ] && [ "$LINECOUNT" -gt 0 ]; }; then
-				sed -i -e '/# '"$SCRIPT_NAME"'/d' /jffs/scripts/services-start
-			fi
-		fi
-
-		if [ -f /jffs/scripts/nat-start ]; then
-			LINECOUNT=$(grep -c '# '"$SCRIPT_NAME" /jffs/scripts/nat-start)
-			LINECOUNTEX=$(grep -cx "/jffs/scripts/$SCRIPT_NAME start"' # '"$SCRIPT_NAME" /jffs/scripts/nat-start)
-
-			if [ "$LINECOUNT" -gt 1 ] || { [ "$LINECOUNTEX" -eq 0 ] && [ "$LINECOUNT" -gt 0 ]; }; then
-				sed -i -e '/# '"$SCRIPT_NAME"'/d' /jffs/scripts/nat-start
-			fi
-		fi
-####### until here.....
 
 		# Add to nat-start
-		if [ -f /jffs/scripts/nat-start ]; then
-			LINECOUNT=$(grep -c '# '"$SCRIPT_NAME_FANCY" /jffs/scripts/nat-start)
-			LINECOUNTEX=$(grep -cx "/jffs/scripts/$SCRIPT_NAME start"' # '"$SCRIPT_NAME_FANCY" /jffs/scripts/nat-start)
-
-			if [ "$LINECOUNT" -gt 1 ] || { [ "$LINECOUNTEX" -eq 0 ] && [ "$LINECOUNT" -gt 0 ]; }; then
-				sed -i -e '/# '"$SCRIPT_NAME_FANCY"'/d' /jffs/scripts/nat-start
-			fi
-
-			if [ "$LINECOUNTEX" -eq 0 ]; then
-				echo "/jffs/scripts/$SCRIPT_NAME start ${2} ${3} \"${4}\" &"' # '"$SCRIPT_NAME_FANCY" >> /jffs/scripts/nat-start
-			fi
-		else
-			printf "#!/bin/sh\n\n/jffs/scripts/%s start %s %s \"%s\" & # %s\n" "${SCRIPT_NAME}" "${2}" "${3}" "${4}" "${SCRIPT_NAME_FANCY}" >> /jffs/scripts/nat-start
-			chmod 0755 /jffs/scripts/nat-start
+		if [ ! -f "/jffs/scripts/nat-start" ]; then
+			echo "#!/bin/sh" > /jffs/scripts/nat-start
+			echo >> /jffs/scripts/nat-start
+		elif [ -f "/jffs/scripts/nat-start" ] && ! head -1 /jffs/scripts/nat-start | grep -qE "^#!/bin/sh"; then
+			sed -i '1s~^~#!/bin/sh\n~' /jffs/scripts/nat-start
 		fi
-		# Stop
-		if [ -f /jffs/scripts/services-stop ]; then
-			LINECOUNT=$(grep -c '# '"$SCRIPT_NAME_FANCY" /jffs/scripts/services-stop)
-			LINECOUNTEX=$(grep -cx "/jffs/scripts/$SCRIPT_NAME stop"' # '"$SCRIPT_NAME_FANCY" /jffs/scripts/services-stop)
+		sed -i '\~# CakeQOS-Merlin~d' /jffs/scripts/nat-start
+		echo "/jffs/scripts/$SCRIPT_NAME start ${2} ${3} \"${4}\" &"' # '"$SCRIPT_NAME_FANCY" >> /jffs/scripts/nat-start
+		chmod 0755 /jffs/scripts/nat-start
 
-			if [ "$LINECOUNT" -gt 1 ] || { [ "$LINECOUNTEX" -eq 0 ] && [ "$LINECOUNT" -gt 0 ]; }; then
-				sed -i -e '/# '"$SCRIPT_NAME_FANCY"'/d' /jffs/scripts/services-stop
-			fi
-
-			if [ "$LINECOUNTEX" -eq 0 ]; then
-				echo "/jffs/scripts/$SCRIPT_NAME stop"' # '"$SCRIPT_NAME_FANCY" >> /jffs/scripts/services-stop
-			fi
-		else
-			printf "#!/bin/sh\n\n/jffs/scripts/%s stop # %s\n" "${SCRIPT_NAME}" "${SCRIPT_NAME_FANCY}" >> /jffs/scripts/services-stop
-			chmod 0755 /jffs/scripts/services-stop
+		# Add to services-stop
+		if [ ! -f "/jffs/scripts/services-stop" ]; then
+			echo "#!/bin/sh" > /jffs/scripts/services-stop
+			echo >> /jffs/scripts/services-stop
+		elif [ -f "/jffs/scripts/services-stop" ] && ! head -1 /jffs/scripts/services-stop | grep -qE "^#!/bin/sh"; then
+			sed -i '1s~^~#!/bin/sh\n~' /jffs/scripts/services-stop
 		fi
+		sed -i '\~# CakeQOS-Merlin~d' /jffs/scripts/services-stop
+		echo "/jffs/scripts/$SCRIPT_NAME stop"' # '"$SCRIPT_NAME_FANCY" >> /jffs/scripts/services-stop
+		chmod 0755 /jffs/scripts/services-stop
 
 		Print_Output "true" "Enabled" "$PASS"
 		cake_start "${@}"
