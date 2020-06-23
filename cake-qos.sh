@@ -28,6 +28,10 @@ Print_Output(){
 	fi
 }
 
+Filter_Version() {
+	grep -m1 -oE 'v[0-9]{1,2}([.][0-9]{1,2})([.][0-9]{1,2})'
+}
+
 cake_check() {
 	STATUS_UPLOAD=$(tc qdisc | grep -E '^qdisc cake .* dev eth0 root')
 	STATUS_DOWNLOAD=$(tc qdisc | grep -E '^qdisc cake .* dev ifb9eth0 root')
@@ -43,21 +47,21 @@ cake_download() {
 		VERSION_LOCAL_CAKE=$(opkg list_installed | grep "^sched-cake-oot - " | awk -F" - " '{print $2}' | cut -d- -f-4)
 		VERSION_LOCAL_TC=$(opkg list_installed | grep "^tc-adv - " | awk -F" - " '{print $2}')
 		LATEST="$(/usr/sbin/curl -fsL --retry 3 https://raw.githubusercontent.com/$MAINTAINER/$SCRIPT_NAME_GITHUB/$SCRIPT_BRANCH/$SCRIPT_NAME.sh)"
-		LATEST_VERSION=$(echo "$LATEST" | grep "^readonly SCRIPT_VERSION" | awk -F"=" '{print $2}' | cut -d "\"" -f 2)
-		LOCALMD5="$(md5sum "/jffs/scripts/$SCRIPT_NAME" | awk '{print $1}')"
+		REMOTE_VERSION=$(/usr/sbin/curl -fsL --retry 3 https://raw.githubusercontent.com/$MAINTAINER/$SCRIPT_NAME_GITHUB/$SCRIPT_BRANCH/$SCRIPT_NAME.sh | Filter_Version)
+		LOCALMD5="$(md5sum "$0" | awk '{print $1}')"
 		REMOTEMD5="$(/usr/sbin/curl -fsL --retry 3 https://raw.githubusercontent.com/$MAINTAINER/$SCRIPT_NAME_GITHUB/$SCRIPT_BRANCH/$SCRIPT_NAME.sh | md5sum | awk '{print $1}')"
 
-		if [ -n "$LATEST_VERSION" ]; then
-			if [ "$LATEST_VERSION" != "$SCRIPT_VERSION" ] && [ "$LOCALMD5" != "$REMOTEMD5" ]; then
-				Print_Output "true" "New CakeQOS-Merlin detected (${LATEST_VERSION}, currently running ${SCRIPT_VERSION}), updating..." "$WARN"
+		if [ -n "$REMOTE_VERSION" ]; then
+			if [ "$LOCALMD5" != "$REMOTEMD5" ]; then
+				if [ "$SCRIPT_VERSION" != "$REMOTE_VERSION" ]; then
+					Print_Output "true" "New CakeQOS-Merlin detected (${REMOTE_VERSION}, currently running ${SCRIPT_VERSION}), updating..." "$WARN"
+				else
+					Print_Output "true" "Local and server md5 don't match, updating..." "$WARN"
+				fi
 				echo "${LATEST}" > "/jffs/scripts/${SCRIPT_NAME}"
 				chmod 0755 "/jffs/scripts/${SCRIPT_NAME}"
-			elif [ "$LATEST_VERSION" = "$SCRIPT_VERSION" ] && [ "$LOCALMD5" != "$REMOTEMD5" ]; then
-				Print_Output "true" "Local and server md5 don't match, updating..." "$WARN"
-				echo "$LATEST" > "/jffs/scripts/${SCRIPT_NAME}"
-				chmod 0755 "/jffs/scripts/${SCRIPT_NAME}"
 			else
-				Print_Output "false" "You are running the latest $SCRIPT_NAME_FANCY script (${LATEST_VERSION}, currently running ${SCRIPT_VERSION}), skipping..." "$PASS"
+				Print_Output "false" "You are running the latest $SCRIPT_NAME_FANCY script (${REMOTE_VERSION}, currently running ${SCRIPT_VERSION}), skipping..." "$PASS"
 			fi
 		fi
 	elif [ "$1" = "install" ]; then
