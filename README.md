@@ -21,31 +21,28 @@
 
 1. Download and apply permissions:
 > /usr/sbin/curl --retry 3 "https://raw.githubusercontent.com/ttgapers/cakeqos-merlin/master/cake-qos.sh" -o "/jffs/scripts/cake-qos" && chmod 0755 /jffs/scripts/cake-qos
-
-2. Run the install command (installer will detect your router model). If you receive any errors (e.g. libnl-tiny package size mismatch) please ensure your Entware instance is up-to-date:
-> /jffs/scripts/cake-qos install
-3. Change for your linespeed and any overhead (assuming 135Mbit download, 13Mbit upload, "docsis ack-filter" as optional extra parameters; speeds can also be specified in `Kbit` units):
-> /jffs/scripts/cake-qos enable **135Mbit 13Mbit "besteffort docsis ack-filter"**
-4. Reboot your router
-5. Check System Log entries in web interface for **CakeQOS-Merlin**
-6. To check that CakeQOS-Merlin is running, run `cake-qos status` and/or do a bufferbloat test on https://www.dslreports.com/speedtest
+2. Run the start command with the params you want (installer will detect your router model). If you receive any errors (e.g. libnl-tiny package size mismatch) please ensure your Entware instance is up-to-date.
+Change for your linespeed and any overhead (assuming 135Mbit download, 13Mbit upload, "besteffort docsis ack-filter" as optional extra parameters; speeds can also be specified in `Kbit` units):
+> /jffs/scripts/cake-qos start **135Mbit 13Mbit "besteffort docsis ack-filter"**
+3. Reboot your router
+4. Check System Log entries in web interface for **CakeQOS-Merlin**
+5. To check that CakeQOS-Merlin is running, run `cake-qos status` and/or do a bufferbloat test on https://www.dslreports.com/speedtest
 
 ## Usage
 
-> cake-qos {install|update|enable|start|status|stop|disable|uninstall}
+> cake-qos {install|update|start|status|stop|disable|uninstall}
 
 (enable and start have required parameters)
 
-- install: download and install necessary cake-qos binaries
-- update: update cake-qos binaries (if any available)
-- enable:  start cake-qos and add to startup
-- start:   start cake-qos
+- install: only download and install necessary cake-qos binaries
+- update: update cake-qos binaries and installer (if any available)
+- start:   configure and start cake-qos
 - status:   check the current status of cake-qos
 - stop:    stop cake-qos
 - disable: stop cake-qos and remove from startup
 - uninstall: stop cake-qos, remove from startup, and remove cake binaries
 
-**Note:** defaults to `besteffort` priority queue if none specified in `enable`/`start` options.
+**Note:** defaults to `besteffort` priority queue if none specified in `start` option.
     
 ## CLI
 
@@ -54,6 +51,7 @@ tc qdisc
 tc qdisc show | grep root
 tc -s qdisc show dev eth0 # for upload
 tc -s qdisc show dev ifb9eth0 # for download
+cake-qos status
 ```
 ## Uninstall/Remove
 
