@@ -320,7 +320,7 @@ Menu_Start(){
 			fi
 		done
 		
-		if [ "$exitmenu" = "exit" ]; then
+		if [ "$exitmenu" != "exit" ]; then
 			while true; do
 				printf "\\n\\e[1mPlease enter your upload speed (Mbps, max 2 decimal places):\\e[0m    "
 				read -r "up_choice"
@@ -338,7 +338,7 @@ Menu_Start(){
 			done
 		fi
 		
-		if [ "$exitmenu" = "exit" ]; then
+		if [ "$exitmenu" != "exit" ]; then
 			while true; do
 				printf "\\n\\e[1mPlease choose a queue priority:\\e[0m\\n"
 				printf "    1. besteffort (default)\\n"
@@ -379,7 +379,7 @@ Menu_Start(){
 			done
 		fi
 		
-		if [ "$exitmenu" = "exit" ]; then
+		if [ "$exitmenu" != "exit" ]; then
 			while true; do
 				printf "\\n\\e[1mPlease enter any other options for cake:\\e[0m    "
 				read -r "opt_choice"
