@@ -31,9 +31,8 @@ Print_Output(){
 
 ### Status
 cake_check() {
-	STATUS="$(tc qdisc | grep '^qdisc cake ')"
-	STATUS_UPLOAD=$(echo "$STATUS" | grep "dev eth0 root")
-	STATUS_DOWNLOAD=$(echo "$STATUS" | grep "dev ifb9eth0 root")
+	STATUS_UPLOAD=$(tc qdisc | grep -E '^qdisc cake .* dev eth0 root')
+	STATUS_DOWNLOAD=$(tc qdisc | grep -E '^qdisc cake .* dev ifb9eth0 root')
 	if [ -n "$STATUS_UPLOAD" ] && [ -n "$STATUS_DOWNLOAD" ]; then
 		return 0
 	else
@@ -87,7 +86,7 @@ cake_download() {
 		DOINSTALL="1"
 	fi
 
-	VERSIONS_ONLINE=$(/usr/sbin/curl --retry 3 -s "https://raw.githubusercontent.com/$MAINTAINER/$SCRIPT_NAME_GITHUB/$SCRIPT_BRANCH/versions.txt")
+	VERSIONS_ONLINE=$(/usr/sbin/curl -fsL --retry 3 --connect-timeout 3 "https://raw.githubusercontent.com/$MAINTAINER/$SCRIPT_NAME_GITHUB/$SCRIPT_BRANCH/versions.txt")
 	if [ -n "$VERSIONS_ONLINE" ]; then
 		VERSION_ONLINE_CAKE=$(echo "$VERSIONS_ONLINE" | awk -F"|" '{print $1}')
 		VERSION_ONLINE_TC=$(echo "$VERSIONS_ONLINE" | awk -F"|" '{print $2}')
@@ -102,8 +101,8 @@ cake_download() {
 			FILE2="tc-adv_${VERSION_ONLINE_TC}_${VERSION_ONLINE_SUFFIX}.ipk"
 			FILE1_OUT="sched-cake-oot.ipk"
 			FILE2_OUT="tc-adv.ipk"
-			/usr/sbin/curl --retry 3 "https://raw.githubusercontent.com/$MAINTAINER/$SCRIPT_NAME_GITHUB/$SCRIPT_BRANCH/${FILE1}" -o "/tmp/home/root/${FILE1_OUT}"
-			/usr/sbin/curl --retry 3 "https://raw.githubusercontent.com/$MAINTAINER/$SCRIPT_NAME_GITHUB/$SCRIPT_BRANCH/${FILE2}" -o "/tmp/home/root/${FILE2_OUT}"
+			/usr/sbin/curl -fsL --retry 3 --connect-timeout 3 "https://raw.githubusercontent.com/$MAINTAINER/$SCRIPT_NAME_GITHUB/$SCRIPT_BRANCH/${FILE1}" -o "/tmp/home/root/${FILE1_OUT}"
+			/usr/sbin/curl -fsL --retry 3 --connect-timeout 3 "https://raw.githubusercontent.com/$MAINTAINER/$SCRIPT_NAME_GITHUB/$SCRIPT_BRANCH/${FILE2}" -o "/tmp/home/root/${FILE2_OUT}"
 
 			if [ -f "/tmp/home/root/${FILE1_OUT}" ] && [ -f "/tmp/home/root/${FILE2_OUT}" ]; then
 				if [ "$1" = "update" ]; then
@@ -130,7 +129,7 @@ cake_start() {
 	entwaretimer="0"
 	while [ ! -f "/opt/bin/sh" ] && [ "$entwaretimer" -lt "100" ]; do
 		entwaretimer="$((entwaretimer + 10))"
-		Print_Output "true" "Entware isn't ready, waiting 10 sec - retry $i" "$WARN"
+		Print_Output "true" "Entware isn't ready, waiting 10 sec" "$WARN"
 		sleep 10
 	done
 	if [ "$entwaretimer" -ge "100" ]; then
@@ -171,24 +170,19 @@ cake_serve() {
 	/opt/sbin/tc filter add dev eth0 parent ffff: protocol all prio 10 u32 match u32 0 0 flowid 1:1 action mirred egress redirect dev ifb9eth0
 }
 
-### Cake Stop If
-cake_stopif() {
-	if cake_check; then
-		cake_stop
-	fi
-}
-
 ### Cake Stop
 cake_stop() {
-	Print_Output "true" "Stopping" "$PASS"
-	cru d "$SCRIPT_NAME_FANCY"
-	/opt/sbin/tc qdisc del dev eth0 ingress 2>/dev/null
-	/opt/sbin/tc qdisc del dev ifb9eth0 root 2>/dev/null
-	/opt/sbin/tc qdisc del dev eth0 root 2>/dev/null
-	ip link del ifb9eth0
-	rmmod sch_cake 2>/dev/null
-	fc enable
-	runner enable
+	if cake_check; then
+		Print_Output "true" "Stopping" "$PASS"
+		cru d "$SCRIPT_NAME_FANCY"
+		/opt/sbin/tc qdisc del dev eth0 ingress 2>/dev/null
+		/opt/sbin/tc qdisc del dev ifb9eth0 root 2>/dev/null
+		/opt/sbin/tc qdisc del dev eth0 root 2>/dev/null
+		ip link del ifb9eth0
+		rmmod sch_cake 2>/dev/null
+		fc enable
+		runner enable
+	fi
 }
 
 ### Cake Disable
@@ -239,7 +233,7 @@ case $1 in
 		;;
 	enable|start)
 		[ -f "/opt/bin/$SCRIPT_NAME" ] || ln -s "$0" "/opt/bin/$SCRIPT_NAME" >/dev/null 2>&1 # add to /opt/bin so it can be called only as "cake-qos param"
-		cake_stopif
+		cake_stop
 		#check if bins are installed, for the sake of......
 		# Why? If binaries don't exist we should prevent install
 		if [ ! -f "/opt/lib/modules/sch_cake.ko" ] || [ ! -f "/opt/sbin/tc" ]; then
