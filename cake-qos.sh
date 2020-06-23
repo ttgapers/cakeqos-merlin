@@ -250,14 +250,13 @@ case $1 in
 		exit 0
 		;;
 	*)
-		Print_Output "false" "Usage: $SCRIPT_NAME {install|update|start|status|stop|disable|uninstall} (start has required parameters)" "$WARN"
+		Print_Output "false" "Usage: $SCRIPT_NAME {install|update|start|status|stop|uninstall} (start has required parameters)" "$WARN"
 		echo
 		Print_Output "false" "install:   only downloads and installs necessary $SCRIPT_NAME binaries" "$PASS"
 		Print_Output "false" "update:    update $SCRIPT_NAME binaries (if any available)" "$PASS"
 		Print_Output "false" "start:     configure and start $SCRIPT_NAME" "$PASS"
 		Print_Output "false" "status:    check the current status of $SCRIPT_NAME" "$PASS"
 		Print_Output "false" "stop:      stop $SCRIPT_NAME" "$PASS"
-		Print_Output "false" "disable:   stop $SCRIPT_NAME and remove from startup" "$PASS"
 		Print_Output "false" "uninstall: stop $SCRIPT_NAME, remove from startup, and remove cake binaries" "$PASS"
 		return 1
 		;;
