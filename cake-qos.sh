@@ -2,7 +2,7 @@
 # CakeQOS-Merlin - port for Merlin firmware supported routers
 # Site: https://github.com/ttgapers/cakeqos-merlin
 # Thread: https://www.snbforums.com/threads/release-cakeqos-merlin.64800/
-# Credits: robcore, Odkrys, ttgapers, jackiechun
+# Credits: robcore, Odkrys, ttgapers, jackiechun, maghuro
 
 # shellcheck disable=SC2086
 readonly SCRIPT_VERSION="v0.0.6"
@@ -281,7 +281,7 @@ case $1 in
 			if [ "$LINECOUNT" -gt 1 ] || { [ "$LINECOUNTEX" -eq 0 ] && [ "$LINECOUNT" -gt 0 ]; }; then
 				sed -i -e '/# '"$SCRIPT_NAME"'/d' /jffs/scripts/nat-start
 			fi
-		fi		
+		fi
 ####### until here.....
 
 		# Add to nat-start
