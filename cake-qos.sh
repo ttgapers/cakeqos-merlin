@@ -185,7 +185,7 @@ case $1 in
 
 		if [ ! -f "/opt/lib/modules/sch_cake.ko" ] || [ ! -f "/opt/sbin/tc" ]; then
 			Print_Output "true" "Cake binaries missing - Installing" "$ERR"
-			cake_download
+			cake_download "{@}"
 		fi
 
 		# Cleanup old script entries
