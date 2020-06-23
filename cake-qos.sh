@@ -68,14 +68,14 @@ cake_download() {
 			case "$RMODEL" in
 			RT-AC86U)
 				FILE1_TYPE="1"
-				;;
+			;;
 			RT-AX88U)
 				FILE1_TYPE="ax"
-				;;
+			;;
 			*)
 				Print_Output "false" "Cake isn't yet compatible with ASUS $RMODEL, keep watching our thread!" "$CRIT"
 				exit 1
-				;;
+			;;
 			esac
 			FILE1="sched-cake-oot_$VERSION_ONLINE_CAKE-$FILE1_TYPE""_""$VERSION_ONLINE_SUFFIX.ipk"
 			FILE2="tc-adv_$VERSION_ONLINE_TC""_""$VERSION_ONLINE_SUFFIX.ipk"
@@ -83,7 +83,7 @@ cake_download() {
 			FILE2_OUT="tc-adv.ipk"
 			/usr/sbin/curl -fsL --retry 3 --connect-timeout 3 "https://raw.githubusercontent.com/$MAINTAINER/$SCRIPT_NAME_GITHUB/$SCRIPT_BRANCH/$FILE1" -o "/opt/tmp/$FILE1_OUT"
 			/usr/sbin/curl -fsL --retry 3 --connect-timeout 3 "https://raw.githubusercontent.com/$MAINTAINER/$SCRIPT_NAME_GITHUB/$SCRIPT_BRANCH/$FILE2" -o "/opt/tmp/$FILE2_OUT"
-
+			
 			if [ -f "/opt/tmp/$FILE1_OUT" ] && [ -f "/opt/tmp/$FILE2_OUT" ]; then
 				if [ "$1" = "update" ]; then
 					opkg --autoremove remove sched-cake-oot
@@ -100,12 +100,12 @@ cake_download() {
 			Print_Output "false" "Your cake binaries are up-to-date." "$PASS"
 		fi
 	fi
-
+	
 	if [ "$1" = "update" ]; then
 		REMOTE_VERSION=$(/usr/sbin/curl -fsL --retry 3 https://raw.githubusercontent.com/$MAINTAINER/$SCRIPT_NAME_GITHUB/$SCRIPT_BRANCH/$SCRIPT_NAME.sh | Filter_Version)
 		LOCALMD5="$(md5sum "$0" | awk '{print $1}')"
 		REMOTEMD5="$(/usr/sbin/curl -fsL --retry 3 https://raw.githubusercontent.com/$MAINTAINER/$SCRIPT_NAME_GITHUB/$SCRIPT_BRANCH/$SCRIPT_NAME.sh | md5sum | awk '{print $1}')"
-
+		
 		if [ -n "$REMOTE_VERSION" ]; then
 			if [ "$LOCALMD5" != "$REMOTEMD5" ]; then
 				if [ "$SCRIPT_VERSION" != "$REMOTE_VERSION" ]; then
