@@ -52,9 +52,6 @@ git_install() {
 	/usr/sbin/curl --retry 3 "https://raw.githubusercontent.com/ttgapers/cakeqos-merlin/develop/cake-qos.sh" -o "/jffs/addons/cake-qos/cake-qos"
 	chmod 0755 /jffs/addons/cake-qos/cake-qos
 	sh /jffs/addons/cake-qos/cake-qos install
-	Print_Output "false" "Installed! Starting and opening Menu..." "$PASS"
-	cake_start
-	Cake_Menu
 }
 
 Filter_Version(){
@@ -82,7 +79,6 @@ Write_Config(){
 		printf '%s="%s"\n' "extraoptions" "$extraoptions"
 		printf '\n%s\n' "##############################################"
 	} > "$SCRIPT_CFG"
-	. "$SCRIPT_CFG"
 }
 
 cake_check(){
@@ -630,6 +626,8 @@ case $1 in
 	installer)
 		Print_Output "false" "Downloading installer..." "$PASS"
 		git_install
+		Print_Output "false" "CakeQoS-Merlin installed! Please run it using \'cake-qos\' and use Option 1 to start it" "$PASS"
+		exit 0
 	;;
 	*)
 		Print_Output "false" "Usage: $SCRIPT_NAME {install|update|start|status|stop|uninstall} (start has required parameters)" "$WARN"
