@@ -53,7 +53,7 @@ Print_Output(){
 
 git_install() {
 	mkdir -p /jffs/addons/cake-qos
-	/usr/sbin/curl --retry 3 "https://raw.githubusercontent.com/ttgapers/cakeqos-merlin/master/cake-qos.sh" -o "/jffs/addons/cake-qos/cake-qos"
+	/usr/sbin/curl --retry 3 "https://raw.githubusercontent.com/ttgapers/cakeqos-merlin/develop/cake-qos.sh" -o "/jffs/addons/cake-qos/cake-qos"
 	chmod 0755 /jffs/addons/cake-qos/cake-qos
 	sh /jffs/addons/cake-qos/cake-qos install
 	exit 0
