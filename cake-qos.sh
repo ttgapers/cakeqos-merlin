@@ -582,6 +582,7 @@ case $1 in
 		fi
 		cake_download "update"
 		[ -f "/opt/bin/$SCRIPT_NAME" ] || "/jffs/addons/$SCRIPT_NAME/$SCRIPT_NAME" "/opt/bin/$SCRIPT_NAME" >/dev/null 2>&1 # add to /opt/bin so it can be called only as "cake-qos param"
+		exec "$0"
 	;;
 	uninstall)
 		cake_stop
