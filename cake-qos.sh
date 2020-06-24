@@ -51,6 +51,14 @@ Print_Output(){
 	fi
 }
 
+git_install() {
+	mkdir -p /jffs/addons/cake-qos
+	/usr/sbin/curl --retry 3 "https://raw.githubusercontent.com/ttgapers/cakeqos-merlin/master/cake-qos.sh" -o "/jffs/addons/cake-qos/cake-qos"
+	chmod 0755 /jffs/addons/cake-qos/cake-qos
+	sh /jffs/addons/cake-qos/cake-qos install
+	exit 0
+}
+
 Filter_Version(){
 	grep -m1 -oE 'v[0-9]{1,2}([.][0-9]{1,2})([.][0-9]{1,2})'
 }
@@ -618,6 +626,10 @@ case $1 in
 		else
 			Print_Output "true" "Running successfully" "$PASS" #remove this when we see that it's working OK. It isn't needed to spam log each 30 min
 		fi
+	;;
+	gitinstall)
+		Print_Output "false" "Downloading installer..." "$PASS"
+		gitinstall
 	;;
 	*)
 		Print_Output "false" "Usage: $SCRIPT_NAME {install|update|start|status|stop|uninstall} (start has required parameters)" "$WARN"
