@@ -49,7 +49,7 @@ Print_Output(){
 
 git_install() {
 	mkdir -p /jffs/addons/cake-qos
-	/usr/sbin/curl --retry 3 "https://raw.githubusercontent.com/ttgapers/cakeqos-merlin/develop/cake-qos.sh" -o "/jffs/addons/cake-qos/cake-qos"
+	/usr/sbin/curl --retry 3 "https://raw.githubusercontent.com/ttgapers/cakeqos-merlin/"$SCRIPT_BRANCH"/cake-qos.sh" -o "/jffs/addons/cake-qos/cake-qos"
 	chmod 0755 /jffs/addons/cake-qos/cake-qos
 	sh /jffs/addons/cake-qos/cake-qos install
 }
@@ -626,7 +626,7 @@ case $1 in
 	installer)
 		Print_Output "false" "Downloading installer..." "$PASS"
 		git_install
-		Print_Output "false" "CakeQoS-Merlin installed! Please run it using \'cake-qos\' and use Option 1 to start it" "$PASS"
+		Print_Output "false" "CakeQoS-Merlin installed! Please run it using 'cake-qos' and use Option 1 to start it" "$PASS"
 		exit 0
 	;;
 	*)
