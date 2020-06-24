@@ -17,7 +17,7 @@
 ##      https://github.com/ttgapers/cakeqos-merlin     ##
 ##                                                     ##
 #########################################################
-
+set -x
 # shellcheck disable=SC2086
 
 readonly SCRIPT_VERSION="v1.0.0"
