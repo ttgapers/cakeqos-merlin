@@ -218,7 +218,7 @@ cake_start(){
 		exit 1
 	fi
 
-	cru a "$SCRIPT_NAME_FANCY" "*/30 * * * * ${SCRIPT_DIR}/${SCRIPT_NAME} checkrun"
+	cru a "$SCRIPT_NAME_FANCY" "*/60 * * * * ${SCRIPT_DIR}/${SCRIPT_NAME} checkrun"
 
 	Print_Output "true" "Starting - settings: ${dlspeed}Mbit | ${upspeed}Mbit | $queueprio | $extraoptions" "$PASS"
 	runner disable 2>/dev/null
@@ -615,18 +615,15 @@ case $1 in
 		exit 0
 	;;
 	checkrun)
-		Print_Output "true" "Checking if running..." "$WARN" #remove this when we see that it's working OK. It isn't needed to spam log each 30 min
 		if ! cake_check; then
-			Print_Output "true" "Not running, starting..." "$CRIT"
+			Print_Output "true" "Not running, forcing start..." "$CRIT"
 			cake_start
-		else
-			Print_Output "true" "Running successfully" "$PASS" #remove this when we see that it's working OK. It isn't needed to spam log each 30 min
 		fi
 	;;
 	installer)
-		Print_Output "false" "Downloading installer..." "$PASS"
+		Print_Output "false" "Downloading CakeQoS-Merlin installer..." "$PASS"
 		git_install
-		Print_Output "false" "CakeQoS-Merlin installed! Please run it using 'cake-qos' and use Option 1 to start it" "$PASS"
+		Print_Output "false" "CakeQoS-Merlin installed! Please run it using 'cake-qos' and use Option 1 to start it. Let the magic begin!" "$PASS"
 		exit 0
 	;;
 	*)
