@@ -453,12 +453,16 @@ case $1 in
 			dlspeed)
 				if ! Validate_Bandwidth "$3"; then echo "${3} is not a valid number!"; echo; exit 2; fi
 				dlspeed="${3}"
-				cake_start
+				if cake_check; then
+					cake_start
+				fi
 			;;
 			upspeed)
 				if ! Validate_Bandwidth "$3"; then echo "${3} is not a valid number!"; echo; exit 2; fi
 				upspeed="${3}"
-				cake_start
+				if cake_check; then
+					cake_start
+				fi
 			;;
 			queueprio)
 				case "$3" in
@@ -479,11 +483,15 @@ case $1 in
 						echo; exit 2
 					;;
 				esac
-				cake_start
+				if cake_check; then
+					cake_start
+				fi
 			;;
 			extraoptions)
 				extraoptions="$3"
-				cake_start
+				if cake_check; then
+					cake_start
+				fi
 			;;
 		esac
 		Write_Config
@@ -569,7 +577,9 @@ case $1 in
 			echo
 		fi
 		Write_Config
-		cake_start
+		if cake_check; then
+			cake_start
+		fi
 
 		[ -f "/opt/bin/$SCRIPT_NAME" ] || ln -s "/jffs/addons/$SCRIPT_NAME/$SCRIPT_NAME" "/opt/bin/$SCRIPT_NAME" >/dev/null 2>&1 # add to /opt/bin so it can be called only as "cake-qos param"
 	;;
