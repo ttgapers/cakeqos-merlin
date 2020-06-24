@@ -143,7 +143,7 @@ cake_download(){
 				fi
 				/usr/sbin/curl -fsL --retry 3 https://raw.githubusercontent.com/ttgapers/cakeqos-merlin/${SCRIPT_BRANCH}/${SCRIPT_NAME}.sh -o "/jffs/addons/${SCRIPT_NAME}/${SCRIPT_NAME}"
 				chmod 0755 "/jffs/addons/${SCRIPT_NAME}/${SCRIPT_NAME}"
-				#exit 0
+				exit 0
 			else
 				Print_Output "false" "You are running the latest $SCRIPT_NAME_FANCY script ($REMOTE_VERSION, currently running $SCRIPT_VERSION), skipping..." "$PASS"
 			fi
@@ -597,8 +597,6 @@ case $1 in
 		fi
 		cake_download "update"
 		[ -f "/opt/bin/$SCRIPT_NAME" ] || "/jffs/addons/$SCRIPT_NAME/$SCRIPT_NAME" "/opt/bin/$SCRIPT_NAME" >/dev/null 2>&1 # add to /opt/bin so it can be called only as "cake-qos param"
-		sleep 3s
-		exec "$0"
 	;;
 	uninstall)
 		cake_stop
