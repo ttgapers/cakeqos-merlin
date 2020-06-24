@@ -30,6 +30,7 @@ readonly ERR="\\e[31m"
 readonly WARN="\\e[33m"
 readonly PASS="\\e[32m"
 
+mkdir -p /jffs/addons/cake-qos
 [ -z "$(nvram get odmpid)" ] && RMODEL=$(nvram get productid) || RMODEL=$(nvram get odmpid) #get router model
 
 if [ -f "$SCRIPT_CFG" ]; then
