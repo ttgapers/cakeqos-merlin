@@ -231,7 +231,7 @@ cake_stop(){
 	if cake_check; then
 		Print_Output "true" "Stopping" "$PASS"
 		cru d "$SCRIPT_NAME_FANCY"
-		sed -i '\~# $SCRIPT_NAME_FANCY~d' /jffs/scripts/nat-start /jffs/scripts/services-stop 2>/dev/null
+		sed -i '\~# CakeQOS-Merlin~d' /jffs/scripts/nat-start /jffs/scripts/services-stop 2>/dev/null
 		/opt/sbin/tc qdisc del dev eth0 ingress 2>/dev/null
 		/opt/sbin/tc qdisc del dev ifb9eth0 root 2>/dev/null
 		/opt/sbin/tc qdisc del dev eth0 root 2>/dev/null
