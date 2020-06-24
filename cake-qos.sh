@@ -19,7 +19,7 @@
 #########################################################
 
 # shellcheck disable=SC2086
-readonly SCRIPT_VERSION="v0.1.1"
+readonly SCRIPT_VERSION="v0.1.2"
 readonly SCRIPT_NAME="cake-qos"
 readonly SCRIPT_NAME_FANCY="CakeQOS-Merlin"
 readonly SCRIPT_BRANCH="develop"

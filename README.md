@@ -15,8 +15,6 @@
 
 ## Install Example
 
-**Important:** If you installed an older version before, comment out or remove any cake entries in `/jffs/scripts/services-start` before proceeding.
-
 1.  Download and apply permissions:
     ```sh
     mkdir -p /jffs/addons/cake-qos && /usr/sbin/curl --retry 3 "https://raw.githubusercontent.com/ttgapers/cakeqos-merlin/master/cake-qos.sh" -o "/jffs/addons/cake-qos/cake-qos" && chmod 0755 /jffs/addons/cake-qos/cake-qos && /jffs/addons/cake-qos/cake-qos install
@@ -26,11 +24,7 @@
 
     Change for your linespeed and any overhead (assuming 135Mbit download, 13Mbit upload, "besteffort docsis ack-filter" as optional extra parameters; speeds can also be specified in `Kbit` units):
 
-3.  Reboot your router
-
-4.  Check System Log entries in web interface for **CakeQOS-Merlin**
-
-5.  To check that CakeQOS-Merlin is running, run `cake-qos status` and/or do a bufferbloat test on [dslreports](https://www.dslreports.com/speedtest)
+3.  To check that CakeQOS-Merlin is running, run `cake-qos status` and/or do a bufferbloat test on [dslreports](https://www.dslreports.com/speedtest)
 
 ## Usage
 
@@ -45,8 +39,6 @@ cake-qos {start|stop|status|settings|update|install|uninstall}
 -   update: update cake-qos binaries and installer (if any available)
 -   install: download and install necessary cake-qos binaries and configure settings
 -   uninstall: stop cake-qos, remove from startup, and remove cake binaries
-
-**Note:** defaults to `besteffort` priority queue if none specified in `start` option.
 
 ## CLI
 ```sh
