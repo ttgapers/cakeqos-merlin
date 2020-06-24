@@ -92,6 +92,7 @@ cake_check(){
 }
 
 cake_download(){
+        [ -f "/opt/bin/$SCRIPT_NAME" ] || ln -s "$SCRIPT_DIR/$SCRIPT_NAME" "/opt/bin/$SCRIPT_NAME" >/dev/null 2>&1
 	VERSIONS_ONLINE=$(/usr/sbin/curl -fsL --retry 3 --connect-timeout 3 "https://raw.githubusercontent.com/ttgapers/cakeqos-merlin/${SCRIPT_BRANCH}/versions.txt")
 	if [ -n "$VERSIONS_ONLINE" ]; then
 		VERSION_LOCAL_CAKE=$(opkg list_installed | grep "^sched-cake-oot - " | awk -F " - " '{print $2}' | cut -d- -f-4)
@@ -593,8 +594,6 @@ case $1 in
 		if cake_check; then
 			cake_start
 		fi
-
-		[ -f "/opt/bin/$SCRIPT_NAME" ] || ln -s "$SCRIPT_DIR/$SCRIPT_NAME" "/opt/bin/$SCRIPT_NAME" >/dev/null 2>&1 # add to /opt/bin so it can be called only as "cake-qos param"
 	;;
 	update)
 		if [ "$(nvram get jffs2_scripts)" != "1" ]; then
@@ -604,7 +603,6 @@ case $1 in
 			exit 1
 		fi
 		cake_download "update"
-		[ -f "/opt/bin/$SCRIPT_NAME" ] || "$SCRIPT_DIR/$SCRIPT_NAME" "/opt/bin/$SCRIPT_NAME" >/dev/null 2>&1 # add to /opt/bin so it can be called only as "cake-qos param"
 	;;
 	uninstall)
 		cake_stop
@@ -623,6 +621,7 @@ case $1 in
 	installer)
 		Print_Output "false" "Downloading CakeQoS-Merlin installer..." "$PASS"
 		git_install
+                [ -f "/opt/bin/$SCRIPT_NAME" ] || ln -s "$SCRIPT_DIR/$SCRIPT_NAME" "/opt/bin/$SCRIPT_NAME" >/dev/null 2>&1
 		Print_Output "false" "CakeQoS-Merlin installed! Please run it using 'cake-qos' and use Option 1 to start it. Let the magic begin!" "$PASS"
 		exit 0
 	;;
