@@ -34,12 +34,8 @@ readonly PASS="\\e[32m"
 
 [ -z "$(nvram get odmpid)" ] && RMODEL=$(nvram get productid) || RMODEL=$(nvram get odmpid) #get router model
 
-if [ ! -f "$SCRIPT_CFG" ]; then
-    if [ ! -d "$SCRIPT_DIR" ]; then
-       mkdir "$SCRIPT_DIR"
-       chmod 777 "$SCRIPT_DIR"
-    fi
-    printf "" > "$SCRIPT_CFG"
+if [ -f "$SCRIPT_CFG" ]; then
+	. "$SCRIPT_CFG"
 fi
 
 Print_Output(){
@@ -58,7 +54,7 @@ git_install() {
 	sh /jffs/addons/cake-qos/cake-qos install
 	Print_Output "false" "Installed! Starting and opening Menu..." "$PASS"
 	cake_start
-	Cake_Menu	
+	Cake_Menu
 }
 
 Filter_Version(){
@@ -203,7 +199,7 @@ cake_start(){
 		sed -i '1s~^~#!/bin/sh\n~' /jffs/scripts/services-stop
 	fi
 	if ! grep -qF "# CakeQOS-Merlin" /jffs/scripts/services-stop; then
-		echo "${SCRIPT_DIR}${SCRIPT_NAME}/${SCRIPT_NAME} stop"' # '"$SCRIPT_NAME_FANCY" >> /jffs/scripts/services-stop
+		echo "${SCRIPT_DIR}/${SCRIPT_NAME} stop"' # '"$SCRIPT_NAME_FANCY" >> /jffs/scripts/services-stop
 		chmod 0755 /jffs/scripts/services-stop
 	fi
 
@@ -283,16 +279,16 @@ Cake_Menu(){
 	Cake_Header
 	reloadmenu="1"
 	printf "\\e[1mSelect an option\\e[0m\\n"
-	echo "1.    Start cake"
-	echo "2.    Stop cake"
-	echo "3.    Check cake status"
-	echo "4.    Change cake settings"
+	echo "[1]  --> Start cake"
+	echo "[2]  --> Stop cake"
+	echo "[3]  --> Check cake status"
+	echo "[4]  --> Change cake settings"
 	echo
-	echo "5.    Check for updates"
-	echo "6.    Install $SCRIPT_NAME_FANCY"
-	echo "7.    Uninstall $SCRIPT_NAME_FANCY"
+	echo "[5]  --> Check for updates"
+	echo "[6]  --> Install $SCRIPT_NAME_FANCY"
+	echo "[7]  --> Uninstall $SCRIPT_NAME_FANCY"
 	echo
-	echo "e.    Exit"
+	echo "[e]  --> Exit"
 	echo
 	printf "\\e[1m#####################################################\\e[0m\\n"
 	echo
@@ -317,13 +313,14 @@ Cake_Menu(){
 				option1="settings"
 				while true; do
 					echo "Select Setting To Modify:"
-					printf '%-35s | %-40s\n' "[1]  --> Download Speed" "$(if [ -n "$dlspeed" ]; then echo "[${dlspeed}]"; else echo "[Unset]"; fi)"
-					printf '%-35s | %-40s\n' "[2]  --> Upload Speed" "$(if [ -n "$upspeed" ]; then echo "[${upspeed}]"; else echo "[Unset]"; fi)"
+					printf '%-35s | %-40s\n' "[1]  --> Download Speed" "$(if [ -n "$dlspeed" ]; then echo "[${dlspeed} Mbit]"; else echo "[Unset]"; fi)"
+					printf '%-35s | %-40s\n' "[2]  --> Upload Speed" "$(if [ -n "$upspeed" ]; then echo "[${upspeed} Mbit]"; else echo "[Unset]"; fi)"
 					printf '%-35s | %-40s\n' "[3]  --> Queue Priority" "$(if [ -n "$queueprio" ]; then echo "[${queueprio}]"; else echo "[Unset]"; fi)"
 					printf '%-35s | %-40s\n' "[4]  --> Extra Options" "$(if [ -n "$extraoptions" ]; then echo "[${extraoptions}]"; else echo "[Unset]"; fi)"
 					echo
-					printf '%-35s\n' "[e] Go back"
-					printf "[1-4]: " 
+					printf '%-35s\n' "[e]  --> Exit"
+					echo
+					printf "[1-4]: "
 					read -r "menu2"
 					echo
 					case "$menu2" in
@@ -519,9 +516,9 @@ case $1 in
 			Print_Output "true" "Custom JFFS scripts enabled - Please manually reboot to apply changes - Exiting" "$CRIT"
 			exit 1
 		fi
-    
+
 		cake_download
-    
+
 		if [ -z "$dlspeed" ]; then
 			while true; do
 				echo
