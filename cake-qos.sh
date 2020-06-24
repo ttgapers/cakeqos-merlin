@@ -24,18 +24,22 @@ readonly SCRIPT_VERSION="v1.0.0"
 readonly SCRIPT_NAME="cake-qos"
 readonly SCRIPT_NAME_FANCY="CakeQOS-Merlin"
 readonly SCRIPT_BRANCH="master"
-readonly SCRIPT_CFG="/jffs/addons/${SCRIPT_NAME}/${SCRIPT_NAME}.cfg"
+readonly SCRIPT_DIR="/jffs/addons/${SCRIPT_NAME}"
+readonly SCRIPT_CFG="${SCRIPT_DIR}/${SCRIPT_NAME}.cfg"
 
 readonly CRIT="\\e[41m"
 readonly ERR="\\e[31m"
 readonly WARN="\\e[33m"
 readonly PASS="\\e[32m"
 
-mkdir -p /jffs/addons/cake-qos
 [ -z "$(nvram get odmpid)" ] && RMODEL=$(nvram get productid) || RMODEL=$(nvram get odmpid) #get router model
 
-if [ -f "$SCRIPT_CFG" ]; then
-	. "$SCRIPT_CFG"
+if [ ! -f "$SCRIPT_CFG" ]; then
+    if [ ! -d "$SCRIPT_DIR" ]; then
+       mkdir "$SCRIPT_DIR"
+       chmod 777 "$SCRIPT_DIR"
+    fi
+    printf "" > "$SCRIPT_CFG"
 fi
 
 Print_Output(){
@@ -141,8 +145,8 @@ cake_download(){
 				else
 					Print_Output "true" "Local and server md5 don't match, updating..." "$WARN"
 				fi
-				/usr/sbin/curl -fsL --retry 3 https://raw.githubusercontent.com/ttgapers/cakeqos-merlin/${SCRIPT_BRANCH}/${SCRIPT_NAME}.sh -o "/jffs/addons/${SCRIPT_NAME}/${SCRIPT_NAME}"
-				chmod 0755 "/jffs/addons/${SCRIPT_NAME}/${SCRIPT_NAME}"
+				/usr/sbin/curl -fsL --retry 3 https://raw.githubusercontent.com/ttgapers/cakeqos-merlin/${SCRIPT_BRANCH}/${SCRIPT_NAME}.sh -o "${SCRIPT_DIR}/${SCRIPT_NAME}"
+				chmod 0755 "${SCRIPT_DIR}/${SCRIPT_NAME}"
 				exit 0
 			else
 				Print_Output "false" "You are running the latest $SCRIPT_NAME_FANCY script ($REMOTE_VERSION, currently running $SCRIPT_VERSION), skipping..." "$PASS"
@@ -175,9 +179,9 @@ cake_start(){
 	elif [ -f "/jffs/scripts/nat-start" ] && ! head -1 /jffs/scripts/nat-start | grep -qE "^#!/bin/sh"; then
 		sed -i '1s~^~#!/bin/sh\n~' /jffs/scripts/nat-start
 	fi
-	if ! grep -qF "/jffs/addons/${SCRIPT_NAME}/${SCRIPT_NAME} start & # $SCRIPT_NAME_FANCY" /jffs/scripts/nat-start; then
+	if ! grep -qF "${SCRIPT_DIR}/${SCRIPT_NAME} start & # $SCRIPT_NAME_FANCY" /jffs/scripts/nat-start; then
 		sed -i '\~# CakeQOS-Merlin~d' /jffs/scripts/nat-start
-		echo "/jffs/addons/${SCRIPT_NAME}/${SCRIPT_NAME} start & # $SCRIPT_NAME_FANCY" >> /jffs/scripts/nat-start
+		echo "${SCRIPT_DIR}/${SCRIPT_NAME} start & # $SCRIPT_NAME_FANCY" >> /jffs/scripts/nat-start
 		chmod 0755 /jffs/scripts/nat-start
 	fi
 
@@ -189,7 +193,7 @@ cake_start(){
 		sed -i '1s~^~#!/bin/sh\n~' /jffs/scripts/services-stop
 	fi
 	if ! grep -qF "# CakeQOS-Merlin" /jffs/scripts/services-stop; then
-		echo "/jffs/addons/${SCRIPT_NAME}/${SCRIPT_NAME} stop"' # '"$SCRIPT_NAME_FANCY" >> /jffs/scripts/services-stop
+		echo "${SCRIPT_DIR}${SCRIPT_NAME}/${SCRIPT_NAME} stop"' # '"$SCRIPT_NAME_FANCY" >> /jffs/scripts/services-stop
 		chmod 0755 /jffs/scripts/services-stop
 	fi
 
@@ -211,7 +215,7 @@ cake_start(){
 		exit 1
 	fi
 
-	cru a "$SCRIPT_NAME_FANCY" "*/30 * * * * /jffs/addons/${SCRIPT_NAME}/${SCRIPT_NAME} checkrun"
+	cru a "$SCRIPT_NAME_FANCY" "*/30 * * * * ${SCRIPT_DIR}/${SCRIPT_NAME} checkrun"
 
 	Print_Output "true" "Starting - settings: ${dlspeed}Mbit | ${upspeed}Mbit | $queueprio | $extraoptions" "$PASS"
 	runner disable 2>/dev/null
@@ -586,7 +590,7 @@ case $1 in
 			cake_start
 		fi
 
-		[ -f "/opt/bin/$SCRIPT_NAME" ] || ln -s "/jffs/addons/$SCRIPT_NAME/$SCRIPT_NAME" "/opt/bin/$SCRIPT_NAME" >/dev/null 2>&1 # add to /opt/bin so it can be called only as "cake-qos param"
+		[ -f "/opt/bin/$SCRIPT_NAME" ] || ln -s "$SCRIPT_DIR/$SCRIPT_NAME" "/opt/bin/$SCRIPT_NAME" >/dev/null 2>&1 # add to /opt/bin so it can be called only as "cake-qos param"
 	;;
 	update)
 		if [ "$(nvram get jffs2_scripts)" != "1" ]; then
@@ -596,14 +600,14 @@ case $1 in
 			exit 1
 		fi
 		cake_download "update"
-		[ -f "/opt/bin/$SCRIPT_NAME" ] || "/jffs/addons/$SCRIPT_NAME/$SCRIPT_NAME" "/opt/bin/$SCRIPT_NAME" >/dev/null 2>&1 # add to /opt/bin so it can be called only as "cake-qos param"
+		[ -f "/opt/bin/$SCRIPT_NAME" ] || "$SCRIPT_DIR/$SCRIPT_NAME" "/opt/bin/$SCRIPT_NAME" >/dev/null 2>&1 # add to /opt/bin so it can be called only as "cake-qos param"
 	;;
 	uninstall)
 		cake_stop
 		sed -i '\~# CakeQOS-Merlin~d' /jffs/scripts/nat-start /jffs/scripts/services-stop
 		opkg --autoremove remove sched-cake-oot
 		opkg --autoremove remove tc-adv
-		rm -rf "/jffs/scripts/${SCRIPT_NAME}" "/opt/bin/${SCRIPT_NAME}" "/jffs/addons/${SCRIPT_NAME}"
+		rm -rf "/jffs/scripts/${SCRIPT_NAME}" "/opt/bin/${SCRIPT_NAME}" "${SCRIPT_DIR}/${SCRIPT_NAME}"
 		exit 0
 	;;
 	checkrun)
