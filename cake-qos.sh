@@ -569,7 +569,7 @@ case $1 in
 		Write_Config
 		cake_start
 
-		[ -f "/opt/bin/$SCRIPT_NAME" ] || ln -s "$0" "/opt/bin/$SCRIPT_NAME" >/dev/null 2>&1 # add to /opt/bin so it can be called only as "cake-qos param"
+		[ -f "/opt/bin/$SCRIPT_NAME" ] || ln -s "/jffs/addons/$SCRIPT_NAME" "/opt/bin/$SCRIPT_NAME" >/dev/null 2>&1 # add to /opt/bin so it can be called only as "cake-qos param"
 	;;
 	update)
 		if [ "$(nvram get jffs2_scripts)" != "1" ]; then
@@ -579,7 +579,7 @@ case $1 in
 			exit 1
 		fi
 		cake_download "update"
-		[ -f "/opt/bin/$SCRIPT_NAME" ] || ln -s "$0" "/opt/bin/$SCRIPT_NAME" >/dev/null 2>&1 # add to /opt/bin so it can be called only as "cake-qos param"
+		[ -f "/opt/bin/$SCRIPT_NAME" ] || "/jffs/addons/$SCRIPT_NAME" "/opt/bin/$SCRIPT_NAME" >/dev/null 2>&1 # add to /opt/bin so it can be called only as "cake-qos param"
 	;;
 	uninstall)
 		cake_stop
