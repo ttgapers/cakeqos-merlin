@@ -627,9 +627,9 @@ case $1 in
 			Print_Output "true" "Running successfully" "$PASS" #remove this when we see that it's working OK. It isn't needed to spam log each 30 min
 		fi
 	;;
-	git_install)
+	installer)
 		Print_Output "false" "Downloading installer..." "$PASS"
-		gitinstall
+		git_install
 	;;
 	*)
 		Print_Output "false" "Usage: $SCRIPT_NAME {install|update|start|status|stop|uninstall} (start has required parameters)" "$WARN"
