@@ -19,6 +19,7 @@
 #########################################################
 
 # shellcheck disable=SC2086
+
 readonly SCRIPT_VERSION="v0.1.2"
 readonly SCRIPT_NAME="cake-qos"
 readonly SCRIPT_NAME_FANCY="CakeQOS-Merlin"
@@ -504,7 +505,9 @@ case $1 in
 			Print_Output "true" "Custom JFFS scripts enabled - Please manually reboot to apply changes - Exiting" "$CRIT"
 			exit 1
 		fi
+    
 		cake_download
+    
 		if [ -z "$dlspeed" ]; then
 			while true; do
 				echo
@@ -518,6 +521,7 @@ case $1 in
 				fi
 				break
 			done
+
 		fi
 		if [ -z "$upspeed" ]; then
 			while true; do
