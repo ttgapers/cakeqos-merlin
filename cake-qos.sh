@@ -307,7 +307,7 @@ Cake_Menu(){
 					printf '%-35s | %-40s\n' "[3]  --> Queue Priority" "$(if [ -n "$queueprio" ]; then echo "[${queueprio}]"; else echo "[Unset]"; fi)"
 					printf '%-35s | %-40s\n' "[4]  --> Extra Options" "$(if [ -n "$extraoptions" ]; then echo "[${extraoptions}]"; else echo "[Unset]"; fi)"
 					echo
-					printf '%-35s | %-40s\n' "[z] Go back"
+					printf '%-35s\n' "[z] Go back"
 					printf "[1-4]: " 
 					read -r "menu2"
 					echo
@@ -389,7 +389,7 @@ Cake_Menu(){
 							echo
 							break
 						;;
-						e|exit|back|menu)
+						e|z|exit|back|menu)
 							unset "option1" "option2" "option3"
 							clear
 							Cake_Menu
