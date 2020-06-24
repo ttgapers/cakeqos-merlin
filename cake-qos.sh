@@ -84,8 +84,8 @@ cake_download(){
 				exit 1
 			;;
 			esac
-			FILE1="sched-cake-oot_$VERSION_ONLINE_CAKE-$FILE1_TYPE""_""$VERSION_ONLINE_SUFFIX.ipk"
-			FILE2="tc-adv_$VERSION_ONLINE_TC""_""$VERSION_ONLINE_SUFFIX.ipk"
+			FILE1="sched-cake-oot_${VERSION_ONLINE_CAKE}-${FILE1_TYPE}_${VERSION_ONLINE_SUFFIX}.ipk"
+			FILE2="tc-adv_${VERSION_ONLINE_TC}_${VERSION_ONLINE_SUFFIX}.ipk"
 			FILE1_OUT="sched-cake-oot.ipk"
 			FILE2_OUT="tc-adv.ipk"
 			/usr/sbin/curl -fsL --retry 3 --connect-timeout 3 "https://raw.githubusercontent.com/$MAINTAINER/$SCRIPT_NAME_GITHUB/$SCRIPT_BRANCH/$FILE1" -o "/opt/tmp/$FILE1_OUT"
@@ -314,7 +314,7 @@ Menu_Start(){
 			elif ! Validate_Bandwidth "$dl_choice"; then
 				printf "\\n\\e[31mPlease enter a valid number\\e[0m\\n"
 			else
-				dlspeed="$dl_choice""Mbit"
+				dlspeed="${dl_choice}Mbit"
 				printf "\\n"
 				break
 			fi
@@ -331,7 +331,7 @@ Menu_Start(){
 				elif ! Validate_Bandwidth "$up_choice"; then
 					printf "\\n\\e[31mPlease enter a valid number\\e[0m\\n"
 				else
-					upspeed="$up_choice""Mbit"
+					upspeed="${up_choice}Mbit"
 					printf "\\n"
 					break
 				fi
