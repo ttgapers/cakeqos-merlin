@@ -627,7 +627,7 @@ case $1 in
 			Print_Output "true" "Running successfully" "$PASS" #remove this when we see that it's working OK. It isn't needed to spam log each 30 min
 		fi
 	;;
-	gitinstall)
+	git_install)
 		Print_Output "false" "Downloading installer..." "$PASS"
 		gitinstall
 	;;
