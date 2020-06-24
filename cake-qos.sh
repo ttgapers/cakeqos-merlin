@@ -56,7 +56,9 @@ git_install() {
 	/usr/sbin/curl --retry 3 "https://raw.githubusercontent.com/ttgapers/cakeqos-merlin/develop/cake-qos.sh" -o "/jffs/addons/cake-qos/cake-qos"
 	chmod 0755 /jffs/addons/cake-qos/cake-qos
 	sh /jffs/addons/cake-qos/cake-qos install
-	exit 0
+	Print_Output "false" "Installed! Starting and opening Menu..." "$PASS"
+	cake_start
+	Cake_Menu	
 }
 
 Filter_Version(){
