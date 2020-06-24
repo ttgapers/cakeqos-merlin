@@ -15,16 +15,17 @@
 
 ## Install Example
 
-1.  Download and apply permissions:
-    ```sh
-    mkdir -p /jffs/addons/cake-qos && /usr/sbin/curl --retry 3 "https://raw.githubusercontent.com/ttgapers/cakeqos-merlin/master/cake-qos.sh" -o "/jffs/addons/cake-qos/cake-qos" && chmod 0755 /jffs/addons/cake-qos/cake-qos && sh /jffs/addons/cake-qos/cake-qos install
+1.  Run the installer:
+    ```sh -c "$(curl -sL https://raw.githubusercontent.com/ttgapers/cakeqos-merlin/develop/cake-qos.sh)" -s installer
     ```
 
 2.  Configure the install command prompts with the params you want (installer will detect your router model). If you receive any errors (e.g. libnl-tiny package size mismatch) please ensure your Entware instance is up-to-date.
 
-    Change for your linespeed and any overhead (assuming 135Mbit download, 13Mbit upload, "besteffort docsis ack-filter" as optional extra parameters; speeds can also be specified in `Kbit` units):
+    Change for your linespeed and any overhead (assuming 135Mbit download, 13Mbit upload, "besteffort docsis ack-filter" as optional extra parameters; speeds can also be specified in `Kbit` units).
+    
+3.  Run CakeQoS with `cake-qos` and use option 1 to start the magic!
 
-3.  To check that CakeQOS-Merlin is running, run `cake-qos status` and/or do a bufferbloat test on [dslreports](https://www.dslreports.com/speedtest)
+3.  To check that CakeQOS-Merlin is running, use `option 3` and/or do a bufferbloat test on [dslreports](https://www.dslreports.com/speedtest)
 
 ## Usage
 
