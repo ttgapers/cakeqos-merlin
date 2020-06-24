@@ -22,10 +22,8 @@
 readonly SCRIPT_VERSION="v0.1.1"
 readonly SCRIPT_NAME="cake-qos"
 readonly SCRIPT_NAME_FANCY="CakeQOS-Merlin"
-readonly SCRIPT_NAME_GITHUB="cakeqos-merlin"
 readonly SCRIPT_BRANCH="develop"
-readonly MAINTAINER="ttgapers"
-readonly SCRIPT_CFG="/jffs/scripts/${SCRIPT_NAME}.cfg"
+readonly SCRIPT_CFG="/jffs/addons/${SCRIPT_NAME}/${SCRIPT_NAME}.cfg"
 
 readonly CRIT="\\e[41m"
 readonly ERR="\\e[31m"
@@ -84,7 +82,7 @@ cake_check(){
 }
 
 cake_download(){
-	VERSIONS_ONLINE=$(/usr/sbin/curl -fsL --retry 3 --connect-timeout 3 "https://raw.githubusercontent.com/$MAINTAINER/$SCRIPT_NAME_GITHUB/$SCRIPT_BRANCH/versions.txt")
+	VERSIONS_ONLINE=$(/usr/sbin/curl -fsL --retry 3 --connect-timeout 3 "https://raw.githubusercontent.com/ttgapers/cakeqos-merlin/${SCRIPT_BRANCH}/versions.txt")
 	if [ -n "$VERSIONS_ONLINE" ]; then
 		VERSION_LOCAL_CAKE=$(opkg list_installed | grep "^sched-cake-oot - " | awk -F " - " '{print $2}' | cut -d- -f-4)
 		VERSION_LOCAL_TC=$(opkg list_installed | grep "^tc-adv - " | awk -F " - " '{print $2}')
@@ -108,8 +106,8 @@ cake_download(){
 			FILE2="tc-adv_${VERSION_ONLINE_TC}_${VERSION_ONLINE_SUFFIX}.ipk"
 			FILE1_OUT="sched-cake-oot.ipk"
 			FILE2_OUT="tc-adv.ipk"
-			/usr/sbin/curl -fsL --retry 3 --connect-timeout 3 "https://raw.githubusercontent.com/$MAINTAINER/$SCRIPT_NAME_GITHUB/$SCRIPT_BRANCH/$FILE1" -o "/opt/tmp/$FILE1_OUT"
-			/usr/sbin/curl -fsL --retry 3 --connect-timeout 3 "https://raw.githubusercontent.com/$MAINTAINER/$SCRIPT_NAME_GITHUB/$SCRIPT_BRANCH/$FILE2" -o "/opt/tmp/$FILE2_OUT"
+			/usr/sbin/curl -fsL --retry 3 --connect-timeout 3 "https://raw.githubusercontent.com/ttgapers/cakeqos-merlin/${SCRIPT_BRANCH}/${FILE1}" -o "/opt/tmp/${FILE1_OUT}"
+			/usr/sbin/curl -fsL --retry 3 --connect-timeout 3 "https://raw.githubusercontent.com/ttgapers/cakeqos-merlin/${SCRIPT_BRANCH}/${FILE2}" -o "/opt/tmp/${FILE2_OUT}"
 
 			if [ -f "/opt/tmp/$FILE1_OUT" ] && [ -f "/opt/tmp/$FILE2_OUT" ]; then
 				if [ "$1" = "update" ]; then
@@ -129,9 +127,9 @@ cake_download(){
 	fi
 
 	if [ "$1" = "update" ]; then
-		REMOTE_VERSION=$(/usr/sbin/curl -fsL --retry 3 https://raw.githubusercontent.com/$MAINTAINER/$SCRIPT_NAME_GITHUB/$SCRIPT_BRANCH/$SCRIPT_NAME.sh | Filter_Version)
+		REMOTE_VERSION=$(/usr/sbin/curl -fsL --retry 3 https://raw.githubusercontent.com/ttgapers/cakeqos-merlin/${SCRIPT_BRANCH}/${SCRIPT_NAME}.sh | Filter_Version)
 		LOCALMD5="$(md5sum "$0" | awk '{print $1}')"
-		REMOTEMD5="$(/usr/sbin/curl -fsL --retry 3 https://raw.githubusercontent.com/$MAINTAINER/$SCRIPT_NAME_GITHUB/$SCRIPT_BRANCH/$SCRIPT_NAME.sh | md5sum | awk '{print $1}')"
+		REMOTEMD5="$(/usr/sbin/curl -fsL --retry 3 https://raw.githubusercontent.com/ttgapers/cakeqos-merlin/${SCRIPT_BRANCH}/${SCRIPT_NAME}.sh | md5sum | awk '{print $1}')"
 
 		if [ -n "$REMOTE_VERSION" ]; then
 			if [ "$LOCALMD5" != "$REMOTEMD5" ]; then
@@ -140,8 +138,8 @@ cake_download(){
 				else
 					Print_Output "true" "Local and server md5 don't match, updating..." "$WARN"
 				fi
-				/usr/sbin/curl -fsL --retry 3 https://raw.githubusercontent.com/$MAINTAINER/$SCRIPT_NAME_GITHUB/$SCRIPT_BRANCH/$SCRIPT_NAME.sh -o "/jffs/scripts/$SCRIPT_NAME"
-				chmod 0755 "/jffs/scripts/$SCRIPT_NAME"
+				/usr/sbin/curl -fsL --retry 3 https://raw.githubusercontent.com/ttgapers/cakeqos-merlin/${SCRIPT_BRANCH}/${SCRIPT_NAME}.sh -o "/jffs/addons/${SCRIPT_NAME}/${SCRIPT_NAME}"
+				chmod 0755 "/jffs/addons/${SCRIPT_NAME}/${SCRIPT_NAME}"
 				exit 0
 			else
 				Print_Output "false" "You are running the latest $SCRIPT_NAME_FANCY script ($REMOTE_VERSION, currently running $SCRIPT_VERSION), skipping..." "$PASS"
@@ -174,9 +172,9 @@ cake_start(){
 	elif [ -f "/jffs/scripts/nat-start" ] && ! head -1 /jffs/scripts/nat-start | grep -qE "^#!/bin/sh"; then
 		sed -i '1s~^~#!/bin/sh\n~' /jffs/scripts/nat-start
 	fi
-	if ! grep -qF "/jffs/scripts/$SCRIPT_NAME start & # $SCRIPT_NAME_FANCY" /jffs/scripts/nat-start; then
+	if ! grep -qF "/jffs/addons/${SCRIPT_NAME}/${SCRIPT_NAME} start & # $SCRIPT_NAME_FANCY" /jffs/scripts/nat-start; then
 		sed -i '\~# CakeQOS-Merlin~d' /jffs/scripts/nat-start
-		echo "/jffs/scripts/$SCRIPT_NAME start & # $SCRIPT_NAME_FANCY" >> /jffs/scripts/nat-start
+		echo "/jffs/addons/${SCRIPT_NAME}/${SCRIPT_NAME} start & # $SCRIPT_NAME_FANCY" >> /jffs/scripts/nat-start
 		chmod 0755 /jffs/scripts/nat-start
 	fi
 
@@ -188,7 +186,7 @@ cake_start(){
 		sed -i '1s~^~#!/bin/sh\n~' /jffs/scripts/services-stop
 	fi
 	if ! grep -qF "# CakeQOS-Merlin" /jffs/scripts/services-stop; then
-		echo "/jffs/scripts/$SCRIPT_NAME stop"' # '"$SCRIPT_NAME_FANCY" >> /jffs/scripts/services-stop
+		echo "/jffs/addons/${SCRIPT_NAME}/${SCRIPT_NAME} stop"' # '"$SCRIPT_NAME_FANCY" >> /jffs/scripts/services-stop
 		chmod 0755 /jffs/scripts/services-stop
 	fi
 
@@ -210,7 +208,7 @@ cake_start(){
 		exit 1
 	fi
 
-	cru a "$SCRIPT_NAME_FANCY" "*/30 * * * * /jffs/scripts/$SCRIPT_NAME checkrun $dlspeed $upspeed \"$queueprio $extraoptions\""
+	cru a "$SCRIPT_NAME_FANCY" "*/30 * * * * /jffs/addons/${SCRIPT_NAME}/${SCRIPT_NAME} checkrun"
 
 	Print_Output "true" "Starting - settings: ${dlspeed}Mbit | ${upspeed}Mbit | $queueprio | $extraoptions" "$PASS"
 	runner disable 2>/dev/null
@@ -587,7 +585,7 @@ case $1 in
 		sed -i '\~# CakeQOS-Merlin~d' /jffs/scripts/nat-start /jffs/scripts/services-stop
 		opkg --autoremove remove sched-cake-oot
 		opkg --autoremove remove tc-adv
-		rm -rf "/jffs/scripts/$SCRIPT_NAME" "/opt/bin/$SCRIPT_NAME" "$SCRIPT_CFG"
+		rm -rf "/jffs/scripts/$SCRIPT_NAME" "/opt/bin/$SCRIPT_NAME" "/jffs/addons/$SCRIPT_NAME"
 		exit 0
 	;;
 	checkrun)
