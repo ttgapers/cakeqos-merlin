@@ -615,7 +615,7 @@ case $1 in
 		sed -i '\~# CakeQOS-Merlin~d' /jffs/scripts/nat-start /jffs/scripts/services-stop
 		opkg --autoremove remove sched-cake-oot
 		opkg --autoremove remove tc-adv
-		rm -rf "/jffs/scripts/${SCRIPT_NAME}" "/opt/bin/${SCRIPT_NAME}" "${SCRIPT_DIR}"
+		rm -rf "/jffs/scripts/${SCRIPT_NAME}" "/opt/bin/${SCRIPT_NAME}" "${SCRIPT_DIR}" >/dev/null 2>&1
 		exit 0
 	;;
 	checkrun)
