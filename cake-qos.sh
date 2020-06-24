@@ -90,7 +90,7 @@ cake_download(){
 			FILE2_OUT="tc-adv.ipk"
 			/usr/sbin/curl -fsL --retry 3 --connect-timeout 3 "https://raw.githubusercontent.com/$MAINTAINER/$SCRIPT_NAME_GITHUB/$SCRIPT_BRANCH/$FILE1" -o "/opt/tmp/$FILE1_OUT"
 			/usr/sbin/curl -fsL --retry 3 --connect-timeout 3 "https://raw.githubusercontent.com/$MAINTAINER/$SCRIPT_NAME_GITHUB/$SCRIPT_BRANCH/$FILE2" -o "/opt/tmp/$FILE2_OUT"
-			
+
 			if [ -f "/opt/tmp/$FILE1_OUT" ] && [ -f "/opt/tmp/$FILE2_OUT" ]; then
 				if [ "$1" = "update" ]; then
 					opkg --autoremove remove sched-cake-oot
@@ -107,12 +107,12 @@ cake_download(){
 			Print_Output "false" "Your cake binaries are up-to-date." "$PASS"
 		fi
 	fi
-	
+
 	if [ "$1" = "update" ]; then
 		REMOTE_VERSION=$(/usr/sbin/curl -fsL --retry 3 https://raw.githubusercontent.com/$MAINTAINER/$SCRIPT_NAME_GITHUB/$SCRIPT_BRANCH/$SCRIPT_NAME.sh | Filter_Version)
 		LOCALMD5="$(md5sum "$0" | awk '{print $1}')"
 		REMOTEMD5="$(/usr/sbin/curl -fsL --retry 3 https://raw.githubusercontent.com/$MAINTAINER/$SCRIPT_NAME_GITHUB/$SCRIPT_BRANCH/$SCRIPT_NAME.sh | md5sum | awk '{print $1}')"
-		
+
 		if [ -n "$REMOTE_VERSION" ]; then
 			if [ "$LOCALMD5" != "$REMOTEMD5" ]; then
 				if [ "$SCRIPT_VERSION" != "$REMOTE_VERSION" ]; then
@@ -152,7 +152,7 @@ cake_start(){
 				options="besteffort $options"
 				;;
 		esac
-		
+
 		Print_Output "true" "Starting - settings: $1 | $2 | $options" "$PASS"
 		runner disable 2>/dev/null
 		fc disable 2>/dev/null
@@ -281,7 +281,7 @@ MainMenu(){
 			;;
 		esac
 	done
-	
+
 	ScriptHeader
 	MainMenu
 }
@@ -290,7 +290,7 @@ Menu_Start(){
 	dlspeed=""
 	upspeed=""
 	options=""
-	
+
 	if [ "$1" = "menu" ]; then
 		ScriptHeader
 		printf "Choose options as follows:\\n"
@@ -300,14 +300,14 @@ Menu_Start(){
 		printf "    - other options [optional]\\n"
 		printf "\\n"
 		printf "\\e[1m#########################################################\\e[0m\\n"
-		
+
 		exitmenu=""
 		queueprio=""
-		
+
 		while true; do
 			printf "\\n\\e[1mPlease enter your download speed (Mbps):\\e[0m    "
 			read -r "dl_choice"
-			
+
 			if [ "$dl_choice" = "e" ]; then
 				exitmenu="exit"
 				break
@@ -319,12 +319,12 @@ Menu_Start(){
 				break
 			fi
 		done
-		
+
 		if [ "$exitmenu" != "exit" ]; then
 			while true; do
 				printf "\\n\\e[1mPlease enter your upload speed (Mbps):\\e[0m    "
 				read -r "up_choice"
-				
+
 				if [ "$up_choice" = "e" ]; then
 					exitmenu="exit"
 					break
@@ -337,7 +337,7 @@ Menu_Start(){
 				fi
 			done
 		fi
-		
+
 		if [ "$exitmenu" != "exit" ]; then
 			while true; do
 				printf "\\n\\e[1mPlease choose a queue priority:\\e[0m\\n"
@@ -378,12 +378,12 @@ Menu_Start(){
 				esac
 			done
 		fi
-		
+
 		if [ "$exitmenu" != "exit" ]; then
 			while true; do
 				printf "\\n\\e[1mPlease enter any other options for cake:\\e[0m    "
 				read -r "opt_choice"
-				
+
 				if [ "$opt_choice" = "e" ]; then
 					exitmenu="exit"
 					break
@@ -394,7 +394,7 @@ Menu_Start(){
 				fi
 			done
 		fi
-		
+
 		if [ "$exitmenu" = "exit" ]; then
 			printf "\\n"
 			Print_Output "false" "Cake configuration cancelled" "$WARN"
@@ -405,18 +405,18 @@ Menu_Start(){
 		upspeed="$3"
 		options="$4"
 	fi
-	
+
 	cake_stop
-	
+
 	if [ ! -f "/opt/lib/modules/sch_cake.ko" ] || [ ! -f "/opt/sbin/tc" ]; then
 		Print_Output "true" "Cake binaries missing - Exiting" "$CRIT"
 		exit 1
 	fi
-	
+
 	# Cleanup old script entries
 	rm -rf "/jffs/addons/$SCRIPT_NAME.d" 2> /dev/null
 	sed -i '\~# cake-qos~d' /jffs/scripts/firewall-start /jffs/scripts/services-start
-	
+
 	# Add to nat-start
 	if [ ! -f "/jffs/scripts/nat-start" ]; then
 		echo "#!/bin/sh" > /jffs/scripts/nat-start
@@ -428,7 +428,7 @@ Menu_Start(){
 		echo "/jffs/scripts/$SCRIPT_NAME start $dlspeed $upspeed \"$options\" &"' # '"$SCRIPT_NAME_FANCY" >> /jffs/scripts/nat-start
 		chmod 0755 /jffs/scripts/nat-start
 	fi
-	
+
 	# Add to services-stop
 	if [ ! -f "/jffs/scripts/services-stop" ]; then
 		echo "#!/bin/sh" > /jffs/scripts/services-stop
