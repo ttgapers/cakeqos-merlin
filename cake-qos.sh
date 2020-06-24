@@ -196,7 +196,7 @@ PressEnter(){
 	return 0
 }
 
-ScriptHeader(){
+Cake_Header(){
 	clear
 	printf "\\n"
 	printf "\\e[1m#########################################################\\e[0m\\n"
@@ -217,7 +217,7 @@ ScriptHeader(){
 	printf "\\n"
 }
 
-MainMenu(){
+Cake_Menu(){
 	printf "\\e[1mSelect an option\\e[0m\\n"
 	printf "1.    Start cake\\n"
 	printf "2.    Stop cake\\n"
@@ -240,50 +240,38 @@ MainMenu(){
 			;;
 			2)
 				printf "\\n"
-				Menu_Stop
+				option1="stop"
 				PressEnter
 				break
 			;;
 			3)
 				printf "\\n"
-				Menu_Status
+				option1="status"
 				PressEnter
 				break
 			;;
 			u)
 				printf "\\n"
-				Menu_Update
+				option1="update"
 				PressEnter
 				break
 			;;
 			e)
-				ScriptHeader
+				Cake_Header
 				printf "\\n\\e[1mThanks for using %s!\\e[0m\\n\\n\\n" "$SCRIPT_NAME_FANCY"
 				exit 0
 			;;
 			z)
-				while true; do
-					printf "\\n\\e[1mAre you sure you want to uninstall %s? (y/n)\\e[0m\\n" "$SCRIPT_NAME_FANCY"
-					read -r "confirm"
-					case "$confirm" in
-						y|Y)
-							Menu_Uninstall
-							exit 0
-						;;
-						*)
-							break
-						;;
-					esac
-				done
+				printf "\\n"
+				option1="uninstall"
+				PressEnter
+				break
 			;;
 			*)
 				printf "\\nPlease choose a valid option\\n\\n"
 			;;
 		esac
 	done
-
-	ScriptHeader
-	MainMenu
 }
 
 Menu_Start(){
@@ -292,7 +280,7 @@ Menu_Start(){
 	options=""
 
 	if [ "$1" = "menu" ]; then
-		ScriptHeader
+		Cake_Header
 		printf "Choose options as follows:\\n"
 		printf "    - download speed [Mbps]\\n"
 		printf "    - upload speed [Mbps]\\n"
@@ -444,66 +432,36 @@ Menu_Start(){
 	cake_start "$dlspeed" "$upspeed" "$options"
 }
 
-Menu_Install(){
-	if [ "$(nvram get jffs2_scripts)" != "1" ]; then
-		nvram set jffs2_scripts=1
-		nvram commit
-		Print_Output "true" "Custom JFFS scripts enabled - Please manually reboot to apply changes - Exiting" "$CRIT"
-		exit 1
-	fi
-	cake_download "install"
-	[ -f "/opt/bin/$SCRIPT_NAME" ] || ln -s "$0" "/opt/bin/$SCRIPT_NAME" >/dev/null 2>&1 # add to /opt/bin so it can be called only as "cake-qos param"
-}
-
-Menu_Update(){
-	if [ "$(nvram get jffs2_scripts)" != "1" ]; then
-		nvram set jffs2_scripts=1
-		nvram commit
-		Print_Output "true" "Custom JFFS scripts enabled - Please manually reboot to apply changes - Exiting" "$CRIT"
-		exit 1
-	fi
-	cake_download "update"
-	[ -f "/opt/bin/$SCRIPT_NAME" ] || ln -s "$0" "/opt/bin/$SCRIPT_NAME" >/dev/null 2>&1 # add to /opt/bin so it can be called only as "cake-qos param"
-}
-
-Menu_Status(){
-	if cake_check; then
-		Print_Output "false" "Running..." "$PASS"
-		Print_Output "false" "> Download Status:" "$PASS"
-		echo "$STATUS_DOWNLOAD"
-		Print_Output "false" "> Upload Status:" "$PASS"
-		echo "$STATUS_UPLOAD"
-	else
-		Print_Output "false" "Not running..." "$WARN"
-	fi
-}
-
-Menu_Stop(){
-	cake_stop
-	return 0
-}
-
-Menu_Uninstall(){
-	cake_stop
-	sed -i '\~# CakeQOS-Merlin~d' /jffs/scripts/nat-start /jffs/scripts/services-stop
-	opkg --autoremove remove sched-cake-oot
-	opkg --autoremove remove tc-adv
-	rm /jffs/scripts/"$SCRIPT_NAME"
-	exit 0
-}
-
 if [ -z "$1" ]; then
-	ScriptHeader
-	MainMenu
+	Cake_Header
+	Cake_Menu
 	exit 0
+fi
+
+if [ -n "$option1" ]; then
+	set "$option1"
 fi
 
 case $1 in
 	install)
-		Menu_Install
+		if [ "$(nvram get jffs2_scripts)" != "1" ]; then
+			nvram set jffs2_scripts=1
+			nvram commit
+			Print_Output "true" "Custom JFFS scripts enabled - Please manually reboot to apply changes - Exiting" "$CRIT"
+			exit 1
+		fi
+		cake_download "install"
+		[ -f "/opt/bin/$SCRIPT_NAME" ] || ln -s "$0" "/opt/bin/$SCRIPT_NAME" >/dev/null 2>&1 # add to /opt/bin so it can be called only as "cake-qos param"
 	;;
 	update)
-		Menu_Update
+		if [ "$(nvram get jffs2_scripts)" != "1" ]; then
+			nvram set jffs2_scripts=1
+			nvram commit
+			Print_Output "true" "Custom JFFS scripts enabled - Please manually reboot to apply changes - Exiting" "$CRIT"
+			exit 1
+		fi
+		cake_download "update"
+		[ -f "/opt/bin/$SCRIPT_NAME" ] || ln -s "$0" "/opt/bin/$SCRIPT_NAME" >/dev/null 2>&1 # add to /opt/bin so it can be called only as "cake-qos param"
 	;;
 	start)
 		if [ -z "$2" ] || [ -z "$3" ]; then
@@ -516,7 +474,15 @@ case $1 in
 		Menu_Start "$@"
 	;;
 	status)
-		Menu_Status
+		if cake_check; then
+			Print_Output "false" "Running..." "$PASS"
+			Print_Output "false" "> Download Status:" "$PASS"
+			echo "$STATUS_DOWNLOAD"
+			Print_Output "false" "> Upload Status:" "$PASS"
+			echo "$STATUS_UPLOAD"
+		else
+			Print_Output "false" "Not running..." "$WARN"
+		fi
 	;;
 	checkrun)
 		Print_Output "true" "Checking if running..." "$WARN" #remove this when we see that it's working OK. It isn't needed to spam log each 30 min
@@ -531,7 +497,12 @@ case $1 in
 		Menu_Stop
 	;;
 	uninstall)
-		Menu_Uninstall
+		cake_stop
+		sed -i '\~# CakeQOS-Merlin~d' /jffs/scripts/nat-start /jffs/scripts/services-stop
+		opkg --autoremove remove sched-cake-oot
+		opkg --autoremove remove tc-adv
+		rm /jffs/scripts/"$SCRIPT_NAME"
+		exit 0
 	;;
 	*)
 		Print_Output "false" "Usage: $SCRIPT_NAME {install|update|start|status|stop|uninstall} (start has required parameters)" "$WARN"
