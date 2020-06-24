@@ -342,8 +342,8 @@ Cake_Menu(){
 						3)
 							option2="queueprio"
 							while true; do
-								echo "Select Queue Prioity Type:"
-								echo "[1]  --> Besteffort (default)"
+								echo "Select Queue Priority Type:"
+								echo "[1]  --> besteffort (default)"
 								echo "[2]  --> diffserv3"
 								echo "[3]  --> diffserv4"
 								echo "[4]  --> diffserv8"
@@ -352,7 +352,7 @@ Cake_Menu(){
 								read -r "menu3"
 								echo
 								case "$menu3" in
-									1)
+									1|"")
 										option3="besteffort"
 										break
 									;;
