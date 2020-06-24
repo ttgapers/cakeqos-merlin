@@ -174,9 +174,9 @@ cake_start(){
 	elif [ -f "/jffs/scripts/nat-start" ] && ! head -1 /jffs/scripts/nat-start | grep -qE "^#!/bin/sh"; then
 		sed -i '1s~^~#!/bin/sh\n~' /jffs/scripts/nat-start
 	fi
-	if ! grep -qF "/jffs/scripts/$SCRIPT_NAME start ${dlspeed}Mbit ${upspeed}Mbit \"$queueprio $extraoptions\" & # $SCRIPT_NAME_FANCY" /jffs/scripts/nat-start; then
+	if ! grep -qF "/jffs/scripts/$SCRIPT_NAME start & # $SCRIPT_NAME_FANCY" /jffs/scripts/nat-start; then
 		sed -i '\~# CakeQOS-Merlin~d' /jffs/scripts/nat-start
-		echo "/jffs/scripts/$SCRIPT_NAME start ${dlspeed}Mbit ${upspeed}Mbit \"$queueprio $extraoptions\" & # $SCRIPT_NAME_FANCY" >> /jffs/scripts/nat-start
+		echo "/jffs/scripts/$SCRIPT_NAME start & # $SCRIPT_NAME_FANCY" >> /jffs/scripts/nat-start
 		chmod 0755 /jffs/scripts/nat-start
 	fi
 
