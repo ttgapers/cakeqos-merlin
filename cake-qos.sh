@@ -281,8 +281,9 @@ Cake_Menu(){
 	printf "\\e[1m#####################################################\\e[0m\\n"
 	echo
 	while true; do
-		printf "Choose an option:    "
+		printf "[1-7]: "
 		read -r "menu1"
+		echo
 		case "$menu1" in
 			1)
 				option1="start"
@@ -304,6 +305,7 @@ Cake_Menu(){
 					printf '%-35s | %-40s\n' "[2]  --> Upload Speed" "$(if [ -n "$upspeed" ]; then echo "[${upspeed}]"; else echo "[Unset]"; fi)"
 					printf '%-35s | %-40s\n' "[3]  --> Queue Priority" "$(if [ -n "$queueprio" ]; then echo "[${queueprio}]"; else echo "[Unset]"; fi)"
 					printf '%-35s | %-40s\n' "[4]  --> Extra Options" "$(if [ -n "$extraoptions" ]; then echo "[${extraoptions}]"; else echo "[Unset]"; fi)"
+					echo
 					printf "[1-4]: "
 					read -r "menu2"
 					echo
@@ -495,6 +497,7 @@ case $1 in
 		cake_download
 		if [ -z "$dlspeed" ]; then
 			while true; do
+				echo
 				echo "Please enter your download speed:"
 				printf "[Mbit]: "
 				read -r "dlspeed"
@@ -508,6 +511,7 @@ case $1 in
 		fi
 		if [ -z "$upspeed" ]; then
 			while true; do
+				echo
 				echo "Please enter your upload speed:"
 				printf "[Mbit]: "
 				read -r "upspeed"
@@ -521,6 +525,7 @@ case $1 in
 		fi
 		if [ -z "$queueprio" ]; then
 			while true; do
+				echo
 				echo "Select Queue Prioity Type:"
 				echo "[1]  --> Besteffort (default)"
 				echo "[2]  --> diffserv3"
@@ -556,6 +561,7 @@ case $1 in
 			done
 		fi
 		if [ -z "$extraoptions" ]; then
+			echo
 			echo "Please enter your extra options:"
 			printf "[Options]: "
 			read -r "extraoptions"
