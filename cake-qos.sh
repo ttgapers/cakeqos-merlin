@@ -553,7 +553,7 @@ case $1 in
 			while true; do
 				echo
 				echo "Select Queue Prioity Type:"
-				echo "[1]  --> Besteffort (default)"
+				echo "[1]  --> besteffort (default)"
 				echo "[2]  --> diffserv3"
 				echo "[3]  --> diffserv4"
 				echo "[4]  --> diffserv8"
@@ -562,7 +562,7 @@ case $1 in
 				read -r "menu3"
 				echo
 				case "$menu3" in
-					1)
+					1|"")
 						queueprio="besteffort"
 						break
 					;;
