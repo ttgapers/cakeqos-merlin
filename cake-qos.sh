@@ -172,7 +172,6 @@ cake_start(){
 
 	# Cleanup old script entries
 	rm -rf "/jffs/addons/$SCRIPT_NAME.d" 2> /dev/null
-	sed -i '\~# cake-qos~d' /jffs/scripts/firewall-start /jffs/scripts/services-start 2>/dev/null
 
 	entwaretimer="0"
 	while [ ! -f "/opt/bin/sh" ] && [ "$entwaretimer" -lt "10" ]; do
@@ -181,8 +180,6 @@ cake_start(){
 		sleep 10
 	done
 
-	cake_stop
-	
 	# Add to nat-start
 	if [ ! -f "/jffs/scripts/nat-start" ]; then
 		echo "#!/bin/sh" > /jffs/scripts/nat-start
@@ -217,7 +214,7 @@ cake_start(){
 		Print_Output "true" "Cake binaries missing - Exiting" "$CRIT"
 		exit 1
 	fi
-	
+
 	if [ "$(nvram get qos_enable)" = "1" ]; then
 		nvram set qos_enable="0"
 		nvram save
@@ -226,6 +223,7 @@ cake_start(){
 		exit 1
 	fi
 
+	cake_stop
 
 	cru a "$SCRIPT_NAME_FANCY" "*/60 * * * * ${SCRIPT_DIR}/${SCRIPT_NAME} checkrun"
 
@@ -460,6 +458,7 @@ case $1 in
 	;;
 	stop)
 		cake_stop
+		sed -i '\~# cake-qos~d' /jffs/scripts/firewall-start /jffs/scripts/services-start 2>/dev/null
 	;;
 	status)
 		if cake_check; then
