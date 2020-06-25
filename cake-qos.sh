@@ -47,13 +47,6 @@ Print_Output(){
 	fi
 }
 
-git_install() {
-	mkdir -p /jffs/addons/cake-qos
-	/usr/sbin/curl --retry 3 "https://raw.githubusercontent.com/ttgapers/cakeqos-merlin/"$SCRIPT_BRANCH"/cake-qos.sh" -o "/jffs/addons/cake-qos/cake-qos"
-	chmod 0755 /jffs/addons/cake-qos/cake-qos
-	sh /jffs/addons/cake-qos/cake-qos install
-}
-
 Filter_Version(){
 	grep -m1 -oE 'v[0-9]{1,2}([.][0-9]{1,2})([.][0-9]{1,2})'
 }
@@ -618,16 +611,6 @@ case $1 in
 			Print_Output "true" "Not running, forcing start..." "$CRIT"
 			cake_start
 		fi
-	;;
-	installer)
-		Print_Output "false" "Downloading CakeQoS-Merlin installer..." "$PASS"
-		git_install
-                if [ ! -L "/opt/bin/${SCRIPT_NAME}" ] || [ "$(readlink /opt/bin/${SCRIPT_NAME})" != "${SCRIPT_DIR}/${SCRIPT_NAME}" ]; then
-			rm -rf /opt/bin/${SCRIPT_NAME}
-			ln -s "${SCRIPT_DIR}/${SCRIPT_NAME}" "/opt/bin/${SCRIPT_NAME}"
-		fi
-		Print_Output "false" "CakeQoS-Merlin installed! Please run it using 'cake-qos' and use Option 1 to start it. Let the magic begin!" "$PASS"
-		exit 0
 	;;
 	*)
 		Print_Output "false" "Usage: $SCRIPT_NAME {install|update|start|status|stop|uninstall} (start has required parameters)" "$WARN"
