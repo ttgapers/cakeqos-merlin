@@ -172,6 +172,7 @@ cake_start(){
 
 	# Cleanup old script entries
 	rm -rf "/jffs/addons/$SCRIPT_NAME.d" 2> /dev/null
+	sed -i '\~# cake-qos~d' /jffs/scripts/firewall-start /jffs/scripts/services-start 2>/dev/null
 
 	entwaretimer="0"
 	while [ ! -f "/opt/bin/sh" ] && [ "$entwaretimer" -lt "10" ]; do
@@ -248,7 +249,6 @@ cake_stop(){
 	if cake_check; then
 		Print_Output "true" "Stopping" "$PASS"
 		cru d "$SCRIPT_NAME_FANCY"
-		sed -i '\~# CakeQOS-Merlin~d' /jffs/scripts/nat-start /jffs/scripts/services-stop 2>/dev/null
 		/opt/sbin/tc qdisc del dev eth0 ingress 2>/dev/null
 		/opt/sbin/tc qdisc del dev ifb9eth0 root 2>/dev/null
 		/opt/sbin/tc qdisc del dev eth0 root 2>/dev/null
@@ -458,7 +458,7 @@ case $1 in
 	;;
 	stop)
 		cake_stop
-		sed -i '\~# cake-qos~d' /jffs/scripts/firewall-start /jffs/scripts/services-start 2>/dev/null
+		sed -i '\~# CakeQOS-Merlin~d' /jffs/scripts/nat-start /jffs/scripts/services-stop 2>/dev/null
 	;;
 	status)
 		if cake_check; then
