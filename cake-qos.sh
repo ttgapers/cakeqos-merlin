@@ -122,6 +122,7 @@ cake_download(){
 					opkg --autoremove remove sched-cake-oot
 					opkg --autoremove remove tc-adv
 				fi
+				opkg update
 				/opt/bin/opkg install "/opt/tmp/$FILE1_OUT"
 				/opt/bin/opkg install "/opt/tmp/$FILE2_OUT"
 				rm "/opt/tmp/$FILE1_OUT" "/opt/tmp/$FILE2_OUT"
