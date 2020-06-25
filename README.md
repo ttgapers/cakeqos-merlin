@@ -17,7 +17,7 @@
 
 1.  Run the installer:
     ```sh 
-    -c "$(curl -sL https://raw.githubusercontent.com/ttgapers/cakeqos-merlin/develop/cake-qos.sh)" -s installer
+    sh -c "$(curl -sL https://raw.githubusercontent.com/ttgapers/cakeqos-merlin/develop/cake-qos.sh)" -s installer
     ```
 
 2.  Configure the install command prompts with the params you want (installer will detect your router model). If you receive any errors (e.g. libnl-tiny package size mismatch) please ensure your Entware instance is up-to-date.
