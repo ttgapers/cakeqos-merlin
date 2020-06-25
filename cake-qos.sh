@@ -47,13 +47,6 @@ Print_Output(){
 	fi
 }
 
-git_install() {
-	mkdir -p /jffs/addons/cake-qos
-	/usr/sbin/curl --retry 3 "https://raw.githubusercontent.com/ttgapers/cakeqos-merlin/"$SCRIPT_BRANCH"/cake-qos.sh" -o "/jffs/addons/cake-qos/cake-qos"
-	chmod 0755 /jffs/addons/cake-qos/cake-qos
-	sh /jffs/addons/cake-qos/cake-qos install
-}
-
 Filter_Version(){
 	grep -m1 -oE 'v[0-9]{1,2}([.][0-9]{1,2})([.][0-9]{1,2})'
 }
@@ -92,7 +85,11 @@ cake_check(){
 }
 
 cake_download(){
-        [ -f "/opt/bin/$SCRIPT_NAME" ] || ln -s "$SCRIPT_DIR/$SCRIPT_NAME" "/opt/bin/$SCRIPT_NAME" >/dev/null 2>&1
+	if [ ! -L "/opt/bin/${SCRIPT_NAME}" ] || [ "$(readlink /opt/bin/${SCRIPT_NAME})" != "${SCRIPT_DIR}/${SCRIPT_NAME}" ]; then
+		rm -rf /opt/bin/${SCRIPT_NAME}
+		ln -s "${SCRIPT_DIR}/${SCRIPT_NAME}" "/opt/bin/${SCRIPT_NAME}"
+	fi
+
 	VERSIONS_ONLINE=$(/usr/sbin/curl -fsL --retry 3 --connect-timeout 3 "https://raw.githubusercontent.com/ttgapers/cakeqos-merlin/${SCRIPT_BRANCH}/versions.txt")
 	if [ -n "$VERSIONS_ONLINE" ]; then
 		VERSION_LOCAL_CAKE=$(opkg list_installed | grep "^sched-cake-oot - " | awk -F " - " '{print $2}' | cut -d- -f-4)
@@ -559,10 +556,6 @@ case $1 in
 				read -r "menu3"
 				echo
 				case "$menu3" in
-					1|"")
-						queueprio="besteffort"
-						break
-					;;
 					2)
 						queueprio="diffserv3"
 						break
@@ -575,10 +568,9 @@ case $1 in
 						queueprio="diffserv8"
 						break
 					;;
-					*)
-						echo "$menu3 Isn't An Option!"
-						continue
-						echo
+					1|*)
+						queueprio="besteffort"
+						break
 					;;
 				esac
 			done
@@ -591,9 +583,6 @@ case $1 in
 			echo
 		fi
 		Write_Config
-		if cake_check; then
-			cake_start
-		fi
 	;;
 	update)
 		if [ "$(nvram get jffs2_scripts)" != "1" ]; then
@@ -609,7 +598,7 @@ case $1 in
 		sed -i '\~# CakeQOS-Merlin~d' /jffs/scripts/nat-start /jffs/scripts/services-stop
 		opkg --autoremove remove sched-cake-oot
 		opkg --autoremove remove tc-adv
-		rm -rf "/jffs/scripts/${SCRIPT_NAME}" "/opt/bin/${SCRIPT_NAME}" "${SCRIPT_DIR}" >/dev/null 2>&1
+		rm -rf "/jffs/scripts/${SCRIPT_NAME}" "/opt/bin/${SCRIPT_NAME}" "${SCRIPT_DIR}"
 		exit 0
 	;;
 	checkrun)
@@ -617,13 +606,6 @@ case $1 in
 			Print_Output "true" "Not running, forcing start..." "$CRIT"
 			cake_start
 		fi
-	;;
-	installer)
-		Print_Output "false" "Downloading CakeQoS-Merlin installer..." "$PASS"
-		git_install
-                [ -f "/opt/bin/$SCRIPT_NAME" ] || ln -s "$SCRIPT_DIR/$SCRIPT_NAME" "/opt/bin/$SCRIPT_NAME" >/dev/null 2>&1
-		Print_Output "false" "CakeQoS-Merlin installed! Please run it using 'cake-qos' and use Option 1 to start it. Let the magic begin!" "$PASS"
-		exit 0
 	;;
 	*)
 		Print_Output "false" "Usage: $SCRIPT_NAME {install|update|start|status|stop|uninstall} (start has required parameters)" "$WARN"
