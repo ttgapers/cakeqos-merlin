@@ -159,13 +159,13 @@ cake_download(){
 cake_start(){
 
 	if [ -z "$dlspeed" ]; then
-		echo "Download Speed value missing - Please configure this to proceed"
+		Print_Output "true" "Download Speed value missing - Please configure this to proceed" "$WARN"
 		exit 1
 	elif [ -z "$upspeed" ]; then
-		echo "Upload Speed value missing - Please configure this to proceed"
+		Print_Output "true" "Upload Speed value missing - Please configure this to proceed" "$WARN"
 		exit 1
 	elif [ -z "$queueprio" ]; then
-		echo "Queue Priority value missing - Please configure this to proceed"
+		Print_Output "true" "Queue Priority value missing - Please configure this to proceed" "$WARN"
 		exit 1
 	fi
 
@@ -196,6 +196,14 @@ cake_start(){
 	if ! grep -qF "# CakeQOS-Merlin" /jffs/scripts/services-stop; then
 		echo "${SCRIPT_DIR}/${SCRIPT_NAME} stop"' # '"$SCRIPT_NAME_FANCY" >> /jffs/scripts/services-stop
 		chmod 0755 /jffs/scripts/services-stop
+	fi
+
+	if [ "$(nvram get qos_enable)" = "1" ]; then
+		nvram set qos_enable="0"
+		nvram save
+		service "restart_qos;restart_firewall" >/dev/null 2>&1
+		Print_Output "true" "Disabling Asus QOS" "$WARN"
+		exit 1
 	fi
 
 	entwaretimer="0"
@@ -425,6 +433,7 @@ Cake_Menu(){
 			;;
 			*)
 				echo "$menu1 Isn't An Option!"
+				echo
 			;;
 		esac
 	done
