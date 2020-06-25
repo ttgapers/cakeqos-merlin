@@ -84,6 +84,24 @@ cake_check(){
 	fi
 }
 
+cake_checkupdates(){
+
+VERSIONS_ONLINE=$(/usr/sbin/curl -fsL --retry 3 --connect-timeout 3 "https://raw.githubusercontent.com/ttgapers/cakeqos-merlin/${SCRIPT_BRANCH}/versions.txt")
+if [ -n "$VERSIONS_ONLINE" ]; then
+	VERSION_LOCAL_CAKE=$(opkg list_installed | grep "^sched-cake-oot - " | awk -F " - " '{print $2}' | cut -d- -f-4)
+	VERSION_LOCAL_TC=$(opkg list_installed | grep "^tc-adv - " | awk -F " - " '{print $2}')
+	VERSION_ONLINE_CAKE=$(echo "$VERSIONS_ONLINE" | awk -F "|" '{print $1}')
+	VERSION_ONLINE_TC=$(echo "$VERSIONS_ONLINE" | awk -F "|" '{print $2}')
+	VERSION_ONLINE_SUFFIX=$(echo "$VERSIONS_ONLINE" | awk -F "|" '{print $3}')
+	REMOTE_VERSION=$(/usr/sbin/curl -fsL --retry 3 https://raw.githubusercontent.com/ttgapers/cakeqos-merlin/${SCRIPT_BRANCH}/${SCRIPT_NAME}.sh | Filter_Version)
+	LOCALMD5="$(md5sum "$0" | awk '{print $1}')"
+	REMOTEMD5="$(/usr/sbin/curl -fsL --retry 3 https://raw.githubusercontent.com/ttgapers/cakeqos-merlin/${SCRIPT_BRANCH}/${SCRIPT_NAME}.sh | md5sum | awk '{print $1}')"
+if [ "$VERSION_LOCAL_CAKE" != "$VERSION_ONLINE_CAKE" ] || [ "$VERSION_LOCAL_TC" != "$VERSION_ONLINE_TC" ] || [ ! -f "/opt/lib/modules/sch_cake.ko" ] || [ ! -f "/opt/sbin/tc" ] || [ "$LOCALMD5" != "$REMOTEMD5" ] || [ "$SCRIPT_VERSION" != "$REMOTE_VERSION" ]; then
+	return 0
+else
+	return 1
+fi
+}
 cake_download(){
 	if [ ! -L "/opt/bin/${SCRIPT_NAME}" ] || [ "$(readlink /opt/bin/${SCRIPT_NAME})" != "${SCRIPT_DIR}/${SCRIPT_NAME}" ]; then
 		rm -rf /opt/bin/${SCRIPT_NAME}
@@ -280,7 +298,11 @@ Cake_Header(){
 	printf "\\e[1m##                  %s on %-9s                ##\\e[0m\\n" "$SCRIPT_VERSION" "$RMODEL"
 	printf "\\e[1m##                                                     ##\\e[0m\\n"
 	printf "\\e[1m##      https://github.com/ttgapers/cakeqos-merlin     ##\\e[0m\\n"
-	printf "\\e[1m##                                                     ##\\e[0m\\n"
+	if cake_checkupdates; then  
+		printf "\\e[1m##         Updates found! Please use Option 5          ##\\e[0m\\n"
+	else
+		printf "\\e[1m##                                                     ##\\e[0m\\n"
+	fi
 	printf "\\e[1m#########################################################\\e[0m\\n"
 	printf "\\n"
 }
