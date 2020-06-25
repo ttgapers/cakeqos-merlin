@@ -230,6 +230,8 @@ cake_start(){
 	runner disable 2>/dev/null
 	fc disable 2>/dev/null
 	fc flush 2>/dev/null
+	nvram set runner_disable="1"
+	nvram commit
 	insmod /opt/lib/modules/sch_cake.ko 2>/dev/null
 	/opt/sbin/tc qdisc replace dev eth0 root cake bandwidth "${upspeed}Mbit" nat "$queueprio" $extraoptions # options needs to be left unquoted to support multiple extra parameters
 	ip link add name ifb9eth0 type ifb
@@ -253,6 +255,8 @@ cake_stop(){
 		rmmod sch_cake 2>/dev/null
 		fc enable
 		runner enable
+		nvram set runner_disable="0"
+		nvram commit
 	fi
 }
 
