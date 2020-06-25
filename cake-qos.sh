@@ -174,6 +174,15 @@ cake_start(){
 	rm -rf "/jffs/addons/$SCRIPT_NAME.d" 2> /dev/null
 	sed -i '\~# cake-qos~d' /jffs/scripts/firewall-start /jffs/scripts/services-start 2>/dev/null
 
+	entwaretimer="0"
+	while [ ! -f "/opt/bin/sh" ] && [ "$entwaretimer" -lt "10" ]; do
+		entwaretimer="$((entwaretimer + 1))"
+		Print_Output "true" "Entware isn't ready, waiting 10 sec - Attempt #$entwaretimer" "$WARN"
+		sleep 10
+	done
+
+	cake_stop
+	
 	# Add to nat-start
 	if [ ! -f "/jffs/scripts/nat-start" ]; then
 		echo "#!/bin/sh" > /jffs/scripts/nat-start
@@ -199,6 +208,16 @@ cake_start(){
 		chmod 0755 /jffs/scripts/services-stop
 	fi
 
+	if [ "$entwaretimer" -ge "100" ]; then
+		Print_Output "true" "Entware didn't start in 100 seconds, please check!" "$CRIT"
+		exit 1
+	fi
+
+	if [ ! -f "/opt/lib/modules/sch_cake.ko" ] || [ ! -f "/opt/sbin/tc" ]; then
+		Print_Output "true" "Cake binaries missing - Exiting" "$CRIT"
+		exit 1
+	fi
+	
 	if [ "$(nvram get qos_enable)" = "1" ]; then
 		nvram set qos_enable="0"
 		nvram save
@@ -207,23 +226,6 @@ cake_start(){
 		exit 1
 	fi
 
-	entwaretimer="0"
-	while [ ! -f "/opt/bin/sh" ] && [ "$entwaretimer" -lt "10" ]; do
-		entwaretimer="$((entwaretimer + 1))"
-		Print_Output "true" "Entware isn't ready, waiting 10 sec - Attempt #$entwaretimer" "$WARN"
-		sleep 10
-	done
-	if [ "$entwaretimer" -ge "100" ]; then
-		Print_Output "true" "Entware didn't start in 100 seconds, please check" "$CRIT"
-		exit 1
-	fi
-
-	cake_stop
-
-	if [ ! -f "/opt/lib/modules/sch_cake.ko" ] || [ ! -f "/opt/sbin/tc" ]; then
-		Print_Output "true" "Cake binaries missing - Exiting" "$CRIT"
-		exit 1
-	fi
 
 	cru a "$SCRIPT_NAME_FANCY" "*/60 * * * * ${SCRIPT_DIR}/${SCRIPT_NAME} checkrun"
 
