@@ -461,16 +461,10 @@ case $1 in
 			dlspeed)
 				if ! Validate_Bandwidth "$3"; then echo "${3} is not a valid number!"; echo; exit 2; fi
 				dlspeed="${3}"
-				if cake_check; then
-					cake_start
-				fi
 			;;
 			upspeed)
 				if ! Validate_Bandwidth "$3"; then echo "${3} is not a valid number!"; echo; exit 2; fi
 				upspeed="${3}"
-				if cake_check; then
-					cake_start
-				fi
 			;;
 			queueprio)
 				case "$3" in
@@ -491,18 +485,15 @@ case $1 in
 						echo; exit 2
 					;;
 				esac
-				if cake_check; then
-					cake_start
-				fi
 			;;
 			extraoptions)
 				extraoptions="$3"
-				if cake_check; then
-					cake_start
-				fi
 			;;
 		esac
 		Write_Config
+		if cake_check; then
+			cake_start
+		fi
 	;;
 	install)
 		if [ "$(nvram get jffs2_scripts)" != "1" ]; then
@@ -583,6 +574,7 @@ case $1 in
 			echo
 		fi
 		Write_Config
+		cake_start
 	;;
 	update)
 		if [ "$(nvram get jffs2_scripts)" != "1" ]; then
