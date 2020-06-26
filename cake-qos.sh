@@ -172,7 +172,7 @@ cake_start(){
 
 	# Cleanup old script entries
 	rm -rf "/jffs/addons/$SCRIPT_NAME.d" 2> /dev/null
-	sed -i '\~# cake-qos~d' /jffs/scripts/firewall-start /jffs/scripts/services-start 2>/dev/null
+	sed -i '\~# cake-qos~d' /jffs/scripts/firewall-start /jffs/scripts/services-start /jffs/scripts/services-stop 2>/dev/null
 
 	entwaretimer="0"
 	while [ ! -f "/opt/bin/sh" ] && [ "$entwaretimer" -lt "10" ]; do
