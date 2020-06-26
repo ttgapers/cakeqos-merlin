@@ -552,7 +552,7 @@ case $1 in
 		if [ -z "$queueprio" ]; then
 			while true; do
 				echo
-				echo "Select Queue Prioity Type:"
+				echo "Select Queue Priority Type:"
 				echo "[1]  --> besteffort (default)"
 				echo "[2]  --> diffserv3"
 				echo "[3]  --> diffserv4"
