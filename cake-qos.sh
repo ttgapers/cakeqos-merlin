@@ -96,10 +96,11 @@ if [ -n "$VERSIONS_ONLINE" ]; then
 	REMOTE_VERSION=$(/usr/sbin/curl -fsL --retry 3 https://raw.githubusercontent.com/ttgapers/cakeqos-merlin/${SCRIPT_BRANCH}/${SCRIPT_NAME}.sh | Filter_Version)
 	LOCALMD5="$(md5sum "$0" | awk '{print $1}')"
 	REMOTEMD5="$(/usr/sbin/curl -fsL --retry 3 https://raw.githubusercontent.com/ttgapers/cakeqos-merlin/${SCRIPT_BRANCH}/${SCRIPT_NAME}.sh | md5sum | awk '{print $1}')"
-if [ "$VERSION_LOCAL_CAKE" != "$VERSION_ONLINE_CAKE" ] || [ "$VERSION_LOCAL_TC" != "$VERSION_ONLINE_TC" ] || [ ! -f "/opt/lib/modules/sch_cake.ko" ] || [ ! -f "/opt/sbin/tc" ] || [ "$LOCALMD5" != "$REMOTEMD5" ] || [ "$SCRIPT_VERSION" != "$REMOTE_VERSION" ]; then
-	return 0
-else
-	return 1
+        if [ "$VERSION_LOCAL_CAKE" != "$VERSION_ONLINE_CAKE" ] || [ "$VERSION_LOCAL_TC" != "$VERSION_ONLINE_TC" ] || [ ! -f "/opt/lib/modules/sch_cake.ko" ] || [ ! -f "/opt/sbin/tc" ] || [ "$LOCALMD5" != "$REMOTEMD5" ] || [ "$SCRIPT_VERSION" != "$REMOTE_VERSION" ]; then
+	        return 0
+        else
+	        return 1
+        fi
 fi
 }
 cake_download(){
