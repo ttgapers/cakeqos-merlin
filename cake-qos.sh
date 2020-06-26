@@ -458,7 +458,9 @@ case $1 in
 	;;
 	stop)
 		cake_stop
-		sed -i '\~# CakeQOS-Merlin~d' /jffs/scripts/nat-start /jffs/scripts/services-stop 2>/dev/null
+		if tty >/dev/null 2>&1; then
+			sed -i '\~# CakeQOS-Merlin~d' /jffs/scripts/nat-start /jffs/scripts/services-stop 2>/dev/null
+		fi
 	;;
 	status)
 		if cake_check; then
