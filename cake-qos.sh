@@ -15,17 +15,21 @@
 ##                                    |_|              ##
 ##                                                     ##
 ##      https://github.com/ttgapers/cakeqos-merlin     ##
+##                        v1.0.1                       ##
 ##                                                     ##
 #########################################################
 
 # shellcheck disable=SC2086
 
-readonly SCRIPT_VERSION="v1.0.1"
+clear
+sed -n '6,21p' "$0"
+
 readonly SCRIPT_NAME="cake-qos"
 readonly SCRIPT_NAME_FANCY="CakeQOS-Merlin"
 readonly SCRIPT_BRANCH="master"
 readonly SCRIPT_DIR="/jffs/addons/${SCRIPT_NAME}"
 readonly SCRIPT_CFG="${SCRIPT_DIR}/${SCRIPT_NAME}.cfg"
+readonly SCRIPT_REMOTEDIR="https://raw.githubusercontent.com/ttgapers/cakeqos-merlin/${SCRIPT_BRANCH}"
 
 readonly CRIT="\\e[41m"
 readonly ERR="\\e[31m"
@@ -41,9 +45,9 @@ fi
 Print_Output(){
 	if [ "$1" = "true" ]; then
 		logger -t "$SCRIPT_NAME_FANCY" "$2"
-		printf "\\e[1m$3%s: $2\\e[0m\\n" "$SCRIPT_NAME_FANCY - $SCRIPT_VERSION"
+		printf "\\e[1m$3%s: $2\\e[0m\\n" "$SCRIPT_NAME_FANCY"
 	else
-		printf "\\e[1m$3%s: $2\\e[0m\\n" "$SCRIPT_NAME_FANCY - $SCRIPT_VERSION"
+		printf "\\e[1m$3%s: $2\\e[0m\\n" "$SCRIPT_NAME_FANCY"
 	fi
 }
 
@@ -52,11 +56,7 @@ Filter_Version(){
 }
 
 Validate_Bandwidth(){
-	if echo "$1" | /bin/grep -oq "^[1-9][0-9]*\.\?[0-9]*$"; then
-		return 0
-	else
-		return 1
-	fi
+	/bin/grep -oq "^[1-9][0-9]*\.\?[0-9]*$"
 }
 
 Write_Config(){
@@ -74,7 +74,11 @@ Write_Config(){
 	} > "$SCRIPT_CFG"
 }
 
-cake_check(){
+Display_Line(){
+	printf '\n#########################################################\n\n'
+}
+
+Cake_CheckStatus(){
 	STATUS_UPLOAD=$(tc qdisc | grep -E '^qdisc cake .* dev eth0 root')
 	STATUS_DOWNLOAD=$(tc qdisc | grep -E '^qdisc cake .* dev ifb9eth0 root')
 	if [ -n "$STATUS_UPLOAD" ] && [ -n "$STATUS_DOWNLOAD" ]; then
@@ -84,100 +88,82 @@ cake_check(){
 	fi
 }
 
-cake_checkupdates(){
-
-VERSIONS_ONLINE=$(/usr/sbin/curl -fsL --retry 3 --connect-timeout 3 "https://raw.githubusercontent.com/ttgapers/cakeqos-merlin/${SCRIPT_BRANCH}/versions.txt")
-if [ -n "$VERSIONS_ONLINE" ]; then
-	VERSION_LOCAL_CAKE=$(opkg list_installed | grep "^sched-cake-oot - " | awk -F " - " '{print $2}' | cut -d- -f-4)
-	VERSION_LOCAL_TC=$(opkg list_installed | grep "^tc-adv - " | awk -F " - " '{print $2}')
-	VERSION_ONLINE_CAKE=$(echo "$VERSIONS_ONLINE" | awk -F "|" '{print $1}')
-	VERSION_ONLINE_TC=$(echo "$VERSIONS_ONLINE" | awk -F "|" '{print $2}')
-	VERSION_ONLINE_SUFFIX=$(echo "$VERSIONS_ONLINE" | awk -F "|" '{print $3}')
-	REMOTE_VERSION=$(/usr/sbin/curl -fsL --retry 3 https://raw.githubusercontent.com/ttgapers/cakeqos-merlin/${SCRIPT_BRANCH}/${SCRIPT_NAME}.sh | Filter_Version)
-	LOCALMD5="$(md5sum "$0" | awk '{print $1}')"
-	REMOTEMD5="$(/usr/sbin/curl -fsL --retry 3 https://raw.githubusercontent.com/ttgapers/cakeqos-merlin/${SCRIPT_BRANCH}/${SCRIPT_NAME}.sh | md5sum | awk '{print $1}')"
-        if [ "$VERSION_LOCAL_CAKE" != "$VERSION_ONLINE_CAKE" ] || [ "$VERSION_LOCAL_TC" != "$VERSION_ONLINE_TC" ] || [ ! -f "/opt/lib/modules/sch_cake.ko" ] || [ ! -f "/opt/sbin/tc" ] || [ "$LOCALMD5" != "$REMOTEMD5" ] || [ "$SCRIPT_VERSION" != "$REMOTE_VERSION" ]; then
-	        return 0
-        else
-	        return 1
-        fi
-fi
-}
-cake_download(){
-	if [ ! -L "/opt/bin/${SCRIPT_NAME}" ] || [ "$(readlink /opt/bin/${SCRIPT_NAME})" != "${SCRIPT_DIR}/${SCRIPT_NAME}" ]; then
-		rm -rf /opt/bin/${SCRIPT_NAME}
-		ln -s "${SCRIPT_DIR}/${SCRIPT_NAME}" "/opt/bin/${SCRIPT_NAME}"
-	fi
-
-	VERSIONS_ONLINE=$(/usr/sbin/curl -fsL --retry 3 --connect-timeout 3 "https://raw.githubusercontent.com/ttgapers/cakeqos-merlin/${SCRIPT_BRANCH}/versions.txt")
-	if [ -n "$VERSIONS_ONLINE" ]; then
+Cake_CheckUpdates(){
+	VERSION_REMOTE_MANIFEST=$(/usr/sbin/curl -fsL --retry 3 --connect-timeout 3 "${SCRIPT_REMOTEDIR}/versions.txt")
+	if [ -n "$VERSION_REMOTE_MANIFEST" ]; then
 		VERSION_LOCAL_CAKE=$(opkg list_installed | grep "^sched-cake-oot - " | awk -F " - " '{print $2}' | cut -d- -f-4)
 		VERSION_LOCAL_TC=$(opkg list_installed | grep "^tc-adv - " | awk -F " - " '{print $2}')
-		VERSION_ONLINE_CAKE=$(echo "$VERSIONS_ONLINE" | awk -F "|" '{print $1}')
-		VERSION_ONLINE_TC=$(echo "$VERSIONS_ONLINE" | awk -F "|" '{print $2}')
-		VERSION_ONLINE_SUFFIX=$(echo "$VERSIONS_ONLINE" | awk -F "|" '{print $3}')
-		if [ "$VERSION_LOCAL_CAKE" != "$VERSION_ONLINE_CAKE" ] || [ "$VERSION_LOCAL_TC" != "$VERSION_ONLINE_TC" ] || [ ! -f "/opt/lib/modules/sch_cake.ko" ] || [ ! -f "/opt/sbin/tc" ]; then
-			case "$RMODEL" in
-			RT-AC86U)
-				FILE1_TYPE="1"
-			;;
-			RT-AX88U)
-				FILE1_TYPE="ax"
-			;;
-			*)
-				Print_Output "false" "Cake isn't yet compatible with ASUS $RMODEL, keep watching our thread!" "$CRIT"
-				exit 1
-			;;
-			esac
-			FILE1="sched-cake-oot_${VERSION_ONLINE_CAKE}-${FILE1_TYPE}_${VERSION_ONLINE_SUFFIX}.ipk"
-			FILE2="tc-adv_${VERSION_ONLINE_TC}_${VERSION_ONLINE_SUFFIX}.ipk"
-			FILE1_OUT="sched-cake-oot.ipk"
-			FILE2_OUT="tc-adv.ipk"
-			/usr/sbin/curl -fsL --retry 3 --connect-timeout 3 "https://raw.githubusercontent.com/ttgapers/cakeqos-merlin/${SCRIPT_BRANCH}/${FILE1}" -o "/opt/tmp/${FILE1_OUT}"
-			/usr/sbin/curl -fsL --retry 3 --connect-timeout 3 "https://raw.githubusercontent.com/ttgapers/cakeqos-merlin/${SCRIPT_BRANCH}/${FILE2}" -o "/opt/tmp/${FILE2_OUT}"
+		VERSION_REMOTE_CAKE=$(echo "$VERSION_REMOTE_MANIFEST" | awk -F "|" '{print $1}')
+		VERSION_REMOTE_TC=$(echo "$VERSION_REMOTE_MANIFEST" | awk -F "|" '{print $2}')
+		MD5_LOCAL_SCRIPT="$(md5sum "$0" | awk '{print $1}')"
+		MD5_REMOTE_SCRIPT="$(/usr/sbin/curl -fsL --retry 3 ${SCRIPT_REMOTEDIR}/${SCRIPT_NAME}.sh | md5sum | awk '{print $1}')"
+		if [ "$VERSION_LOCAL_CAKE" != "$VERSION_REMOTE_CAKE" ] || [ ! -f "/opt/lib/modules/sch_cake.ko" ] || [ "$VERSION_LOCAL_TC" != "$VERSION_REMOTE_TC" ] || [ ! -f "/opt/sbin/tc" ] || [ "$MD5_LOCAL_SCRIPT" != "$MD5_REMOTE_SCRIPT" ]; then
+			return 0
+		else
+			return 1
+		fi
+	else
+		return 1
+	fi
+}
 
-			if [ -f "/opt/tmp/$FILE1_OUT" ] && [ -f "/opt/tmp/$FILE2_OUT" ]; then
-				if [ "$1" = "update" ]; then
+Download_File() {
+	if [ "$(curl -fsL --retry 3 --connect-timeout 3 "${SCRIPT_REMOTEDIR}/${1}" | md5sum | awk '{print $1}')" != "$(md5sum "$2" 2>/dev/null | awk '{print $1}')" ]; then
+		if curl -fsL --retry 3 --connect-timeout 3 "${SCRIPT_REMOTEDIR}/${1}" -o "$2"; then
+			Print_Output "false" "Updated $(echo "$1" | awk -F / '{print $NF}')" "$PASS"
+		else
+			Print_Output "false" "Updating $(echo "$1" | awk -F / '{print $NF}') Failed)" "$ERR"
+			return 1
+		fi
+	else
+		return 1
+	fi
+}
+
+Cake_Bin_Download(){
+	VERSION_REMOTE_MANIFEST=$(/usr/sbin/curl -fsL --retry 3 --connect-timeout 3 "${SCRIPT_REMOTEDIR}/versions.txt")
+	if [ -n "$VERSION_REMOTE_MANIFEST" ]; then
+		VERSION_LOCAL_CAKE=$(opkg list_installed | grep "^sched-cake-oot - " | awk -F " - " '{print $2}' | cut -d- -f-4)
+		VERSION_REMOTE_CAKE=$(echo "$VERSION_REMOTE_MANIFEST" | awk -F "|" '{print $1}')
+		VERSION_LOCAL_TC=$(opkg list_installed | grep "^tc-adv - " | awk -F " - " '{print $2}')
+		VERSION_REMOTE_TC=$(echo "$VERSION_REMOTE_MANIFEST" | awk -F "|" '{print $2}')
+		if [ "$VERSION_LOCAL_CAKE" != "$VERSION_REMOTE_CAKE" ] || [ ! -f "/opt/lib/modules/sch_cake.ko" ]|| [ "$VERSION_LOCAL_TC" != "$VERSION_REMOTE_TC" ] || [ ! -f "/opt/sbin/tc" ]; then
+			case "$RMODEL" in
+				RT-AC86U)
+					FILE1_TYPE="1"
+				;;
+				RT-AX88U)
+					FILE1_TYPE="ax"
+				;;
+			esac
+			opkg update
+			if [ "$VERSION_LOCAL_CAKE" != "$VERSION_REMOTE_CAKE" ] || [ ! -f "/opt/lib/modules/sch_cake.ko" ]; then
+				FILE1="sched-cake-oot_${VERSION_REMOTE_CAKE}-${FILE1_TYPE}_aarch64-3.10.ipk"
+				FILE1_OUT="sched-cake-oot.ipk"
+				if Download_File "${FILE1}" "/opt/tmp/${FILE1_OUT}"; then
 					opkg --autoremove remove sched-cake-oot
-					opkg --autoremove remove tc-adv
+					/opt/bin/opkg install "/opt/tmp/${FILE1_OUT}"
+					rm -rf "/opt/tmp/${FILE1_OUT}"
 				fi
-				opkg update
-				/opt/bin/opkg install "/opt/tmp/$FILE1_OUT"
-				/opt/bin/opkg install "/opt/tmp/$FILE2_OUT"
-				rm "/opt/tmp/$FILE1_OUT" "/opt/tmp/$FILE2_OUT"
-			else
-				Print_Output "true" "There was an error downloading the cake binaries, please try again." "$ERR"
-				exit 1
+			fi
+			if [ "$VERSION_LOCAL_TC" != "$VERSION_REMOTE_TC" ] || [ ! -f "/opt/sbin/tc" ]; then
+				FILE2="tc-adv_${VERSION_REMOTE_TC}_aarch64-3.10.ipk"
+				FILE2_OUT="tc-adv.ipk"
+				if Download_File "${FILE2}" "/opt/tmp/${FILE2_OUT}"; then
+					opkg --autoremove remove tc-adv
+					/opt/bin/opkg install "/opt/tmp/${FILE2_OUT}"
+					rm -rf "/opt/tmp/${FILE2_OUT}"
+				fi
 			fi
 		else
 			Print_Output "false" "Your cake binaries are up-to-date." "$PASS"
 		fi
-	fi
-
-	if [ "$1" = "update" ]; then
-		REMOTE_VERSION=$(/usr/sbin/curl -fsL --retry 3 https://raw.githubusercontent.com/ttgapers/cakeqos-merlin/${SCRIPT_BRANCH}/${SCRIPT_NAME}.sh | Filter_Version)
-		LOCALMD5="$(md5sum "$0" | awk '{print $1}')"
-		REMOTEMD5="$(/usr/sbin/curl -fsL --retry 3 https://raw.githubusercontent.com/ttgapers/cakeqos-merlin/${SCRIPT_BRANCH}/${SCRIPT_NAME}.sh | md5sum | awk '{print $1}')"
-
-		if [ -n "$REMOTE_VERSION" ]; then
-			if [ "$LOCALMD5" != "$REMOTEMD5" ]; then
-				if [ "$SCRIPT_VERSION" != "$REMOTE_VERSION" ]; then
-					Print_Output "true" "New CakeQOS-Merlin detected ($REMOTE_VERSION, currently running $SCRIPT_VERSION), updating..." "$WARN"
-				else
-					Print_Output "true" "Local and server md5 don't match, updating..." "$WARN"
-				fi
-				/usr/sbin/curl -fsL --retry 3 https://raw.githubusercontent.com/ttgapers/cakeqos-merlin/${SCRIPT_BRANCH}/${SCRIPT_NAME}.sh -o "${SCRIPT_DIR}/${SCRIPT_NAME}"
-				chmod 0755 "${SCRIPT_DIR}/${SCRIPT_NAME}"
-				exit 0
-			else
-				Print_Output "false" "You are running the latest $SCRIPT_NAME_FANCY script ($REMOTE_VERSION, currently running $SCRIPT_VERSION), skipping..." "$PASS"
-			fi
-		fi
+	else
+		Print_Output "false" "Unable to download manifest" "$ERR"
 	fi
 }
 
-cake_start(){
-
+Cake_Start(){
 	if [ -z "$dlspeed" ]; then
 		Print_Output "true" "Download Speed value missing - Please configure this to proceed" "$WARN"
 		exit 1
@@ -199,6 +185,16 @@ cake_start(){
 		Print_Output "true" "Entware isn't ready, waiting 10 sec - Attempt #$entwaretimer" "$WARN"
 		sleep 10
 	done
+	if [ "$entwaretimer" -ge "100" ]; then
+		Print_Output "true" "Entware didn't start in 100 seconds, please check!" "$CRIT"
+		exit 1
+	fi
+
+	if [ "$(nvram get jffs2_scripts)" != "1" ]; then
+		nvram set jffs2_scripts=1
+		nvram commit
+		Print_Output "true" "Custom JFFS scripts enabled - Please manually reboot to apply changes" "$CRIT"
+	fi
 
 	# Add to nat-start
 	if [ ! -f "/jffs/scripts/nat-start" ]; then
@@ -225,11 +221,6 @@ cake_start(){
 		chmod 0755 /jffs/scripts/services-stop
 	fi
 
-	if [ "$entwaretimer" -ge "100" ]; then
-		Print_Output "true" "Entware didn't start in 100 seconds, please check!" "$CRIT"
-		exit 1
-	fi
-
 	if [ ! -f "/opt/lib/modules/sch_cake.ko" ] || [ ! -f "/opt/sbin/tc" ]; then
 		Print_Output "true" "Cake binaries missing - Exiting" "$CRIT"
 		exit 1
@@ -243,11 +234,16 @@ cake_start(){
 		exit 1
 	fi
 
-	cake_stop
+	if [ ! -L "/opt/bin/${SCRIPT_NAME}" ] || [ "$(readlink /opt/bin/${SCRIPT_NAME})" != "${SCRIPT_DIR}/${SCRIPT_NAME}" ]; then
+		rm -rf /opt/bin/${SCRIPT_NAME}
+		ln -s "${SCRIPT_DIR}/${SCRIPT_NAME}" "/opt/bin/${SCRIPT_NAME}"
+	fi
 
-	cru a "$SCRIPT_NAME_FANCY" "*/60 * * * * ${SCRIPT_DIR}/${SCRIPT_NAME} checkrun"
+	Cake_Stop
 
-	Print_Output "true" "Starting - settings: ${dlspeed}Mbit | ${upspeed}Mbit | $queueprio | $extraoptions" "$PASS"
+	cru a "$SCRIPT_NAME_FANCY" "0 * * * * ${SCRIPT_DIR}/${SCRIPT_NAME} checkrun"
+
+	Print_Output "true" "Starting - ( ${dlspeed}Mbit | ${upspeed}Mbit | $queueprio | $extraoptions )" "$PASS"
 	runner disable 2>/dev/null
 	fc disable 2>/dev/null
 	fc flush 2>/dev/null
@@ -265,8 +261,8 @@ cake_start(){
 	/opt/sbin/tc filter add dev eth0 parent ffff: protocol all prio 10 u32 match u32 0 0 flowid 1:1 action mirred egress redirect dev ifb9eth0
 }
 
-cake_stop(){
-	if cake_check; then
+Cake_Stop(){
+	if Cake_CheckStatus; then
 		Print_Output "true" "Stopping" "$PASS"
 		cru d "$SCRIPT_NAME_FANCY"
 		/opt/sbin/tc qdisc del dev eth0 ingress 2>/dev/null
@@ -282,56 +278,28 @@ cake_stop(){
 	fi
 }
 
-
-Cake_Header(){
-	clear
-	printf "\\n"
-	printf "\\e[1m#########################################################\\e[0m\\n"
-	printf "\\e[1m##               _                                     ##\\e[0m\\n"
-	printf "\\e[1m##              | |                                    ##\\e[0m\\n"
-	printf "\\e[1m##    ___  __ _ | | __ ___          __ _   ___   ___   ##\\e[0m\\n"
-	printf "\\e[1m##   / __|/ _  || |/ // _ \ ______ / _  | / _ \ / __|  ##\\e[0m\\n"
-	printf "\\e[1m##  | (__ |(_| ||   <|  __/|______| (_| || (_) |\__ \  ##\\e[0m\\n"
-	printf "\\e[1m##   \___|\__,_||_|\_\\\\\___|        \__, | \___/ |___/  ##\\e[0m\\n"
-	printf "\\e[1m##                                    | |              ##\\e[0m\\n"
-	printf "\\e[1m##                                    |_|              ##\\e[0m\\n"
-	printf "\\e[1m##                                                     ##\\e[0m\\n"
-	printf "\\e[1m##                  %s on %-9s                ##\\e[0m\\n" "$SCRIPT_VERSION" "$RMODEL"
-	printf "\\e[1m##                                                     ##\\e[0m\\n"
-	printf "\\e[1m##      https://github.com/ttgapers/cakeqos-merlin     ##\\e[0m\\n"
-	printf "\\e[1m##                                                     ##\\e[0m\\n"
-	if [ "$1" = "1" ]; then
-		if cake_checkupdates; then
-			printf "\\e[1m##        Updates found! Please use Option [5]         ##\\e[0m\\n"
-		else
-			printf "\\e[1m##             Have a wonderful day! :)                ##\\e[0m\\n"
-		fi
-	else
-		printf "\\e[1m##             Have a wonderful day! :)                ##\\e[0m\\n"
-	fi
-	printf "\\e[1m##                                                     ##\\e[0m\\n"
-	printf "\\e[1m#########################################################\\e[0m\\n"
-	printf "\\n"
-}
-
 Cake_Menu(){
-	Cake_Header "1"
+	Display_Line
 	reloadmenu="1"
-	printf "\\e[1mSelect an option\\e[0m\\n"
+	echo "Select an option"
 	echo "[1]  --> Start cake"
 	echo "[2]  --> Stop cake"
 	echo "[3]  --> Check cake status"
 	echo "[4]  --> Change cake settings"
 	echo
-	echo "[5]  --> Check for updates"
+	echo "[5]  --> Update $SCRIPT_NAME_FANCY"
 	echo "[6]  --> Install $SCRIPT_NAME_FANCY"
 	echo "[7]  --> Uninstall $SCRIPT_NAME_FANCY"
 	echo
 	echo "[e]  --> Exit"
 	echo
-	printf "\\e[1m#####################################################\\e[0m\\n"
-	echo
+	if Cake_CheckUpdates; then
+		Display_Line
+		echo "[i] $SCRIPT_NAME_FANCY update available!"
+	fi
+	Display_Line
 	while true; do
+		echo
 		printf "[1-7]: "
 		read -r "menu1"
 		echo
@@ -366,12 +334,14 @@ Cake_Menu(){
 						1)
 							option2="dlspeed"
 							echo "Please enter your download speed:"
+							echo
 							printf "[Mbit]: "
 							read -r "option3"
 							echo
-							if ! Validate_Bandwidth "$option3"; then
+							if ! echo "$option3" | Validate_Bandwidth; then
 								echo "${option3} is not a valid number!"
 								unset "option2" "option3"
+								echo
 								continue
 							fi
 							break
@@ -379,12 +349,14 @@ Cake_Menu(){
 						2)
 							option2="upspeed"
 							echo "Please enter your upload speed:"
+							echo
 							printf "[Mbit]: "
 							read -r "option3"
 							echo
-							if ! Validate_Bandwidth "$option3"; then
+							if ! echo "$option3" | Validate_Bandwidth; then
 								echo "${option3} is not a valid number!"
 								unset "option2" "option3"
+								echo
 								continue
 							fi
 							break
@@ -463,8 +435,8 @@ Cake_Menu(){
 				break
 			;;
 			e)
-				Cake_Header "0"
-				printf "\\n\\e[1mThanks for using %s!\\e[0m\\n\\n\\n" "$SCRIPT_NAME_FANCY"
+				echo "Exiting!"
+				echo
 				exit 0
 			;;
 			*)
@@ -483,18 +455,20 @@ if [ -n "$option1" ]; then
 	set "$option1" "$option2" "$option3"
 fi
 
+Display_Line
+
 case $1 in
 	start)
-		cake_start
+		Cake_Start
 	;;
 	stop)
-		cake_stop
+		Cake_Stop
 		if tty >/dev/null 2>&1; then
 			sed -i '\~# CakeQOS-Merlin~d' /jffs/scripts/nat-start /jffs/scripts/services-stop 2>/dev/null
 		fi
 	;;
 	status)
-		if cake_check; then
+		if Cake_CheckStatus; then
 			Print_Output "false" "Running..." "$PASS"
 			Print_Output "false" "> Download Status:" "$PASS"
 			echo "$STATUS_DOWNLOAD"
@@ -507,11 +481,11 @@ case $1 in
 	settings)
 		case "$2" in
 			dlspeed)
-				if ! Validate_Bandwidth "$3"; then echo "${3} is not a valid number!"; echo; exit 2; fi
+				if ! echo "$3" | Validate_Bandwidth; then echo "${3} is not a valid number!"; echo; exit 2; fi
 				dlspeed="${3}"
 			;;
 			upspeed)
-				if ! Validate_Bandwidth "$3"; then echo "${3} is not a valid number!"; echo; exit 2; fi
+				if ! echo "$3" | Validate_Bandwidth; then echo "${3} is not a valid number!"; echo; exit 2; fi
 				upspeed="${3}"
 			;;
 			queueprio)
@@ -539,112 +513,144 @@ case $1 in
 			;;
 		esac
 		Write_Config
-		if cake_check; then
-			cake_start
+		if Cake_CheckStatus; then
+			Cake_Start
+		fi
+	;;
+	update)
+		Cake_Bin_Download
+		VERSION_LOCAL_SCRIPT="$(Filter_Version < "$0")"
+		VERSION_REMOTE_SCRIPT=$(/usr/sbin/curl -fsL --retry 3 ${SCRIPT_REMOTEDIR}/${SCRIPT_NAME}.sh | Filter_Version)
+		MD5_LOCAL_SCRIPT="$(md5sum "$0" | awk '{print $1}')"
+		MD5_REMOTE_SCRIPT="$(/usr/sbin/curl -fsL --retry 3 ${SCRIPT_REMOTEDIR}/${SCRIPT_NAME}.sh | md5sum | awk '{print $1}')"
+		if [ -n "$VERSION_REMOTE_SCRIPT" ]; then
+			if [ "$MD5_LOCAL_SCRIPT" != "$MD5_REMOTE_SCRIPT" ]; then
+				if [ "$VERSION_LOCAL_SCRIPT" != "$VERSION_REMOTE_SCRIPT" ]; then
+					Print_Output "true" "New CakeQOS-Merlin detected ($VERSION_REMOTE_SCRIPT, currently running $VERSION_LOCAL_SCRIPT), updating..." "$WARN"
+				else
+					Print_Output "true" "Local and server md5 don't match, updating..." "$WARN"
+				fi
+				Download_File "${SCRIPT_NAME}.sh" "$0"
+				echo; exit 0
+			else
+				Print_Output "false" "You are running the latest $SCRIPT_NAME_FANCY script ($VERSION_REMOTE_SCRIPT, currently running $VERSION_LOCAL_SCRIPT), skipping..." "$PASS"
+			fi
+		else
+			Print_Output "false" "Updating ${SCRIPT_NAME}.sh Failed" "$ERR"
 		fi
 	;;
 	install)
+		if [ "$RMODEL" != "RT-AC86U" ] && [ "$RMODEL" != "RT-AX88U" ]; then
+			Print_Output "false" "Cake isn't yet compatible with ASUS $RMODEL, keep watching our thread!" "$CRIT"
+			exit 1
+		fi
 		if [ "$(nvram get jffs2_scripts)" != "1" ]; then
 			nvram set jffs2_scripts=1
 			nvram commit
 			Print_Output "true" "Custom JFFS scripts enabled - Please manually reboot to apply changes - Exiting" "$CRIT"
 			exit 1
 		fi
+		entwaretimer="0"
+		while [ ! -f "/opt/bin/sh" ] && [ "$entwaretimer" -lt "10" ]; do
+			entwaretimer="$((entwaretimer + 1))"
+			Print_Output "true" "Entware isn't ready, waiting 10 sec - Attempt #$entwaretimer" "$WARN"
+			sleep 10
+		done
+		if [ "$entwaretimer" -ge "100" ]; then
+			Print_Output "true" "Entware didn't start in 100 seconds, please check!" "$CRIT"
+			exit 1
+		fi
+		Cake_Bin_Download
+		Display_Line
+		if [ -z "$dlspeed" ] || [ -z "$upspeed" ] || [ -z "$queueprio" ] || [ -z "$extraoptions" ]; then
+			if [ -z "$dlspeed" ]; then
+				while true; do
+					echo
+					echo "Please enter your download speed:"
+					echo
+					printf "[Mbit]: "
+					read -r "dlspeed"
+					echo
+					if ! echo "$dlspeed" | Validate_Bandwidth; then
+						echo "${dlspeed} is not a valid number!"
+						continue
+					fi
+					break
+				done
 
-		cake_download
-		Cake_Header "0"
-		if [ -z "$dlspeed" ]; then
-			while true; do
+			fi
+			if [ -z "$upspeed" ]; then
+				while true; do
+					echo
+					echo "Please enter your upload speed:"
+					echo
+					printf "[Mbit]: "
+					read -r "upspeed"
+					echo
+					if ! echo "$upspeed" | Validate_Bandwidth; then
+						echo "${upspeed} is not a valid number!"
+						continue
+					fi
+					break
+				done
+			fi
+			if [ -z "$queueprio" ]; then
+				while true; do
+					echo
+					echo "Select Queue Priority Type:"
+					echo "[1]  --> besteffort (default)"
+					echo "[2]  --> diffserv3"
+					echo "[3]  --> diffserv4"
+					echo "[4]  --> diffserv8"
+					echo
+					printf "[1-4]: "
+					read -r "menu3"
+					echo
+					case "$menu3" in
+						2)
+							queueprio="diffserv3"
+							break
+						;;
+						3)
+							queueprio="diffserv4"
+							break
+						;;
+						4)
+							queueprio="diffserv8"
+							break
+						;;
+						1|*)
+							queueprio="besteffort"
+							break
+						;;
+					esac
+				done
+			fi
+			if [ -z "$extraoptions" ]; then
 				echo
-				echo "Please enter your download speed:"
-				printf "[Mbit]: "
-				read -r "dlspeed"
+				echo "Please enter your extra options:"
+				printf "[Options]: "
+				read -r "extraoptions"
 				echo
-				if ! Validate_Bandwidth "$dlspeed"; then
-					echo "${dlspeed} is not a valid number!"
-					continue
-				fi
-				break
-			done
-
-		fi
-		if [ -z "$upspeed" ]; then
-			while true; do
-				echo
-				echo "Please enter your upload speed:"
-				printf "[Mbit]: "
-				read -r "upspeed"
-				echo
-				if ! Validate_Bandwidth "$upspeed"; then
-					echo "${upspeed} is not a valid number!"
-					continue
-				fi
-				break
-			done
-		fi
-		if [ -z "$queueprio" ]; then
-			while true; do
-				echo
-				echo "Select Queue Priority Type:"
-				echo "[1]  --> besteffort (default)"
-				echo "[2]  --> diffserv3"
-				echo "[3]  --> diffserv4"
-				echo "[4]  --> diffserv8"
-				echo
-				printf "[1-4]: "
-				read -r "menu3"
-				echo
-				case "$menu3" in
-					2)
-						queueprio="diffserv3"
-						break
-					;;
-					3)
-						queueprio="diffserv4"
-						break
-					;;
-					4)
-						queueprio="diffserv8"
-						break
-					;;
-					1|*)
-						queueprio="besteffort"
-						break
-					;;
-				esac
-			done
-		fi
-		if [ -z "$extraoptions" ]; then
-			echo
-			echo "Please enter your extra options:"
-			printf "[Options]: "
-			read -r "extraoptions"
-			echo
+			fi
+			Display_Line
 		fi
 		Write_Config
-		cake_start
-	;;
-	update)
-		if [ "$(nvram get jffs2_scripts)" != "1" ]; then
-			nvram set jffs2_scripts=1
-			nvram commit
-			Print_Output "true" "Custom JFFS scripts enabled - Please manually reboot to apply changes - Exiting" "$CRIT"
-			exit 1
-		fi
-		cake_download "update"
+		Cake_Start
 	;;
 	uninstall)
-		cake_stop
+		Cake_Stop
 		sed -i '\~# CakeQOS-Merlin~d' /jffs/scripts/nat-start /jffs/scripts/services-stop
 		opkg --autoremove remove sched-cake-oot
 		opkg --autoremove remove tc-adv
 		rm -rf "/jffs/scripts/${SCRIPT_NAME}" "/opt/bin/${SCRIPT_NAME}" "${SCRIPT_DIR}"
+		echo
 		exit 0
 	;;
 	checkrun)
-		if ! cake_check; then
+		if ! Cake_CheckStatus; then
 			Print_Output "true" "Not running, forcing start..." "$CRIT"
-			cake_start
+			Cake_Start
 		fi
 	;;
 	*)
@@ -658,4 +664,5 @@ case $1 in
 		Print_Output "false" "uninstall: stop $SCRIPT_NAME, remove from startup, and remove cake binaries" "$PASS"
 	;;
 esac
-if [ -n "$reloadmenu" ]; then echo; echo; printf "[i] Press Enter To Continue..."; read -r "reloadmenu"; exec "$0"; fi
+Display_Line
+if [ -n "$reloadmenu" ]; then echo; printf "[i] Press Enter To Continue..."; read -r "reloadmenu"; exec "$0"; fi
