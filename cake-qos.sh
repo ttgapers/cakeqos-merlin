@@ -533,7 +533,7 @@ case $1 in
 				Download_File "${SCRIPT_NAME}.sh" "$0"
 				echo; exit 0
 			else
-				Print_Output "false" "You are running the latest $SCRIPT_NAME_FANCY script ($VERSION_REMOTE_SCRIPT, currently running $VERSION_LOCAL_SCRIPT), skipping..." "$PASS"
+				Print_Output "false" "${SCRIPT_NAME}.sh is up-to-date." "$PASS"
 			fi
 		else
 			Print_Output "false" "Updating ${SCRIPT_NAME}.sh Failed" "$ERR"
