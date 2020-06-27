@@ -300,7 +300,7 @@ Cake_Header(){
 	printf "\\e[1m##                                                     ##\\e[0m\\n"
 	printf "\\e[1m##      https://github.com/ttgapers/cakeqos-merlin     ##\\e[0m\\n"
 	printf "\\e[1m##                                                     ##\\e[0m\\n"
-	if cake_checkupdates; then
+	if cake_checkupdates && [ "$1" = "1"]; then
 		printf "\\e[1m##        Updates found! Please use Option [5]         ##\\e[0m\\n"
 	else
 		printf "\\e[1m##             Have a wonderful day! :)                ##\\e[0m\\n"
@@ -311,7 +311,7 @@ Cake_Header(){
 }
 
 Cake_Menu(){
-	Cake_Header
+	Cake_Header "1"
 	reloadmenu="1"
 	printf "\\e[1mSelect an option\\e[0m\\n"
 	echo "[1]  --> Start cake"
@@ -459,7 +459,7 @@ Cake_Menu(){
 				break
 			;;
 			e)
-				Cake_Header
+				Cake_Header "0"
 				printf "\\n\\e[1mThanks for using %s!\\e[0m\\n\\n\\n" "$SCRIPT_NAME_FANCY"
 				exit 0
 			;;
@@ -548,7 +548,7 @@ case $1 in
 		fi
 
 		cake_download
-
+		Cake_Header "0"
 		if [ -z "$dlspeed" ]; then
 			while true; do
 				echo
