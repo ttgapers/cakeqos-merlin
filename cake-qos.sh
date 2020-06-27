@@ -298,13 +298,14 @@ Cake_Header(){
 	printf "\\e[1m##                                                     ##\\e[0m\\n"
 	printf "\\e[1m##                  %s on %-9s                ##\\e[0m\\n" "$SCRIPT_VERSION" "$RMODEL"
 	printf "\\e[1m##                                                     ##\\e[0m\\n"
-	printf "\\e[1m##                                                     ##\\e[0m\\n"
 	printf "\\e[1m##      https://github.com/ttgapers/cakeqos-merlin     ##\\e[0m\\n"
-	if cake_checkupdates; then  
-		printf "\\e[1m##         Updates found! Please use Option 5          ##\\e[0m\\n"
+	printf "\\e[1m##                                                     ##\\e[0m\\n"
+	if cake_checkupdates; then
+		printf "\\e[1m##        Updates found! Please use Option [5]         ##\\e[0m\\n"
 	else
-		printf "\\e[1m##                                                     ##\\e[0m\\n"
+		printf "\\e[1m##             Have a wonderful day! :)                ##\\e[0m\\n"
 	fi
+	printf "\\e[1m##                                                     ##\\e[0m\\n"
 	printf "\\e[1m#########################################################\\e[0m\\n"
 	printf "\\n"
 }
