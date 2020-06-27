@@ -20,7 +20,7 @@
 
 # shellcheck disable=SC2086
 
-readonly SCRIPT_VERSION="v1.0.0"
+readonly SCRIPT_VERSION="v1.0.1"
 readonly SCRIPT_NAME="cake-qos"
 readonly SCRIPT_NAME_FANCY="CakeQOS-Merlin"
 readonly SCRIPT_BRANCH="master"
@@ -300,8 +300,12 @@ Cake_Header(){
 	printf "\\e[1m##                                                     ##\\e[0m\\n"
 	printf "\\e[1m##      https://github.com/ttgapers/cakeqos-merlin     ##\\e[0m\\n"
 	printf "\\e[1m##                                                     ##\\e[0m\\n"
-	if cake_checkupdates && [ "$1" = "1"]; then
-		printf "\\e[1m##        Updates found! Please use Option [5]         ##\\e[0m\\n"
+	if [ "$1" = "1" ]; then
+		if cake_checkupdates; then
+			printf "\\e[1m##        Updates found! Please use Option [5]         ##\\e[0m\\n"
+		else
+			printf "\\e[1m##             Have a wonderful day! :)                ##\\e[0m\\n"
+		fi
 	else
 		printf "\\e[1m##             Have a wonderful day! :)                ##\\e[0m\\n"
 	fi
