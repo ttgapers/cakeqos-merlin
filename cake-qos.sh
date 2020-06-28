@@ -531,7 +531,7 @@ case $1 in
 					Print_Output "true" "Local and server md5 don't match, updating..." "$WARN"
 				fi
 				Download_File "${SCRIPT_NAME}.sh" "$0"
-				echo; exit 0
+				echo
 			else
 				Print_Output "false" "${SCRIPT_NAME}.sh is up-to-date." "$PASS"
 			fi
