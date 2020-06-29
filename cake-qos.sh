@@ -178,8 +178,8 @@ Cake_Start(){
 
 	# Migrate universal options to individual
 	if [ -n "${extraoptions:=}" ] && [ -z "$optionsdl" ] && [ -z "$optionsup" ]; then
-		optionsdl="${extraoptions:=}"
-		optionsup="${extraoptions:=}"
+		optionsdl="${extraoptions}"
+		optionsup="${extraoptions}"
 		Write_Config
 	fi
 
@@ -299,7 +299,7 @@ Cake_Menu(){
 	echo
 	echo "[e]  --> Exit"
 	echo
-	if Cake_CheckUpdates; then
+	if [ "$1" = "check" ] && Cake_CheckUpdates; then
 		Display_Line
 		echo "[*] $SCRIPT_NAME_FANCY update available!"
 	fi
@@ -463,7 +463,7 @@ Cake_Menu(){
 }
 
 if [ -z "$1" ]; then
-	Cake_Menu
+	Cake_Menu "check"
 fi
 
 if [ -n "$option1" ]; then
