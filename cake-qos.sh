@@ -295,7 +295,7 @@ Cake_Menu(){
 	echo
 	if Cake_CheckUpdates; then
 		Display_Line
-		echo "[i] $SCRIPT_NAME_FANCY update available!"
+		echo "[*] $SCRIPT_NAME_FANCY update available!"
 	fi
 	Display_Line
 	while true; do
@@ -665,4 +665,4 @@ case $1 in
 	;;
 esac
 Display_Line
-if [ -n "$reloadmenu" ]; then echo; printf "[i] Press Enter To Continue..."; read -r "reloadmenu"; exec "$0"; fi
+if [ -n "$reloadmenu" ]; then echo; printf "[*] Press Enter To Continue..."; read -r "reloadmenu"; exec "$0"; fi
