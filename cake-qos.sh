@@ -422,7 +422,7 @@ Cake_Menu(){
 				done
 				break
 			;;
-			5)
+			5|i)
 				option1="update"
 				break
 			;;
