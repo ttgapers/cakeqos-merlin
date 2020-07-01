@@ -56,7 +56,7 @@ Filter_Version(){
 }
 
 Validate_Bandwidth(){
-	grep -qE "^[0-9]{1,3}$"
+	grep -qE "^[0-9]{1,3}(\.[0-9]+)?$"
 }
 
 Write_Config(){
