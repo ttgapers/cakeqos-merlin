@@ -320,6 +320,36 @@ Cake_Menu(){
 			;;
 			3)
 				option1="status"
+				while true; do
+					echo "Select Status Option:"
+					echo "[1]  --> Download Status"
+					echo "[2]  --> Upload Status"
+					echo "[3]  --> General Status"
+					echo
+					printf "[1-3]: "
+					read -r "menu2"
+					echo
+					case "$menu2" in
+						1)
+							option2="download"
+							break
+						;;
+						2)
+							option2="upload"
+							break
+						;;
+						3)
+							option2="general"
+							break
+						;;
+						e|exit|back|menu)
+							unset "option1" "option2" "option3"
+							clear
+							Cake_Menu
+							break
+						;;
+					esac
+				done
 				break
 			;;
 			4)
@@ -486,10 +516,20 @@ case $1 in
 	status)
 		if Cake_CheckStatus; then
 			Print_Output "false" "Running..." "$PASS"
-			Print_Output "false" "> Download Status:" "$PASS"
-			echo "$STATUS_DOWNLOAD"
-			Print_Output "false" "> Upload Status:" "$PASS"
-			echo "$STATUS_UPLOAD"
+			case "$2" in
+				download)
+					tc -s qdisc show dev ifb9eth0
+				;;
+				upload)
+					tc -s qdisc show dev eth0
+				;;
+				general)
+					Print_Output "false" "> Download Status:" "$PASS"
+					echo "$STATUS_DOWNLOAD"
+					Print_Output "false" "> Upload Status:" "$PASS"
+					echo "$STATUS_UPLOAD"
+				;;
+			esac
 		else
 			Print_Output "false" "Not running..." "$WARN"
 		fi
