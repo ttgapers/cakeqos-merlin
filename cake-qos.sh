@@ -734,12 +734,12 @@ case $1 in
 	*)
 		Print_Output "false" "Usage: $SCRIPT_NAME {start|stop|status|settings|update|install|uninstall}" "$WARN"
 		echo
-		Print_Output "false" "start:     configure and start $SCRIPT_NAME" "$PASS"
+		Print_Output "false" "start:     start $SCRIPT_NAME" "$PASS"
 		Print_Output "false" "stop:      stop $SCRIPT_NAME" "$PASS"
 		Print_Output "false" "status:    check the current status of $SCRIPT_NAME" "$PASS"
 		Print_Output "false" "settings:  configure settings for $SCRIPT_NAME" "$PASS"
-		Print_Output "false" "update:    update $SCRIPT_NAME binaries (if any available)" "$PASS"
-		Print_Output "false" "install:   only downloads and installs necessary $SCRIPT_NAME binaries" "$PASS"
+		Print_Output "false" "update:    update $SCRIPT_NAME & binaries (if available)" "$PASS"
+		Print_Output "false" "install:   install and configure $SCRIPT_NAME" "$PASS"
 		Print_Output "false" "uninstall: stop $SCRIPT_NAME, remove from startup, and remove cake binaries" "$PASS"
 	;;
 esac
