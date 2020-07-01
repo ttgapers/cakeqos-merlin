@@ -343,7 +343,7 @@ Cake_Menu(){
 							break
 						;;
 						e|exit|back|menu)
-							unset "option1" "option2" "option3"
+							unset "option1" "option2"
 							clear
 							Cake_Menu
 							break
