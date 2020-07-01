@@ -515,7 +515,6 @@ case $1 in
 	;;
 	status)
 		if Cake_CheckStatus; then
-			Print_Output "false" "Running..." "$PASS"
 			case "$2" in
 				download)
 					tc -s qdisc show dev ifb9eth0
@@ -526,8 +525,13 @@ case $1 in
 				general)
 					Print_Output "false" "> Download Status:" "$PASS"
 					echo "$STATUS_DOWNLOAD"
+					echo
 					Print_Output "false" "> Upload Status:" "$PASS"
 					echo "$STATUS_UPLOAD"
+				;;
+				*)
+					echo "Command Not Recognized, Please Try Again"
+					echo; exit 2
 				;;
 			esac
 		else
@@ -569,6 +573,10 @@ case $1 in
 			;;
 			optionsup)
 				optionsup="$3"
+			;;
+			*)
+				echo "Command Not Recognized, Please Try Again"
+				echo; exit 2
 			;;
 		esac
 		Write_Config
