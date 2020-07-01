@@ -15,7 +15,7 @@
 ##                                    |_|              ##
 ##                                                     ##
 ##      https://github.com/ttgapers/cakeqos-merlin     ##
-##                        v1.0.1                       ##
+##                        v1.0.2                       ##
 ##                                                     ##
 #########################################################
 
@@ -56,7 +56,7 @@ Filter_Version(){
 }
 
 Validate_Bandwidth(){
-	grep -qE "^[0-9]{1,3}$"
+	grep -qE "^[0-9]{1,3}(\.[0-9]+)?$"
 }
 
 Write_Config(){
@@ -69,7 +69,8 @@ Write_Config(){
 		printf '%s="%s"\n' "dlspeed" "$dlspeed"
 		printf '%s="%s"\n' "upspeed" "$upspeed"
 		printf '%s="%s"\n' "queueprio" "$queueprio"
-		printf '%s="%s"\n' "extraoptions" "$extraoptions"
+		printf '%s="%s"\n' "optionsdl" "$optionsdl"
+		printf '%s="%s"\n' "optionsup" "$optionsup"
 		printf '\n%s\n' "##############################################"
 	} > "$SCRIPT_CFG"
 }
@@ -175,6 +176,13 @@ Cake_Start(){
 		exit 1
 	fi
 
+	# Migrate universal options to individual
+	if [ -n "${extraoptions:=}" ] && [ -z "$optionsdl" ] && [ -z "$optionsup" ]; then
+		optionsdl="${extraoptions}"
+		optionsup="${extraoptions}"
+		Write_Config
+	fi
+
 	# Cleanup old script entries
 	rm -rf "/jffs/addons/$SCRIPT_NAME.d" 2> /dev/null
 	sed -i '\~# cake-qos~d' /jffs/scripts/firewall-start /jffs/scripts/services-start /jffs/scripts/services-stop 2>/dev/null
@@ -239,11 +247,9 @@ Cake_Start(){
 		ln -s "${SCRIPT_DIR}/${SCRIPT_NAME}" "/opt/bin/${SCRIPT_NAME}"
 	fi
 
-	Cake_Stop
-
 	cru a "$SCRIPT_NAME_FANCY" "0 * * * * ${SCRIPT_DIR}/${SCRIPT_NAME} checkrun"
 
-	Print_Output "true" "Starting - ( ${dlspeed}Mbit | ${upspeed}Mbit | $queueprio | $extraoptions )" "$PASS"
+	Print_Output "true" "Starting - ( ${dlspeed}Mbit | ${upspeed}Mbit | $queueprio | $optionsdl | $optionsup )" "$PASS"
 	runner disable 2>/dev/null
 	fc disable 2>/dev/null
 	fc flush 2>/dev/null
@@ -251,12 +257,12 @@ Cake_Start(){
 	nvram set fc_disable="1"
 	nvram commit
 	insmod /opt/lib/modules/sch_cake.ko 2>/dev/null
-	/opt/sbin/tc qdisc replace dev eth0 root cake bandwidth "${upspeed}Mbit" nat "$queueprio" $extraoptions # options needs to be left unquoted to support multiple extra parameters
+	/opt/sbin/tc qdisc replace dev eth0 root cake bandwidth "${upspeed}Mbit" nat "$queueprio" $optionsup # options needs to be left unquoted to support multiple extra parameters
 	ip link add name ifb9eth0 type ifb
 	/opt/sbin/tc qdisc del dev eth0 ingress 2>/dev/null
 	/opt/sbin/tc qdisc add dev eth0 handle ffff: ingress
 	/opt/sbin/tc qdisc del dev ifb9eth0 root 2>/dev/null
-	/opt/sbin/tc qdisc add dev ifb9eth0 root cake bandwidth "${dlspeed}Mbit" nat wash ingress "$queueprio" $extraoptions # options needs to be left unquoted to support multiple extra parameters
+	/opt/sbin/tc qdisc add dev ifb9eth0 root cake bandwidth "${dlspeed}Mbit" nat wash ingress "$queueprio" $optionsdl # options needs to be left unquoted to support multiple extra parameters
 	ifconfig ifb9eth0 up
 	/opt/sbin/tc filter add dev eth0 parent ffff: protocol all prio 10 u32 match u32 0 0 flowid 1:1 action mirred egress redirect dev ifb9eth0
 }
@@ -293,7 +299,7 @@ Cake_Menu(){
 	echo
 	echo "[e]  --> Exit"
 	echo
-	if Cake_CheckUpdates; then
+	if [ "$1" = "check" ] && Cake_CheckUpdates; then
 		Display_Line
 		echo "[*] $SCRIPT_NAME_FANCY update available!"
 	fi
@@ -314,6 +320,36 @@ Cake_Menu(){
 			;;
 			3)
 				option1="status"
+				while true; do
+					echo "Select Status Option:"
+					echo "[1]  --> Download Status"
+					echo "[2]  --> Upload Status"
+					echo "[3]  --> General Status"
+					echo
+					printf "[1-3]: "
+					read -r "menu2"
+					echo
+					case "$menu2" in
+						1)
+							option2="download"
+							break
+						;;
+						2)
+							option2="upload"
+							break
+						;;
+						3)
+							option2="general"
+							break
+						;;
+						e|exit|back|menu)
+							unset "option1" "option2"
+							clear
+							Cake_Menu
+							break
+						;;
+					esac
+				done
 				break
 			;;
 			4)
@@ -323,11 +359,12 @@ Cake_Menu(){
 					printf '%-35s | %-40s\n' "[1]  --> Download Speed" "$(if [ -n "$dlspeed" ]; then echo "[${dlspeed} Mbit]"; else echo "[Unset]"; fi)"
 					printf '%-35s | %-40s\n' "[2]  --> Upload Speed" "$(if [ -n "$upspeed" ]; then echo "[${upspeed} Mbit]"; else echo "[Unset]"; fi)"
 					printf '%-35s | %-40s\n' "[3]  --> Queue Priority" "$(if [ -n "$queueprio" ]; then echo "[${queueprio}]"; else echo "[Unset]"; fi)"
-					printf '%-35s | %-40s\n' "[4]  --> Extra Options" "$(if [ -n "$extraoptions" ]; then echo "[${extraoptions}]"; else echo "[Unset]"; fi)"
+					printf '%-35s | %-40s\n' "[4]  --> Extra Download Options" "$(if [ -n "$optionsdl" ]; then echo "[${optionsdl}]"; else echo "[Unset]"; fi)"
+					printf '%-35s | %-40s\n' "[5]  --> Extra Upload Options" "$(if [ -n "$optionsup" ]; then echo "[${optionsup}]"; else echo "[Unset]"; fi)"
 					echo
 					printf '%-35s\n' "[e]  --> Exit"
 					echo
-					printf "[1-4]: "
+					printf "[1-5]: "
 					read -r "menu2"
 					echo
 					case "$menu2" in
@@ -405,8 +442,16 @@ Cake_Menu(){
 							break
 						;;
 						4)
-							option2="extraoptions"
-							echo "Please enter your extra options:"
+							option2="optionsdl"
+							echo "Please enter your extra download options:"
+							printf "[Options]: "
+							read -r "option3"
+							echo
+							break
+						;;
+						5)
+							option2="optionsup"
+							echo "Please enter your extra upload options:"
 							printf "[Options]: "
 							read -r "option3"
 							echo
@@ -448,17 +493,19 @@ Cake_Menu(){
 }
 
 if [ -z "$1" ]; then
-	Cake_Menu
+	Cake_Menu "check"
 fi
 
 if [ -n "$option1" ]; then
 	set "$option1" "$option2" "$option3"
+	echo "[$] $0 $*" | tr -s " "
 fi
 
 Display_Line
 
 case $1 in
 	start)
+		Cake_Stop
 		Cake_Start
 	;;
 	stop)
@@ -469,11 +516,25 @@ case $1 in
 	;;
 	status)
 		if Cake_CheckStatus; then
-			Print_Output "false" "Running..." "$PASS"
-			Print_Output "false" "> Download Status:" "$PASS"
-			echo "$STATUS_DOWNLOAD"
-			Print_Output "false" "> Upload Status:" "$PASS"
-			echo "$STATUS_UPLOAD"
+			case "$2" in
+				download)
+					tc -s qdisc show dev ifb9eth0
+				;;
+				upload)
+					tc -s qdisc show dev eth0
+				;;
+				general)
+					Print_Output "false" "> Download Status:" "$PASS"
+					echo "$STATUS_DOWNLOAD"
+					echo
+					Print_Output "false" "> Upload Status:" "$PASS"
+					echo "$STATUS_UPLOAD"
+				;;
+				*)
+					echo "Command Not Recognized, Please Try Again"
+					echo; exit 2
+				;;
+			esac
 		else
 			Print_Output "false" "Not running..." "$WARN"
 		fi
@@ -508,12 +569,20 @@ case $1 in
 					;;
 				esac
 			;;
-			extraoptions)
-				extraoptions="$3"
+			optionsdl)
+				optionsdl="$3"
+			;;
+			optionsup)
+				optionsup="$3"
+			;;
+			*)
+				echo "Command Not Recognized, Please Try Again"
+				echo; exit 2
 			;;
 		esac
 		Write_Config
 		if Cake_CheckStatus; then
+			Cake_Stop
 			Cake_Start
 		fi
 	;;
@@ -528,10 +597,11 @@ case $1 in
 				if [ "$VERSION_LOCAL_SCRIPT" != "$VERSION_REMOTE_SCRIPT" ]; then
 					Print_Output "true" "New CakeQOS-Merlin detected ($VERSION_REMOTE_SCRIPT, currently running $VERSION_LOCAL_SCRIPT), updating..." "$WARN"
 				else
-					Print_Output "true" "Local and server md5 don't match, updating..." "$WARN"
+					Print_Output "true" "Local and remote md5 don't match, updating..." "$WARN"
 				fi
+				Cake_Stop >/dev/null 2>&1
 				Download_File "${SCRIPT_NAME}.sh" "$0"
-				echo
+				Cake_Start >/dev/null 2>&1
 			else
 				Print_Output "false" "${SCRIPT_NAME}.sh is up-to-date." "$PASS"
 			fi
@@ -562,7 +632,7 @@ case $1 in
 		fi
 		Cake_Bin_Download
 		Display_Line
-		if [ -z "$dlspeed" ] || [ -z "$upspeed" ] || [ -z "$queueprio" ] || [ -z "$extraoptions" ]; then
+		if [ -z "$dlspeed" ] || [ -z "$upspeed" ] || [ -z "$queueprio" ] || [ -z "$optionsdl" ] || [ -z "$optionsup" ]; then
 			if [ -z "$dlspeed" ]; then
 				while true; do
 					echo
@@ -626,16 +696,24 @@ case $1 in
 					esac
 				done
 			fi
-			if [ -z "$extraoptions" ]; then
+			if [ -z "$optionsdl" ]; then
 				echo
-				echo "Please enter your extra options:"
+				echo "Please enter your extra download options:"
 				printf "[Options]: "
-				read -r "extraoptions"
+				read -r "optionsdl"
+				echo
+			fi
+			if [ -z "$optionsup" ]; then
+				echo
+				echo "Please enter your extra upload options:"
+				printf "[Options]: "
+				read -r "optionsup"
 				echo
 			fi
 			Display_Line
 		fi
 		Write_Config
+		Cake_Stop
 		Cake_Start
 	;;
 	uninstall)
@@ -650,17 +728,19 @@ case $1 in
 	checkrun)
 		if ! Cake_CheckStatus; then
 			Print_Output "true" "Not running, forcing start..." "$CRIT"
+			Cake_Stop
 			Cake_Start
 		fi
 	;;
 	*)
-		Print_Output "false" "Usage: $SCRIPT_NAME {install|update|start|status|stop|uninstall} (start has required parameters)" "$WARN"
+		Print_Output "false" "Usage: $SCRIPT_NAME {start|stop|status|settings|update|install|uninstall}" "$WARN"
 		echo
-		Print_Output "false" "install:   only downloads and installs necessary $SCRIPT_NAME binaries" "$PASS"
-		Print_Output "false" "update:    update $SCRIPT_NAME binaries (if any available)" "$PASS"
-		Print_Output "false" "start:     configure and start $SCRIPT_NAME" "$PASS"
-		Print_Output "false" "status:    check the current status of $SCRIPT_NAME" "$PASS"
+		Print_Output "false" "start:     start $SCRIPT_NAME" "$PASS"
 		Print_Output "false" "stop:      stop $SCRIPT_NAME" "$PASS"
+		Print_Output "false" "status:    check the current status of $SCRIPT_NAME" "$PASS"
+		Print_Output "false" "settings:  configure settings for $SCRIPT_NAME" "$PASS"
+		Print_Output "false" "update:    update $SCRIPT_NAME & binaries (if available)" "$PASS"
+		Print_Output "false" "install:   install and configure $SCRIPT_NAME" "$PASS"
 		Print_Output "false" "uninstall: stop $SCRIPT_NAME, remove from startup, and remove cake binaries" "$PASS"
 	;;
 esac
