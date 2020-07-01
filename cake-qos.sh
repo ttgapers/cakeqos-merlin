@@ -498,6 +498,7 @@ fi
 
 if [ -n "$option1" ]; then
 	set "$option1" "$option2" "$option3"
+	echo "[$] $0 $*" | tr -s " "
 fi
 
 Display_Line
