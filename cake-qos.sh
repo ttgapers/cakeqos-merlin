@@ -601,7 +601,8 @@ case $1 in
 				fi
 				Cake_Stop >/dev/null 2>&1
 				Download_File "${SCRIPT_NAME}.sh" "$0"
-				Cake_Start >/dev/null 2>&1
+				service restart_firewall
+				echo; exit 1
 			else
 				Print_Output "false" "${SCRIPT_NAME}.sh is up-to-date." "$PASS"
 			fi
