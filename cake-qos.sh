@@ -734,15 +734,19 @@ case $1 in
 		fi
 	;;
 	*)
-		Print_Output "false" "Usage: $SCRIPT_NAME {start|stop|status|settings|update|install|uninstall}" "$WARN"
-		echo
-		Print_Output "false" "start:     start $SCRIPT_NAME" "$PASS"
-		Print_Output "false" "stop:      stop $SCRIPT_NAME" "$PASS"
-		Print_Output "false" "status:    check the current status of $SCRIPT_NAME" "$PASS"
-		Print_Output "false" "settings:  configure settings for $SCRIPT_NAME" "$PASS"
-		Print_Output "false" "update:    update $SCRIPT_NAME & binaries (if available)" "$PASS"
-		Print_Output "false" "install:   install and configure $SCRIPT_NAME" "$PASS"
-		Print_Output "false" "uninstall: stop $SCRIPT_NAME, remove from startup, and remove cake binaries" "$PASS"
+		Print_Output "false" "Usage;" "$WARN"
+		printf '\n%-32s |  %-55s\n' "cake-qos start" "start $SCRIPT_NAME"
+		printf '%-32s |  %-55s\n\n' "cake-qos stop" "stop $SCRIPT_NAME"
+		printf '%-32s |  %-55s\n' "cake-qos status download" "check the current download status of $SCRIPT_NAME"
+		printf '%-32s |  %-55s\n' "cake-qos status upload" "check the current upload status of $SCRIPT_NAME"
+		printf '%-32s |  %-55s\n\n' "cake-qos status general" "check the current general status of $SCRIPT_NAME"
+		printf '%-32s |  %-55s\n' "cake-qos settings dlspeed xxx" "configure download speed setting for $SCRIPT_NAME"
+		printf '%-32s |  %-55s\n' "cake-qos settings upspeed xxx" "configure upload speed setting for $SCRIPT_NAME"
+		printf '%-32s |  %-55s\n' "cake-qos settings queueprio xxx" "configure queue priority setting for $SCRIPT_NAME"
+		printf '%-32s |  %-55s\n' "cake-qos settings optionsdl xxx" "configure download options setting for $SCRIPT_NAME"
+		printf '%-32s |  %-55s\n\n' "cake-qos settings optionsup xxx" "configure upload options setting for $SCRIPT_NAME"
+		printf '%-32s |  %-55s\n' "cake-qos install" "install and configure $SCRIPT_NAME"
+		printf '%-32s |  %-55s\n' "cake-qos uninstall" "uninstall and remove all traces of $SCRIPT_NAME"
 	;;
 esac
 Display_Line
