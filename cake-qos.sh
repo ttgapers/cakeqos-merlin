@@ -236,10 +236,9 @@ Cake_Start(){
 
 	if [ "$(nvram get qos_enable)" = "1" ]; then
 		nvram set qos_enable="0"
-		nvram save
+		nvram commit
 		service "restart_qos;restart_firewall" >/dev/null 2>&1
-		Print_Output "true" "Disabling Asus QOS" "$WARN"
-		exit 1
+		Print_Output "true" "Disabling Asus QoS" "$WARN"
 	fi
 
 	if [ ! -L "/opt/bin/${SCRIPT_NAME}" ] || [ "$(readlink /opt/bin/${SCRIPT_NAME})" != "${SCRIPT_DIR}/${SCRIPT_NAME}" ]; then
