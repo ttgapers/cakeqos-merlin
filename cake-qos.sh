@@ -15,7 +15,7 @@
 ##                                    |_|              ##
 ##                                                     ##
 ##      https://github.com/ttgapers/cakeqos-merlin     ##
-##                        v1.0.2                       ##
+##                        v1.0.3                       ##
 ##                                                     ##
 #########################################################
 
@@ -131,7 +131,7 @@ Cake_Bin_Download(){
 		if [ "$VERSION_LOCAL_CAKE" != "$VERSION_REMOTE_CAKE" ] || [ ! -f "/opt/lib/modules/sch_cake.ko" ]|| [ "$VERSION_LOCAL_TC" != "$VERSION_REMOTE_TC" ] || [ ! -f "/opt/sbin/tc" ]; then
 			case "$RMODEL" in
 				RT-AC86U)
-					FILE1_TYPE="1"
+					FILE1_TYPE="ac"
 				;;
 				RT-AX88U)
 					FILE1_TYPE="ax"
