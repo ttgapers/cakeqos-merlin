@@ -15,7 +15,7 @@
 ##                                    |_|              ##
 ##                                                     ##
 ##      https://github.com/ttgapers/cakeqos-merlin     ##
-##                        v1.0.3                       ##
+##                        v1.0.4                       ##
 ##                                                     ##
 #########################################################
 
@@ -132,14 +132,20 @@ Cake_Bin_Download(){
 			case "$RMODEL" in
 				RT-AC86U)
 					FILE1_TYPE="ac"
+					FILE_ARCH="aarch64-3.10"
 				;;
 				RT-AX88U)
 					FILE1_TYPE="ax"
+					FILE_ARCH="aarch64-3.10"
+				;;
+				RT-AX56U|RT-AX58U)
+					FILE1_TYPE="ax32"
+					FILE_ARCH="armv7-2.6"
 				;;
 			esac
 			opkg update
 			if [ "$VERSION_LOCAL_CAKE" != "$VERSION_REMOTE_CAKE" ] || [ ! -f "/opt/lib/modules/sch_cake.ko" ]; then
-				FILE1="sched-cake-oot_${VERSION_REMOTE_CAKE}-${FILE1_TYPE}_aarch64-3.10.ipk"
+				FILE1="sched-cake-oot_${VERSION_REMOTE_CAKE}-${FILE1_TYPE}_${FILE_ARCH}.ipk"
 				FILE1_OUT="sched-cake-oot.ipk"
 				if Download_File "${FILE1}" "/opt/tmp/${FILE1_OUT}"; then
 					opkg --autoremove remove sched-cake-oot
@@ -148,7 +154,7 @@ Cake_Bin_Download(){
 				fi
 			fi
 			if [ "$VERSION_LOCAL_TC" != "$VERSION_REMOTE_TC" ] || [ ! -f "/opt/sbin/tc" ]; then
-				FILE2="tc-adv_${VERSION_REMOTE_TC}_aarch64-3.10.ipk"
+				FILE2="tc-adv_${VERSION_REMOTE_TC}_${FILE_ARCH}.ipk"
 				FILE2_OUT="tc-adv.ipk"
 				if Download_File "${FILE2}" "/opt/tmp/${FILE2_OUT}"; then
 					opkg --autoremove remove tc-adv
@@ -175,17 +181,6 @@ Cake_Start(){
 		Print_Output "true" "Queue Priority value missing - Please configure this to proceed" "$WARN"
 		exit 1
 	fi
-
-	# Migrate universal options to individual
-	if [ -n "${extraoptions:=}" ] && [ -z "$optionsdl" ] && [ -z "$optionsup" ]; then
-		optionsdl="${extraoptions}"
-		optionsup="${extraoptions}"
-		Write_Config
-	fi
-
-	# Cleanup old script entries
-	rm -rf "/jffs/addons/$SCRIPT_NAME.d" 2> /dev/null
-	sed -i '\~# cake-qos~d' /jffs/scripts/firewall-start /jffs/scripts/services-start /jffs/scripts/services-stop 2>/dev/null
 
 	entwaretimer="0"
 	while [ ! -f "/opt/bin/sh" ] && [ "$entwaretimer" -lt "10" ]; do

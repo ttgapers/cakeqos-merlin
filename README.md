@@ -1,11 +1,10 @@
 # CakeQOS-Merlin
 
 ## Pre-requisites
-1.  Currently only supports RT-86U & RT-AX88U running [Melin firmware](https://github.com/RMerl/asuswrt-merlin.ng) (384.xx and above)
+1.  Currently only supports RT-AC86U / RT-AX88U / RT-AX56U / RT-AX58U running [Melin firmware](https://github.com/RMerl/asuswrt-merlin.ng) (384.xx and above)
 2.  Not recommended for connection up/down of 250Mbps or higher. **Note:** Users with higher up/down connections have reported lower peaks but better stability and user experience overall and continue to use Cake.
 3.  Entware
 4.  USB Storage
-5.  JFFS Custom Scripts Enabled
 
 ## Tips
 1.  If you use connections like ADSL, VDSL, Docsis, learn about the overhead keyword. [https://man7.org/linux/man-pages/man8/tc-cake.8.html](https://man7.org/linux/man-pages/man8/tc-cake.8.html)
