@@ -605,7 +605,7 @@ case $1 in
 		fi
 	;;
 	install)
-		if [ "$RMODEL" != "RT-AC86U" ] && [ "$RMODEL" != "RT-AX88U" ]; then
+		if [ "$RMODEL" != "RT-AC86U" ] && [ "$RMODEL" != "RT-AX88U" ] && [ "$RMODEL" != "RT-AX56U" ] && [ "$RMODEL" != "RT-AX58U" ]; then
 			Print_Output "false" "Cake isn't yet compatible with ASUS $RMODEL, keep watching our thread!" "$CRIT"
 			exit 1
 		fi
