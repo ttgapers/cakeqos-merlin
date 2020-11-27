@@ -15,7 +15,7 @@
 ##                                    |_|              ##
 ##                                                     ##
 ##      https://github.com/ttgapers/cakeqos-merlin     ##
-##                        v1.0.4                       ##
+##                        v1.0.5                       ##
 ##                                                     ##
 #########################################################
 
@@ -138,7 +138,7 @@ Cake_Bin_Download(){
 					FILE1_TYPE="ax"
 					FILE_ARCH="aarch64-3.10"
 				;;
-				RT-AX56U|RT-AX58U)
+				RT-AX56U|RT-AX58U|RT-AX3000)
 					FILE1_TYPE="ax32"
 					FILE_ARCH="armv7-2.6"
 				;;
@@ -605,7 +605,7 @@ case $1 in
 		fi
 	;;
 	install)
-		if [ "$RMODEL" != "RT-AC86U" ] && [ "$RMODEL" != "RT-AX88U" ] && [ "$RMODEL" != "RT-AX56U" ] && [ "$RMODEL" != "RT-AX58U" ]; then
+		if [ "$RMODEL" != "RT-AC86U" ] && [ "$RMODEL" != "RT-AX88U" ] && [ "$RMODEL" != "RT-AX56U" ] && [ "$RMODEL" != "RT-AX58U" ] || [ "$RMODEL" != "RT-AX3000" ]; then
 			Print_Output "false" "Cake isn't yet compatible with ASUS $RMODEL, keep watching our thread!" "$CRIT"
 			exit 1
 		fi
