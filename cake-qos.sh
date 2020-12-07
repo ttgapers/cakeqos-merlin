@@ -15,7 +15,7 @@
 ##                                    |_|              ##
 ##                                                     ##
 ##      https://github.com/ttgapers/cakeqos-merlin     ##
-##                        v1.0.6                       ##
+##                        v1.0.7                       ##
 ##                                                     ##
 #########################################################
 
@@ -132,7 +132,7 @@ Cake_Bin_Download(){
 		VERSION_REMOTE_TC=$(echo "$VERSION_REMOTE_MANIFEST" | awk -F "|" '{print $2}')
 		if [ "$VERSION_LOCAL_CAKE" != "$VERSION_REMOTE_CAKE" ] || [ ! -f "/opt/lib/modules/sch_cake.ko" ]|| [ "$VERSION_LOCAL_TC" != "$VERSION_REMOTE_TC" ] || [ ! -f "/opt/sbin/tc" ]; then
 			case "$RMODEL" in
-				RT-AC86U)
+				RT-AC86U|GT-AC2900)
 					FILE1_TYPE="ac"
 					FILE_ARCH="aarch64-3.10"
 				;;
@@ -143,6 +143,10 @@ Cake_Bin_Download(){
 				RT-AX56U|RT-AX58U|RT-AX3000)
 					FILE1_TYPE="ax32"
 					FILE_ARCH="armv7-2.6"
+				;;
+				RT-AX86U)
+					FILE1_TYPE="ax86"
+					FILE_ARCH="aarch64-3.10"
 				;;
 			esac
 			opkg update
@@ -615,7 +619,7 @@ case $1 in
 		fi
 	;;
 	install)
-		if [ "$RMODEL" != "RT-AC86U" ] && [ "$RMODEL" != "RT-AX88U" ] && [ "$RMODEL" != "RT-AX56U" ] && [ "$RMODEL" != "RT-AX58U" ] && [ "$RMODEL" != "RT-AX3000" ]; then
+		if [ "$RMODEL" != "RT-AC86U" ] && [ "$RMODEL" != "GT-AC2900" ] && [ "$RMODEL" != "RT-AX88U" ] && [ "$RMODEL" != "RT-AX56U" ] && [ "$RMODEL" != "RT-AX58U" ] && [ "$RMODEL" != "RT-AX3000" ] && [ "$RMODEL" != "RT-AX86U" ]; then
 			Print_Output "false" "Cake isn't yet compatible with ASUS $RMODEL, keep watching our thread!" "$CRIT"
 			exit 1
 		fi
