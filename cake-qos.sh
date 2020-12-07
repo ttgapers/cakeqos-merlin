@@ -15,7 +15,7 @@
 ##                                    |_|              ##
 ##                                                     ##
 ##      https://github.com/ttgapers/cakeqos-merlin     ##
-##                        v1.0.5                       ##
+##                        v1.0.6                       ##
 ##                                                     ##
 #########################################################
 
@@ -246,7 +246,11 @@ Cake_Start(){
 	cru a "$SCRIPT_NAME_FANCY" "0 * * * * ${SCRIPT_DIR}/${SCRIPT_NAME} checkrun"
 
 	Print_Output "true" "Starting - ( ${dlspeed}Mbit | ${upspeed}Mbit | $queueprio | $optionsdl | $optionsup )" "$PASS"
-	runner disable 2>/dev/null
+	if [ "$RMODEL" = "RT-AX58U" ] || [ "$RMODEL" = "RT-AX3000" ]; then
+		fc config --hw-accel 0
+	else
+		runner disable 2>/dev/null
+	fi
 	fc disable 2>/dev/null
 	fc flush 2>/dev/null
 	nvram set runner_disable="1"
@@ -272,7 +276,11 @@ Cake_Stop(){
 		/opt/sbin/tc qdisc del dev ${iface} root 2>/dev/null
 		ip link del ifb9${iface}
 		rmmod sch_cake 2>/dev/null
-		runner enable
+		if [ "$RMODEL" = "RT-AX58U" ] || [ "$RMODEL" = "RT-AX3000" ]; then
+			fc config --hw-accel 1
+		else
+			runner enable
+		fi
 		fc enable
 		nvram set runner_disable="0"
 		nvram set fc_disable="0"
