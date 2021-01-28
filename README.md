@@ -25,12 +25,14 @@
 ## Usage
 
 ```sh
-cake-qos {start|stop|status|settings|update|install|uninstall}
+cake-qos {start|stop|status download|status upload|status general|settings|update|install|uninstall}
 ```
 
 -   start:   start cake-qos
 -   stop:    stop cake-qos
--   status:   check the current status of cake-qos
+-   status download:   check the current download status of cake-qos
+-   status upload:   check the current upload status of cake-qos
+-   status general:   check the current general status of cake-qos
 -   settings: configure cake-qos settings
 -   update: update cake-qos binaries and installer (if any available)
 -   install: download and install necessary cake-qos binaries and configure settings
