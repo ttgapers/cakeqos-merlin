@@ -317,16 +317,16 @@ Cake_Install(){
 	fi
 
 	# Add to qos-start
-	if [ ! -f "/jffs/scripts/qos-start" ]; then
-		echo "#!/bin/sh" > /jffs/scripts/qos-start
-		echo >> /jffs/scripts/qos-start
-	elif [ -f "/jffs/scripts/qos-start" ] && ! head -1 /jffs/scripts/qos-start | grep -qE "^#!/bin/sh"; then
-		sed -i '1s~^~#!/bin/sh\n~' /jffs/scripts/qos-start
-	fi
-	if ! grep -q "# $SCRIPT_NAME_FANCY" /jffs/scripts/qos-start; then
-		echo "${SCRIPT_DIR}/${SCRIPT_NAME} \$1 # $SCRIPT_NAME_FANCY" >> /jffs/scripts/qos-start
-		chmod 0755 /jffs/scripts/qos-start
-	fi
+#	if [ ! -f "/jffs/scripts/qos-start" ]; then
+#		echo "#!/bin/sh" > /jffs/scripts/qos-start
+#		echo >> /jffs/scripts/qos-start
+#	elif [ -f "/jffs/scripts/qos-start" ] && ! head -1 /jffs/scripts/qos-start | grep -qE "^#!/bin/sh"; then
+#		sed -i '1s~^~#!/bin/sh\n~' /jffs/scripts/qos-start
+#	fi
+#	if ! grep -q "# $SCRIPT_NAME_FANCY" /jffs/scripts/qos-start; then
+#		echo "${SCRIPT_DIR}/${SCRIPT_NAME} \$1 # $SCRIPT_NAME_FANCY" >> /jffs/scripts/qos-start
+#		chmod 0755 /jffs/scripts/qos-start
+#	fi
 
 	if [ ! -L "/opt/bin/${SCRIPT_NAME}" ] || [ "$(readlink /opt/bin/${SCRIPT_NAME})" != "${SCRIPT_DIR}/${SCRIPT_NAME}" ]; then
 		rm -rf /opt/bin/${SCRIPT_NAME}
@@ -389,7 +389,7 @@ Cake_Uninstall(){
 		# Remove last mounted asp page
 		rm -f /www/user/"$prev_webui_page" 2>/dev/null
 	fi
-	sed -i '\~# CakeQOS-Merlin~d' /jffs/scripts/service-event /jffs/scripts/service-event-end /jffs/scripts/qos-start
+	sed -i '\~# CakeQOS-Merlin~d' /jffs/scripts/service-event /jffs/scripts/service-event-end #/jffs/scripts/qos-start
 	sed -i "/^cakeqos_/d" /jffs/addons/custom_settings.txt
 	rm -rf "/opt/bin/${SCRIPT_NAME}" "${SCRIPT_DIR}" "/www/ext/${SCRIPT_NAME}" /jffs/configs/cake-qos.conf.add 2>/dev/null
 }
