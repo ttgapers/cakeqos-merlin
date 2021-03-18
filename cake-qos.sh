@@ -280,7 +280,8 @@ Cake_Install(){
 	local prev_webui_page
 	local LOCKFILE FD
 	if ! nvram get rc_support | /bin/grep -q "cake"; then
-		Print_Output "false" "Cake isn't available in your firmware. Please upgrade to 386.2 or higher!" "$CRIT"
+		Print_Output "false" "This version of the script is not compatible with your router firmware version. Installing legacy version 1.0.7!" "$WARN"
+		curl -fsL --retry 3 --connect-timeout 3 "https://raw.githubusercontent.com/ttgapers/cakeqos-merlin/384/cake-qos.sh" -o "$0" && exec sh "$0" install
 		exit 1
 	fi
 	if [ "$(nvram get jffs2_scripts)" != "1" ]; then
