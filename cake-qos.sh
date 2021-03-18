@@ -36,8 +36,6 @@ readonly ERR="\\e[31m"
 readonly WARN="\\e[33m"
 readonly PASS="\\e[32m"
 
-[ -z "$(nvram get odmpid)" ] && RMODEL=$(nvram get productid) || RMODEL=$(nvram get odmpid) #get router model
-
 . /usr/sbin/helper.sh
 
 # Update version number in custom_settings.txt for reading in WebUI
@@ -445,7 +443,7 @@ Cake_Update(){
 			printf " Would you like to overwrite your existing installation anyway? [1=Yes 2=No]: "
 			;;
 		'Hotfix')
-			printf " $SCRIPT_NAME_FANCY hotfix is available.\n"
+			printf " %s hotfix is available.\n" "$SCRIPT_NAME_FANCY"
 			printf " Would you like to update now? [1=Yes 2=No]: "
 			;;
 		'Error')
@@ -454,7 +452,7 @@ Cake_Update(){
 			;;
 		*)
 			# New Version Number
-			printf " $SCRIPT_NAME_FANCY v${updatestatus} is now available!\n"
+			printf " %s v%s is now available!\n" "$SCRIPT_NAME_FANCY" "$updatestatus"
 			printf " Would you like to update now? [1=Yes 2=No]: "
 			;;
 		esac
