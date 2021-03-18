@@ -440,27 +440,27 @@ Cake_Update(){
 	if [ "$mode" = "interactive" ] && [ -z "$1" ]; then
 		case "$updatestatus" in
 		'NoUpdate')
-			printf " You have the latest version installed"
+			printf " You have the latest version installed\n"
 			printf " Would you like to overwrite your existing installation anyway? [1=Yes 2=No]: "
 			;;
 		'Hotfix')
-			printf " $SCRIPTNAME_DISPLAY hotfix is available."
+			printf " $SCRIPTNAME_DISPLAY hotfix is available.\n"
 			printf " Would you like to update now? [1=Yes 2=No]: "
 			;;
 		'Error')
-			printf " Error determining remote version status!"
+			printf " Error determining remote version status!\n"
 			return
 			;;
 		*)
 			# New Version Number
-			printf " $SCRIPTNAME_DISPLAY v${updatestatus} is now available!"
+			printf " $SCRIPTNAME_DISPLAY v${updatestatus} is now available!\n"
 			printf " Would you like to update now? [1=Yes 2=No]: "
 			;;
 		esac
 		read -r yn
 		printf "\n"
 		if [ "$yn" != "1" ]; then
-			printf " No Changes have been made"
+			printf " No Changes have been made\n"
 			return 0
 		fi
 	fi
