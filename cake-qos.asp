@@ -90,7 +90,7 @@ function YazHint(hintid) {
 			hinttext = "Remove duplicate TCP ACKs from the flow queue since only the last ACK is needed.";
 			break;
 		case 7:
-			hinttext = "Add any custom parameters separated by spaces. These will be appended to the end of the CAKE options and take priority over the options above.";
+			hinttext = "Add any custom parameters separated by spaces. These will be appended to the end of the CAKE options and take priority over the options above. There is no validation done on these options. Use carefully!";
 			break;
 		default:
 			hinttext = "Help text not yet defined";
@@ -1190,12 +1190,12 @@ function change_wizard(o){
 <table width="100%" border="1" align="center" cellpadding="4" cellspacing="0" class="FormTable">
 	<thead>
 		<tr>
-			<td colspan="2">Options</td>
+			<td colspan="3">Options</td>
 		</tr>
 	</thead>
 	<tr>
 		<th>Version</th>
-		<td>
+		<td colspan="2">
 			<span id="cakeqos_version" style="margin-left:4px; color:#FFFFFF;"></span>
 			&nbsp;&nbsp;&nbsp;
 			<input type="button" id="ver_check" class="button_gen" style="width:135px;height:24px;" onclick="version_check();" value="Check for Update">
@@ -1207,7 +1207,7 @@ function change_wizard(o){
 	</tr>
 	<tr style="display:none">
 		<th><a class="hintstyle" href="javascript:void(0);" onclick="YazHint(1);">Cake Download Interface</a></th>
-		<td>
+		<td colspan="2">
 			<input type="radio" name="cakeqos_dlif" class="input" value="0">WAN ingress
 			<input type="radio" name="cakeqos_dlif" class="input" value="1">LAN bridge
 		</td>
@@ -1218,9 +1218,9 @@ function change_wizard(o){
 			<input type="text" maxlength="4" class="input_6_table" name="qos_overhead" id="qos_overhead" onKeyPress="return validator.isNumber(this,event);" onblur="validator.numberRange(this, -64, 256);" value="<% nvram_get("qos_overhead"); %>" style="float:left;">
 			<img id="ovh_pull_arrow" class="pull_arrow" height="14px;" src="/images/arrow-down.gif" onclick="pullOverheadList(this);">
 			<div id="overhead_presets_list" style="margin-top:25px;height:auto;" class="dns_server_list_dropdown"></div>
-			<label id="qos_mpu_label" style="float:left;margin-left:25px;margin-right:5px;">MPU:</label>
+			<label for="qos_mpu" style="float:left;margin-left:25px;margin-right:5px;margin-top:4px;">MPU:</label>
 			<input type="text" maxlength="4" class="input_6_table" name="qos_mpu" id="qos_mpu" onKeyPress="return validator.isNumber(this,event);" onblur="validator.numberRange(this, 0, 256);" value="<% nvram_get("qos_mpu"); %>" style="float:left;">
-			<label id="qos_atm_label" style="float:left;margin-left:25px;margin-right:5px;">Mode:</label>
+			<label for="qos_atm" style="float:left;margin-left:25px;margin-right:5px;margin-top:4px;">Mode:</label>
 			<select name="qos_atm" id="qos_atm" class="input_option">
 				<option <% nvram_match("qos_atm","0","selected"); %> value="0">Normal</option>
 				<option <% nvram_match("qos_atm","1","selected"); %> value="1">ATM</option>
@@ -1231,16 +1231,17 @@ function change_wizard(o){
 	<tr>
 		<th><a class="hintstyle" href="javascript:void(0);" onclick="YazHint(2);">Priority Queue (Tins)</a></th>
 		<td>
-			<label for="cakeqos_dlprio"><span>Download:</span></label>
-			<select name="cakeqos_dlprio" id="cakeqos_dlprio" class="input_option" style="width:134px">
+			<label for="cakeqos_dlprio">Download:</label>
+			<select name="cakeqos_dlprio" id="cakeqos_dlprio" class="input_option">
 				<option value="0">diffserv3</option>
 				<option value="1">diffserv4</option>
 				<option value="2">diffserv8</option>
 				<option value="3">besteffort</option>
 			</select>
-			&nbsp;&nbsp;&nbsp;
-			<label for="cakeqos_ulprio"><span>Upload:</span></label>
-			<select name="cakeqos_ulprio" id="cakeqos_ulprio" class="input_option" style="width:134px">
+			</td>
+			<td>
+			<label for="cakeqos_ulprio">Upload:</label>
+			<select name="cakeqos_ulprio" id="cakeqos_ulprio" class="input_option">
 				<option value="0">diffserv3</option>
 				<option value="1">diffserv4</option>
 				<option value="2">diffserv8</option>
@@ -1251,7 +1252,7 @@ function change_wizard(o){
 	<tr>
 		<th><a class="hintstyle" href="javascript:void(0);" onclick="YazHint(3);">Flow Isolation (Fairness)</a></th>
 		<td>
-			<label for="cakeqos_dlflowiso"><span>Download:</span></label>
+			<label for="cakeqos_dlflowiso">Download:</label>
 			<select name="cakeqos_dlflowiso" id="cakeqos_dlflowiso" class="input_option">
 				<option value="0">flowblind</option>
 				<option value="1">srchost</option>
@@ -1262,8 +1263,9 @@ function change_wizard(o){
 				<option value="6">dual-dsthost</option>
 				<option value="7">triple-isolate</option>
 			</select>
-			&nbsp;&nbsp;&nbsp;
-			<label for="cakeqos_ulflowiso"><span>Upload:</span></label>
+			</td>
+			<td>
+			<label for="cakeqos_ulflowiso">Upload:</label>
 			<select name="cakeqos_ulflowiso" id="cakeqos_ulflowiso" class="input_option">
 				<option value="0">flowblind</option>
 				<option value="1">srchost</option>
@@ -1279,11 +1281,12 @@ function change_wizard(o){
 	<tr>
 		<th><a class="hintstyle" href="javascript:void(0);" onclick="YazHint(4);">NAT Lookup</a></th>
 		<td>
-			<span>Download:</span>
+			<label for="cakeqos_dlnat">Download:</label>
 			<input type="radio" name="cakeqos_dlnat" class="input" value="1">Yes
 			<input type="radio" name="cakeqos_dlnat" class="input" value="0">No
-			&nbsp;&nbsp;&nbsp;
-			<span style="margin-left:53px;">Upload:</span>
+			</td>
+			<td>
+			<label for="cakeqos_ulnat">Upload:</label>
 			<input type="radio" name="cakeqos_ulnat" class="input" value="1">Yes
 			<input type="radio" name="cakeqos_ulnat" class="input" value="0">No
 		</td>
@@ -1291,11 +1294,12 @@ function change_wizard(o){
 	<tr>
 		<th><a class="hintstyle" href="javascript:void(0);" onclick="YazHint(5);">Wash DSCP Markings</a></th>
 		<td>
-			<span>Download:</span>
+			<label for="cakeqos_dlwash">Download:</label>
 			<input type="radio" name="cakeqos_dlwash" class="input" value="1">Yes
 			<input type="radio" name="cakeqos_dlwash" class="input" value="0">No
-			&nbsp;&nbsp;&nbsp;
-			<span style="margin-left:53px;">Upload:</span>
+			</td>
+			<td>
+			<label for="cakeqos_ulwash">Upload:</label>
 			<input type="radio" name="cakeqos_ulwash" class="input" value="1">Yes
 			<input type="radio" name="cakeqos_ulwash" class="input" value="0">No
 		</td>
@@ -1303,30 +1307,31 @@ function change_wizard(o){
 	<tr>
 		<th><a class="hintstyle" href="javascript:void(0);" onclick="YazHint(6);">Filter Duplicate TCP ACKs</a></th>
 		<td>
-			<span>Download:</span>
+			<label for="cakeqos_dlack">Download:</label>
 			<input type="radio" name="cakeqos_dlack" class="input" value="1">Yes
 			<input type="radio" name="cakeqos_dlack" class="input" value="0">No
-			&nbsp;&nbsp;&nbsp;
-			<span style="margin-left:53px;">Upload:</span>
+			</td>
+			<td>
+			<label for="cakeqos_ulack">Upload:</label>
 			<input type="radio" name="cakeqos_ulack" class="input" value="1">Yes
 			<input type="radio" name="cakeqos_ulack" class="input" value="0">No
 		</td>
 	</tr>
 	<tr>
 		<th><a class="hintstyle" href="javascript:void(0);" onclick="YazHint(7);">Custom Download Parameters</a></th>
-		<td>
-			<input id="cakeqos_dlcust" type="text" maxlength="32" class="input_32_table" name="cakeqos_dlcust" autocomplete="off" autocorrect="off" autocapitalize="off" placeholder="Optional custom parameters">
+		<td colspan="2">
+			<input id="cakeqos_dlcust" type="text" maxlength="48" class="input_32_table" name="cakeqos_dlcust" autocomplete="off" autocorrect="off" autocapitalize="off" placeholder="Optional custom parameters">
 		</td>
 	</tr>
 	<tr>
 		<th><a class="hintstyle" href="javascript:void(0);" onclick="YazHint(7);">Custom Upload Parameters</a></th>
-		<td>
-			<input id="cakeqos_ulcust" type="text" maxlength="32" class="input_32_table" name="cakeqos_ulcust" autocomplete="off" autocorrect="off" autocapitalize="off" placeholder="Optional custom parameters">
+		<td colspan="2">
+			<input id="cakeqos_ulcust" type="text" maxlength="48" class="input_32_table" name="cakeqos_ulcust" autocomplete="off" autocorrect="off" autocapitalize="off" placeholder="Optional custom parameters">
 		</td>
 	</tr>
 	<tr style="display:none;" >
 		<th>Add Well-Known iptables Rule</th>
-		<td>
+		<td colspan="2">
 			<select name="WellKnownRules" class="input_option" onChange="change_wizard(this);">
 				<option value="User Defined">Please select</option>
 			</select>
