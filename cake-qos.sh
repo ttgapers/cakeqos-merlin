@@ -296,9 +296,9 @@ Cake_Install(){
 	elif [ -f "/jffs/scripts/service-event" ] && ! head -1 /jffs/scripts/service-event | grep -qE "^#!/bin/sh"; then
 		sed -i '1s~^~#!/bin/sh\n~' /jffs/scripts/service-event
 	fi
-	if ! grep -q "${SCRIPT_DIR}/${SCRIPT_NAME}.sh config # $SCRIPT_NAME_FANCY" /jffs/scripts/service-event; then
+	if ! grep -q "${SCRIPT_DIR}/${SCRIPT_NAME} config # $SCRIPT_NAME_FANCY" /jffs/scripts/service-event; then
 		sed -i '\~# CakeQOS-Merlin~d' /jffs/scripts/service-event
-		echo "[ \"\$2\" = \"qos\" ] && ${SCRIPT_DIR}/${SCRIPT_NAME}.sh config # $SCRIPT_NAME_FANCY" >> /jffs/scripts/service-event
+		echo "[ \"\$2\" = \"qos\" ] && ${SCRIPT_DIR}/${SCRIPT_NAME} config # $SCRIPT_NAME_FANCY" >> /jffs/scripts/service-event
 		chmod 0755 /jffs/scripts/service-event
 	fi
 
@@ -311,7 +311,7 @@ Cake_Install(){
 	fi
 	if ! grep -q "$SCRIPT_NAME_FANCY" /jffs/scripts/service-event-end; then
 		sed -i '\~# CakeQOS-Merlin~d' /jffs/scripts/service-event-end
-		echo "if echo \"\$2\" | /bin/grep -q \"^${SCRIPT_NAME}\"; then { sh ${SCRIPT_DIR}/${SCRIPT_NAME}.sh \"\${2#${SCRIPT_NAME}}\" & } ; fi # $SCRIPT_NAME_FANCY" >> /jffs/scripts/service-event-end
+		echo "if echo \"\$2\" | /bin/grep -q \"^${SCRIPT_NAME}\"; then { sh ${SCRIPT_DIR}/${SCRIPT_NAME} \"\${2#${SCRIPT_NAME}}\" & } ; fi # $SCRIPT_NAME_FANCY" >> /jffs/scripts/service-event-end
 		chmod 0755 /jffs/scripts/service-event
 	fi
 
@@ -388,8 +388,9 @@ Cake_Uninstall(){
 		# Remove last mounted asp page
 		rm -f /www/user/"$prev_webui_page" 2>/dev/null
 	fi
-	sed -i '\~# CakeQOS-Merlin~d' /jffs/scripts/service-event /jffs/scripts/qos-start
-	rm -rf "/opt/bin/${SCRIPT_NAME}" "${SCRIPT_DIR}" /jffs/configs/cake-qos.conf.add 2>/dev/null
+	sed -i '\~# CakeQOS-Merlin~d' /jffs/scripts/service-event /jffs/scripts/service-event-end /jffs/scripts/qos-start
+	sed -i "/^cakeqos_/d" /jffs/addons/custom_settings.txt
+	rm -rf "/opt/bin/${SCRIPT_NAME}" "${SCRIPT_DIR}" "/www/ext/${SCRIPT_NAME}" /jffs/configs/cake-qos.conf.add 2>/dev/null
 }
 
 compare_remote_version() {
@@ -514,6 +515,7 @@ case "$arg1" in
 	;;
 	uninstall)
 		Cake_Uninstall
+		service restart_qos
 		echo
 		exit 0
 	;;
