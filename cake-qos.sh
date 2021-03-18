@@ -502,7 +502,7 @@ case "$arg1" in
 	;;
 	debug)
 #		printf "DLIF: %s\n" "$(Cake_Get_DLIF)"
-		printf "Overhead: %s\n" "$(Cake_Get_Overhead)"
+#		printf "Overhead: %s\n" "$(Cake_Get_Overhead)"
 		printf "Prio: %s %s\n" "$(Cake_Get_Prio 'dl')" "$(Cake_Get_Prio 'ul')"
 		printf "Flow Iso: %s %s\n" "$(Cake_Get_FlowIso 'dl')" "$(Cake_Get_FlowIso 'ul')"
 		printf "NAT: %s %s\n" "$(Cake_Get_NAT 'dl')" "$(Cake_Get_NAT 'ul')"
