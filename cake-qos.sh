@@ -24,7 +24,7 @@
 clear
 sed -n '6,21p' "$0"
 
-readonly version=2.0.0
+version=2.0.0
 readonly SCRIPT_NAME="cake-qos"
 readonly SCRIPT_NAME_FANCY="CakeQOS-Merlin"
 readonly SCRIPT_BRANCH="develop"
