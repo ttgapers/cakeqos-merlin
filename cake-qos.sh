@@ -444,7 +444,7 @@ Cake_Update(){
 			printf " Would you like to overwrite your existing installation anyway? [1=Yes 2=No]: "
 			;;
 		'Hotfix')
-			printf " $SCRIPTNAME_DISPLAY hotfix is available.\n"
+			printf " $SCRIPT_NAME_FANCY hotfix is available.\n"
 			printf " Would you like to update now? [1=Yes 2=No]: "
 			;;
 		'Error')
@@ -453,7 +453,7 @@ Cake_Update(){
 			;;
 		*)
 			# New Version Number
-			printf " $SCRIPTNAME_DISPLAY v${updatestatus} is now available!\n"
+			printf " $SCRIPT_NAME_FANCY v${updatestatus} is now available!\n"
 			printf " Would you like to update now? [1=Yes 2=No]: "
 			;;
 		esac
@@ -527,17 +527,12 @@ case "$arg1" in
 	;;	
 	*)
 		Print_Output "false" "Usage;" "$WARN"
-		printf '\n%-32s |  %-55s\n' "cake-qos start" "start $SCRIPT_NAME"
-		printf '%-32s |  %-55s\n\n' "cake-qos stop" "stop $SCRIPT_NAME"
-		printf '%-32s |  %-55s\n' "cake-qos status download" "check the current download status of $SCRIPT_NAME"
+		printf '\n%-32s |  %-55s\n' "cake-qos status download" "check the current download status of $SCRIPT_NAME"
 		printf '%-32s |  %-55s\n' "cake-qos status upload" "check the current upload status of $SCRIPT_NAME"
-		printf '%-32s |  %-55s\n\n' "cake-qos status general" "check the current general status of $SCRIPT_NAME"
-		printf '%-32s |  %-55s\n' "cake-qos settings dlspeed xxx" "configure download speed setting for $SCRIPT_NAME"
-		printf '%-32s |  %-55s\n' "cake-qos settings upspeed xxx" "configure upload speed setting for $SCRIPT_NAME"
-		printf '%-32s |  %-55s\n' "cake-qos settings queueprio xxx" "configure queue priority setting for $SCRIPT_NAME"
-		printf '%-32s |  %-55s\n' "cake-qos settings optionsdl xxx" "configure download options setting for $SCRIPT_NAME"
-		printf '%-32s |  %-55s\n\n' "cake-qos settings optionsup xxx" "configure upload options setting for $SCRIPT_NAME"
+		printf '%-32s |  %-55s\n\n' "cake-qos status" "check the current general status of $SCRIPT_NAME"
 		printf '%-32s |  %-55s\n' "cake-qos install" "install and configure $SCRIPT_NAME"
 		printf '%-32s |  %-55s\n' "cake-qos uninstall" "uninstall and remove all traces of $SCRIPT_NAME"
+		printf '%-32s |  %-55s\n' "cake-qos update" "check for updates of $SCRIPT_NAME"
+		printf '%-32s |  %-55s\n' "cake-qos debug" "show debug info from $SCRIPT_NAME"
 	;;
 esac
