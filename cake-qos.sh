@@ -109,7 +109,6 @@ get_wanif() {
 }
 
 Cake_Get_DLIF(){
-	local DLIF
 	DLIF="$(am_settings_get cakeqos_dlif)"
 	[ -z "$DLIF" ] && DLIF="0"
 	case $DLIF in
@@ -119,7 +118,6 @@ Cake_Get_DLIF(){
 }
 
 # Cake_Get_Overhead(){
-	# local OVERHEAD MPU ATM
 	# OVERHEAD="$(nvram get qos_overhead)"
 	# MPU="$(nvram get qos_mpu)"
 	# ATM="$(nvram get qos_atm)"
@@ -135,7 +133,6 @@ Cake_Get_DLIF(){
 # }
 
 Cake_Get_Prio(){
-	local DIR PRIO
 	DIR="$1"
 	PRIO="$(am_settings_get cakeqos_${DIR}prio)"
 	if [ -z "$PRIO" ]; then
@@ -154,7 +151,6 @@ Cake_Get_Prio(){
 }
 
 Cake_Get_FlowIso(){
-	local DIR FLOWISO
 	DIR="$1"
 	FLOWISO="$(am_settings_get cakeqos_${DIR}flowiso)"
 	if [ -z "$FLOWISO" ]; then
@@ -177,7 +173,6 @@ Cake_Get_FlowIso(){
 }
 
 Cake_Get_NAT(){
-	local DIR NAT
 	DIR="$1"
 	NAT="$(am_settings_get cakeqos_${DIR}nat)"
 	[ -z "$NAT" ] && NAT="$(nvram get wan0_nat_x)"
@@ -189,7 +184,6 @@ Cake_Get_NAT(){
 }
 
 Cake_Get_Wash(){
-	local DIR WASH
 	DIR="$1"
 	WASH="$(am_settings_get cakeqos_${DIR}wash)"
 	if [ -z "$WASH" ]; then
@@ -206,7 +200,6 @@ Cake_Get_Wash(){
 }
 
 Cake_Get_ACK(){
-	local DIR ACK
 	DIR="$1"
 	ACK="$(am_settings_get cakeqos_${DIR}ack)"
 	[ -z "$ACK" ] && ACK="0"
@@ -218,7 +211,6 @@ Cake_Get_ACK(){
 }
 
 Cake_Get_CustomOpts(){
-	local DIR CUST
 	DIR="$1"
 	CUST="$(am_settings_get cakeqos_${DIR}cust | /usr/sbin/openssl enc -a -d)"
 	[ -z "$CUST" ] || printf "%s\n" "$CUST"
@@ -275,8 +267,6 @@ Download_File() {
 }
 
 Cake_Install(){
-	local prev_webui_page
-	local LOCKFILE FD
 	if ! nvram get rc_support | /bin/grep -q "cake"; then
 		Print_Output "false" "This version of the script is not compatible with your router firmware version. Installing legacy version 1.0.7!" "$WARN"
 		curl -fsL --retry 3 --connect-timeout 3 "https://raw.githubusercontent.com/ttgapers/cakeqos-merlin/384/cake-qos.sh" -o "$0" && exec sh "$0" install
@@ -364,8 +354,6 @@ Cake_Install(){
 }
 
 Cake_Uninstall(){
-	local prev_webui_page
-	local LOCKFILE FD
 	printf "Removing WebUI...\n"
 	prev_webui_page="$(sed -nE "s/^\{url\: \"(user[0-9]+\.asp)\"\, tabName\: \"${SCRIPT_NAME_FANCY}\"\}\,$/\1/p" /tmp/menuTree.js 2>/dev/null)"
 	if [ -n "$prev_webui_page" ]; then
@@ -395,7 +383,6 @@ Cake_Uninstall(){
 compare_remote_version() {
 	# Check version on Github and determine the difference with the installed version
 	# Outcomes: Version update, Hotfix (w/o version change), or no update
-	local remotever localmd5 remotemd5 localmd5asp remotemd5asp
 	# Fetch version of the shell script on Github
 	remotever="$(curl -fsN --retry 3 --connect-timeout 3 "${SCRIPT_REMOTEDIR}/${SCRIPT_NAME}.sh" | /bin/grep "^version=" | sed -e 's/version=//')"
 	if [ "${version//.}" -lt "${remotever//.}" ]; then		# strip the . from version string for numeric comparison
@@ -420,7 +407,6 @@ compare_remote_version() {
 Cake_Update(){
 	# Check for, and optionally apply updates.
 	# Parameter options: check (do not update), silent (update without prompting)
-	local updatestatus yn
 	printf "Checking for updates\n"
 	# Update the webui status thorugh detect_update.js ajax call.
 	printf "var verUpdateStatus = \"%s\";\n" "InProgress" > /www/ext/${SCRIPT_NAME}/detect_update.js
