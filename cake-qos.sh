@@ -45,6 +45,13 @@ if [ "$(am_settings_get cakeqos_ver)" != "$version" ]; then
 	am_settings_set cakeqos_ver "$version"
 fi
 
+# Detect if script is run from an SSH shell interactively or being invoked via cron or from the WebUI (unattended)
+if tty >/dev/null 2>&1; then
+	mode="interactive"
+else
+	mode="unattended"
+fi
+
 Print_Output(){
 	if [ "$1" = "true" ]; then
 		logger -t "$SCRIPT_NAME_FANCY" "$2"
@@ -295,6 +302,19 @@ Cake_Install(){
 		chmod 0755 /jffs/scripts/service-event
 	fi
 
+	# Add to service-event-end
+	if [ ! -f "/jffs/scripts/service-event-end" ]; then
+		echo "#!/bin/sh" > /jffs/scripts/service-event-end
+		echo >> /jffs/scripts/service-event-end
+	elif [ -f "/jffs/scripts/service-event-end" ] && ! head -1 /jffs/scripts/service-event-end | grep -qE "^#!/bin/sh"; then
+		sed -i '1s~^~#!/bin/sh\n~' /jffs/scripts/service-event-end
+	fi
+	if ! grep -q "$SCRIPT_NAME_FANCY" /jffs/scripts/service-event-end; then
+		sed -i '\~# CakeQOS-Merlin~d' /jffs/scripts/service-event-end
+		echo "if echo \"\$2\" | /bin/grep -q \"^${SCRIPT_NAME}\"; then { sh ${SCRIPT_DIR}/${SCRIPT_NAME}.sh \"\${2#${SCRIPT_NAME}}\" & } ; fi # $SCRIPT_NAME_FANCY" >> /jffs/scripts/service-event-end
+		chmod 0755 /jffs/scripts/service-event
+	fi
+
 	# Add to qos-start
 	if [ ! -f "/jffs/scripts/qos-start" ]; then
 		echo "#!/bin/sh" > /jffs/scripts/qos-start
@@ -341,6 +361,7 @@ Cake_Install(){
 		fi
 		/usr/bin/flock -u "$FD"
 	fi
+	[ ! -d "/www/ext/${SCRIPT_NAME}" ] && mkdir -p "/www/ext/${SCRIPT_NAME}"
 }
 
 Cake_Uninstall(){
@@ -371,14 +392,88 @@ Cake_Uninstall(){
 	rm -rf "/opt/bin/${SCRIPT_NAME}" "${SCRIPT_DIR}" /jffs/configs/cake-qos.conf.add 2>/dev/null
 }
 
-if [ -n "$option1" ]; then
-	set "$option1" "$option2" "$option3"
-	echo "[$] $0 $*" | tr -s " "
-fi
+compare_remote_version() {
+	# Check version on Github and determine the difference with the installed version
+	# Outcomes: Version update, Hotfix (w/o version change), or no update
+	local remotever localmd5 remotemd5 localmd5asp remotemd5asp
+	# Fetch version of the shell script on Github
+	remotever="$(curl -fsN --retry 3 --connect-timeout 3 "${SCRIPT_REMOTEDIR}/${SCRIPT_NAME}.sh" | /bin/grep "^version=" | sed -e 's/version=//')"
+	if [ "${version//.}" -lt "${remotever//.}" ]; then		# strip the . from version string for numeric comparison
+		# version upgrade
+		echo "$remotever"
+	else
+		# If no version change, calculate md5sum of local and remote files
+		# to determine if a hotfix has been published
+		localmd5="$(md5sum "$0" | awk '{print $1}')"
+		remotemd5="$(curl -fsL --retry 3 --connect-timeout 3 "${SCRIPT_REMOTEDIR}/${SCRIPT_NAME}.sh" | md5sum | awk '{print $1}')"
+		localmd5asp="$(md5sum "${SCRIPT_DIR}/${SCRIPT_NAME}.asp" | awk '{print $1}')"
+		remotemd5asp="$(curl -fsL --retry 3 --connect-timeout 3 "${SCRIPT_REMOTEDIR}/${SCRIPT_NAME}.asp" | md5sum | awk '{print $1}')"
+		if [ "$localmd5" != "$remotemd5" ] || [ "$localmd5asp" != "$remotemd5asp" ]; then
+			# hotfix
+			printf "Hotfix\n"
+		else
+			printf "NoUpdate\n"
+		fi
+	fi
+} # compare_remote_version
 
+Cake_Update(){
+	# Check for, and optionally apply updates.
+	# Parameter options: check (do not update), silent (update without prompting)
+	local updatestatus yn
+	printf "Checking for updates\n"
+	# Update the webui status thorugh detect_update.js ajax call.
+	printf "var verUpdateStatus = \"%s\";\n" "InProgress" > /www/ext/${SCRIPT_NAME}/detect_update.js
+	updatestatus="$(compare_remote_version)"
+	# Check to make sure we got back a valid status from compare_remote_version(). If not, indicate Error.
+	case "$updatestatus" in
+		'NoUpdate'|'Hotfix'|[0-9].[0-9].[0-9]) ;;
+		*) updatestatus="Error"
+	esac
+	printf "var verUpdateStatus = \"%s\";\n" "$updatestatus" > /www/ext/${SCRIPT_NAME}/detect_update.js
+
+	if [ "$1" = "check" ]; then
+		# Do not proceed with any updating if check function requested
+		return
+	fi
+	if [ "$mode" = "interactive" ] && [ -z "$1" ]; then
+		case "$updatestatus" in
+		'NoUpdate')
+			printf " You have the latest version installed"
+			printf " Would you like to overwrite your existing installation anyway? [1=Yes 2=No]: "
+			;;
+		'Hotfix')
+			printf " $SCRIPTNAME_DISPLAY hotfix is available."
+			printf " Would you like to update now? [1=Yes 2=No]: "
+			;;
+		'Error')
+			printf " Error determining remote version status!"
+			return
+			;;
+		*)
+			# New Version Number
+			printf " $SCRIPTNAME_DISPLAY v${updatestatus} is now available!"
+			printf " Would you like to update now? [1=Yes 2=No]: "
+			;;
+		esac
+		read -r yn
+		printf "\n"
+		if [ "$yn" != "1" ]; then
+			printf " No Changes have been made"
+			return 0
+		fi
+	fi
+	printf "Installing: %s...\n\n" "$SCRIPT_NAME_FANCY"
+	Download_File "${SCRIPT_NAME}.sh" "$0"
+	Download_File "${SCRIPT_NAME}.asp" "${SCRIPT_DIR}/${SCRIPT_NAME}.asp"
+	exec sh "$0" install
+	exit
+}
+
+arg1="$1"
 iface="$(get_wanif)"
 
-case $1 in
+case "$arg1" in
 	config)
 		Cake_Write_QOS
 	;;
@@ -410,31 +505,9 @@ case $1 in
 			Print_Output "false" "Not running..." "$WARN"
 		fi
 	;;
-	update)
-		VERSION_LOCAL_SCRIPT="$version"
-		VERSION_REMOTE_SCRIPT="$(/usr/sbin/curl -fsL --retry 3 ${SCRIPT_REMOTEDIR}/${SCRIPT_NAME}.sh | /bin/grep "^version=" | sed -e 's/version=//' )"
-		MD5_LOCAL_SCRIPT="$(md5sum "$0" | awk '{print $1}')"
-		MD5_LOCAL_ASP="$(md5sum "${SCRIPT_DIR}/${SCRIPT_NAME}.asp" | awk '{print $1}')"
-		MD5_REMOTE_SCRIPT="$(/usr/sbin/curl -fsL --retry 3 ${SCRIPT_REMOTEDIR}/${SCRIPT_NAME}.sh | md5sum | awk '{print $1}')"
-		MD5_REMOTE_ASP="$(/usr/sbin/curl -fsL --retry 3 ${SCRIPT_REMOTEDIR}/${SCRIPT_NAME}.asp | md5sum | awk '{print $1}')"
-		if [ -n "$VERSION_REMOTE_SCRIPT" ]; then
-			if [ "$MD5_LOCAL_SCRIPT" != "$MD5_REMOTE_SCRIPT" ] || [ "$MD5_LOCAL_ASP" != "$MD5_REMOTE_ASP" ]; then
-				if [ "$VERSION_LOCAL_SCRIPT" != "$VERSION_REMOTE_SCRIPT" ]; then
-					Print_Output "true" "New $SCRIPT_NAME_FANCY detected ($VERSION_REMOTE_SCRIPT, currently running $VERSION_LOCAL_SCRIPT), updating..." "$WARN"
-				else
-					Print_Output "true" "Local and remote md5 don't match, updating..." "$WARN"
-				fi
-				Download_File "${SCRIPT_NAME}.sh" "$0"
-				Download_File "${SCRIPT_NAME}.asp" "${SCRIPT_DIR}/${SCRIPT_NAME}.asp"
-				exec sh "$0" install
-				echo; exit 1
-			else
-				Print_Output "false" "${SCRIPT_NAME_FANCY} is up-to-date." "$PASS"
-			fi
-		else
-			Print_Output "false" "Updating ${SCRIPT_NAME_FANCY} Failed" "$ERR"
-		fi
-	;;
+	update*)		# updatecheck, updatesilent, or plain update
+		Cake_Update "${arg1#update}"		# strip 'update' from arg1 to pass to update function
+		;;
 	install)
 		Cake_Install
 		service restart_qos
