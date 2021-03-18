@@ -479,7 +479,7 @@ case "$arg1" in
 		Cake_Write_QOS
 	;;
 	init)
-		#Cake_Start
+		#Nothing to do yet. Future enhancements
 	;;
 	status)
 		if Cake_CheckStatus; then
@@ -490,16 +490,12 @@ case "$arg1" in
 				upload)
 					tc -s qdisc show dev ${iface}
 				;;
-				general)
+				*)
 					Print_Output "false" "> Download Status:" "$PASS"
 					echo "$STATUS_DOWNLOAD"
 					echo
 					Print_Output "false" "> Upload Status:" "$PASS"
 					echo "$STATUS_UPLOAD"
-				;;
-				*)
-					echo "Command Not Recognized, Please Try Again"
-					echo; exit 2
 				;;
 			esac
 		else
