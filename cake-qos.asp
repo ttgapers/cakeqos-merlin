@@ -1183,7 +1183,7 @@ function change_wizard(o){
 <tbody bgcolor="#4D595D">
 <tr>
 <td valign="top">
-<div class="formfonttitle" style="margin:10px 0px 10px 5px; display:inline-block;">CakeQoS</div>
+<div class="formfonttitle" style="margin:10px 0px 10px 5px; display:inline-block;">CakeQOS-Merlin</div>
 <div style="margin-bottom:10px" class="splitLine"></div>
 
 <!-- CakeQoS UI Start-->
