@@ -29,7 +29,7 @@ readonly SCRIPT_NAME="cake-qos"
 readonly SCRIPT_NAME_FANCY="CakeQOS-Merlin"
 readonly SCRIPT_BRANCH="alpha"
 readonly SCRIPT_DIR="/jffs/addons/${SCRIPT_NAME}"
-readonly SCRIPT_REMOTEDIR="https://raw.githubusercontent.com/dave14305/cakeqos-merlin/${SCRIPT_BRANCH}"
+readonly SCRIPT_REMOTEDIR="https://raw.githubusercontent.com/ttgapers/cakeqos-merlin/${SCRIPT_BRANCH}"
 
 readonly CRIT="\\e[41m"
 readonly ERR="\\e[31m"
