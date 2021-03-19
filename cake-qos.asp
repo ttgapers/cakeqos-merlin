@@ -746,8 +746,13 @@ function show_appdb_rules() {
 
 function get_config()
 {
-	document.form.cakeqos_ibw.value = (qos_ibw/1024).toFixed(2);
-	document.form.cakeqos_obw.value = (qos_obw/1024).toFixed(2);
+	if ( qos_ibw == 0 && qos_obw == 0 ) {
+		document.form.cakeqos_ibw.value = "Auto";
+		document.form.cakeqos_obw.value = "Auto";
+	} else {
+		document.form.cakeqos_ibw.value = (qos_ibw/1024).toFixed(2);
+		document.form.cakeqos_obw.value = (qos_obw/1024).toFixed(2);
+	}
 	if ( custom_settings.cakeqos_ver != undefined )
 		document.getElementById("cakeqos_version").innerText = "v" + custom_settings.cakeqos_ver;
 	else
