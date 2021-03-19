@@ -37,6 +37,8 @@ var iptables_temp_array=[];
 var iptables_names_temp_array=[];
 var appdb_temp_array=[];
 var appdb_rulelist_array="";
+var qos_obw=<% nvram_get("qos_obw"); %>;
+var qos_ibw=<% nvram_get("qos_ibw"); %>;
 var qos_type = '<% nvram_get("qos_type"); %>';
 if ('<% nvram_get("qos_enable"); %>' == 0) { // QoS disabled
 	var qos_mode = 0;
@@ -744,6 +746,8 @@ function show_appdb_rules() {
 
 function get_config()
 {
+	document.form.cakeqos_ibw.value = (qos_ibw/1024).toFixed(2);
+	document.form.cakeqos_obw.value = (qos_obw/1024).toFixed(2);
 	if ( custom_settings.cakeqos_ver != undefined )
 		document.getElementById("cakeqos_version").innerText = "v" + custom_settings.cakeqos_ver;
 	else
@@ -1226,6 +1230,17 @@ function change_wizard(o){
 				<option <% nvram_match("qos_atm","1","selected"); %> value="1">ATM</option>
 				<option <% nvram_match("qos_atm","2","selected"); %> value="2">PTM</option>
 			</select>
+		</td>
+	</tr>
+	<tr>
+		<th>Bandwidth (read-only)&nbsp;&nbsp;&nbsp;<span><a style="color:#FC0;text-decoration: underline;" href="QoS_EZQoS.asp">Manage</a></span></th>
+		<td>
+			<label for="cakeqos_ibw">Download:</label>
+			<input type="text" maxlength="10" id="cakeqos_ibw" name="cakeqos_ibw" class="input_12_table" value="" readonly>&nbsp;Mb/s
+			</td>
+			<td>
+			<label for="cakeqos_obw">Upload:</label>
+			<input type="text" maxlength="10" id="cakeqos_obw" name="cakeqos_obw" class="input_12_table" value="" readonly>&nbsp;Mb/s
 		</td>
 	</tr>
 	<tr>
