@@ -301,7 +301,7 @@ Cake_Install(){
 	if ! grep -q "$SCRIPT_NAME_FANCY" /jffs/scripts/service-event-end; then
 		sed -i '\~# CakeQOS-Merlin~d' /jffs/scripts/service-event-end
 		echo "if echo \"\$2\" | /bin/grep -q \"^${SCRIPT_NAME}\"; then { sh ${SCRIPT_DIR}/${SCRIPT_NAME} \"\${2#${SCRIPT_NAME}}\" & } ; fi # $SCRIPT_NAME_FANCY" >> /jffs/scripts/service-event-end
-		chmod 0755 /jffs/scripts/service-event
+		chmod 0755 /jffs/scripts/service-event-end
 	fi
 
 	# Add to qos-start
