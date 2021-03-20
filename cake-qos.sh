@@ -238,7 +238,7 @@ Cake_Write_QOS(){
 ULPRIOQUEUE="$(Cake_Get_Prio 'ul')"
 DLPRIOQUEUE="$(Cake_Get_Prio 'dl')"
 ULOPTIONS="$(Cake_Get_FlowIso 'ul') $(Cake_Get_NAT 'ul') $(Cake_Get_Wash 'ul') $(Cake_Get_ACK 'ul') $(Cake_Get_CustomOpts 'ul')"
-DLOPTIONS="$(Cake_Get_FlowIso 'dl') $(Cake_Get_NAT 'dl') $(Cake_Get_Wash 'dl') $(Cake_Get_ACK 'dl') $(Cake_Get_CustomOpts 'dl')"
+DLOPTIONS="ingress $(Cake_Get_FlowIso 'dl') $(Cake_Get_NAT 'dl') $(Cake_Get_Wash 'dl') $(Cake_Get_ACK 'dl') $(Cake_Get_CustomOpts 'dl')"
 EOF
 
 }
