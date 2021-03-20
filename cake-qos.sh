@@ -2,7 +2,7 @@
 # CakeQOS-Merlin - port for Merlin firmware supported routers
 # Site: https://github.com/ttgapers/cakeqos-merlin
 # Thread: https://www.snbforums.com/threads/release-cakeqos-merlin.64800/
-# Credits: robcore, Odkrys, ttgapers, jackiechun, maghuro, Adamm, Jack Yaz
+# Credits: robcore, Odkrys, ttgapers, jackiechun, maghuro, Adamm, Jack Yaz, dave14305
 
 #########################################################
 ##               _                                     ##
@@ -266,6 +266,39 @@ Download_File() {
 	fi
 }
 
+Cake_Mount_UI(){
+	# Check if the webpage is already mounted in the GUI and reuse that page
+	prev_webui_page="$(sed -nE "s/^\{url\: \"(user[0-9]+\.asp)\"\, tabName\: \"${SCRIPT_NAME_FANCY}\"\}\,$/\1/p" /tmp/menuTree.js 2>/dev/null)"
+	if [ -n "$prev_webui_page" ]; then
+		# use the same filename as before
+		am_webui_page="$prev_webui_page"
+	else
+		# get a new mountpoint
+		am_get_webui_page "${SCRIPT_DIR}/${SCRIPT_NAME}.asp"
+	fi
+	if [ "$am_webui_page" = "none" ]; then
+		logmsg "No API slots available to install web page"
+	else
+		cp -p "${SCRIPT_DIR}/${SCRIPT_NAME}.asp" /www/user/"$am_webui_page"
+		LOCKFILE=/tmp/addonwebui.lock
+		FD=386
+		eval exec "$FD>$LOCKFILE"
+		/usr/bin/flock -x "$FD"
+		if [ ! -f /tmp/menuTree.js ]; then
+			cp /www/require/modules/menuTree.js /tmp/
+			mount -o bind /tmp/menuTree.js /www/require/modules/menuTree.js
+		fi
+		if ! /bin/grep -q "{url: \"$am_webui_page\", tabName: \"${SCRIPT_NAME_FANCY}\"}," /tmp/menuTree.js; then
+			umount /www/require/modules/menuTree.js 2>/dev/null
+			sed -i "\~tabName: \"${SCRIPT_NAME_FANCY}\"},~d" /tmp/menuTree.js
+			sed -i "/url: \"QoS_Stats.asp\", tabName:/i {url: \"$am_webui_page\", tabName: \"${SCRIPT_NAME_FANCY}\"}," /tmp/menuTree.js
+			mount -o bind /tmp/menuTree.js /www/require/modules/menuTree.js
+		fi
+		/usr/bin/flock -u "$FD"
+	fi
+	[ ! -d "/www/ext/${SCRIPT_NAME}" ] && mkdir -p "/www/ext/${SCRIPT_NAME}"
+}
+
 Cake_Install(){
 	if ! nvram get rc_support | /bin/grep -q "cake"; then
 		Print_Output "false" "This version of the script is not compatible with your router firmware version. Installing legacy version 1.0.7!" "$WARN"
@@ -304,6 +337,19 @@ Cake_Install(){
 		chmod 0755 /jffs/scripts/service-event-end
 	fi
 
+	# Add to services-start
+	if [ ! -f "/jffs/scripts/services-start" ]; then
+		echo "#!/bin/sh" > /jffs/scripts/services-start
+		echo >> /jffs/scripts/services-start
+	elif [ -f "/jffs/scripts/services-start" ] && ! head -1 /jffs/scripts/services-start | grep -qE "^#!/bin/sh"; then
+		sed -i '1s~^~#!/bin/sh\n~' /jffs/scripts/services-start
+	fi
+	if ! grep -q "$SCRIPT_NAME_FANCY" /jffs/scripts/services-start; then
+		sed -i '\~# CakeQOS-Merlin~d' /jffs/scripts/services-start
+		echo "sh ${SCRIPT_DIR}/${SCRIPT_NAME} mountui # $SCRIPT_NAME_FANCY" >> /jffs/scripts/services-start
+		chmod 0755 /jffs/scripts/services-start
+	fi
+
 	# Add to qos-start
 #	if [ ! -f "/jffs/scripts/qos-start" ]; then
 #		echo "#!/bin/sh" > /jffs/scripts/qos-start
@@ -321,36 +367,8 @@ Cake_Install(){
 		ln -s "${SCRIPT_DIR}/${SCRIPT_NAME}" "/opt/bin/${SCRIPT_NAME}"
 	fi
 	Download_File "${SCRIPT_NAME}.asp" "${SCRIPT_DIR}/${SCRIPT_NAME}.asp"
-	# Check if the webpage is already mounted in the GUI and reuse that page
-	prev_webui_page="$(sed -nE "s/^\{url\: \"(user[0-9]+\.asp)\"\, tabName\: \"${SCRIPT_NAME_FANCY}\"\}\,$/\1/p" /tmp/menuTree.js 2>/dev/null)"
-	if [ -n "$prev_webui_page" ]; then
-		# use the same filename as before
-		am_webui_page="$prev_webui_page"
-	else
-		# get a new mountpoint
-		am_get_webui_page "${SCRIPT_DIR}/${SCRIPT_NAME}.asp"
-	fi
-	if [ "$am_webui_page" = "none" ]; then
-		logmsg "No API slots available to install web page"
-	else
-		cp -p "${SCRIPT_DIR}/${SCRIPT_NAME}.asp" /www/user/"$am_webui_page"
-		LOCKFILE=/tmp/addonwebui.lock
-		FD=386
-		eval exec "$FD>$LOCKFILE"
-		/usr/bin/flock -x "$FD"
-		if [ ! -f /tmp/menuTree.js ]; then
-			cp /www/require/modules/menuTree.js /tmp/
-			mount -o bind /tmp/menuTree.js /www/require/modules/menuTree.js
-		fi
-		if ! /bin/grep -q "{url: \"$am_webui_page\", tabName: \"${SCRIPT_NAME_FANCY}\"}," /tmp/menuTree.js; then
-			umount /www/require/modules/menuTree.js 2>/dev/null
-			sed -i "\~tabName: \"${SCRIPT_NAME_FANCY}\"},~d" /tmp/menuTree.js
-			sed -i "/url: \"QoS_Stats.asp\", tabName:/i {url: \"$am_webui_page\", tabName: \"${SCRIPT_NAME_FANCY}\"}," /tmp/menuTree.js
-			mount -o bind /tmp/menuTree.js /www/require/modules/menuTree.js
-		fi
-		/usr/bin/flock -u "$FD"
-	fi
-	[ ! -d "/www/ext/${SCRIPT_NAME}" ] && mkdir -p "/www/ext/${SCRIPT_NAME}"
+	Cake_Mount_UI
+	Print_Output "false" "Customize Cake in the WebUI under Adaptive QoS / $SCRIPT_NAME_FANCY" "$PASS"
 }
 
 Cake_Uninstall(){
@@ -375,7 +393,7 @@ Cake_Uninstall(){
 		# Remove last mounted asp page
 		rm -f /www/user/"$prev_webui_page" 2>/dev/null
 	fi
-	sed -i '\~# CakeQOS-Merlin~d' /jffs/scripts/service-event /jffs/scripts/service-event-end #/jffs/scripts/qos-start
+	sed -i '\~# CakeQOS-Merlin~d' /jffs/scripts/service-event /jffs/scripts/service-event-end /jffs/scripts/services-start #/jffs/scripts/qos-start
 	sed -i "/^cakeqos_/d" /jffs/addons/custom_settings.txt
 	rm -rf "/opt/bin/${SCRIPT_NAME}" "${SCRIPT_DIR}" "/www/ext/${SCRIPT_NAME}" /jffs/configs/cake-qos.conf.add 2>/dev/null
 }
@@ -466,6 +484,9 @@ case "$arg1" in
 	init)
 		#Nothing to do yet. Future enhancements
 	;;
+	mountui)
+		Cake_Mount_UI
+	;;
 	status)
 		if Cake_CheckStatus; then
 			case "$2" in
@@ -492,6 +513,7 @@ case "$arg1" in
 		;;
 	install)
 		Cake_Install
+		printf "Restarting QoS..."
 		service restart_qos
 	;;
 	uninstall)
