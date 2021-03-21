@@ -39,7 +39,6 @@ var appdb_temp_array=[];
 var appdb_rulelist_array="";
 var qos_obw=<% nvram_get("qos_obw"); %>;
 var qos_ibw=<% nvram_get("qos_ibw"); %>;
-var wan_mtu=<% nvram_get("wan_mtu"); %>;
 var qos_type = '<% nvram_get("qos_type"); %>';
 if ('<% nvram_get("qos_enable"); %>' == 0) { // QoS disabled
 	var qos_mode = 0;
@@ -67,14 +66,6 @@ var overhead_presets = [["1", "48", "0", "Conservative default"],
 			["2", "30", "0", "VDSL2 PPPoE PTM"],
 			["2", "22", "0", "VDSL2 Bridged PTM"]
 			];
-
-/* prototype function to respect user locale number formatting for fixed decimal point numbers */
-Number.prototype.toLocaleFixed = function(n) {
-	return this.toLocaleString(undefined, {
-		minimumFractionDigits: n,
-		maximumFractionDigits: n
-	});
-};
 
 function YazHint(hintid) {
 	var tag_name = document.getElementsByTagName('a');
@@ -153,10 +144,6 @@ function initial() {
 	}
 	get_config();
 	build_overhead_presets();
-	var effective_dlbw=(qos_ibw * (( wan_mtu - 20 - 20 ) / ( 1500 + <% nvram_get("qos_overhead"); %> ))/1024).toLocaleFixed(2);
-	var effective_ulbw=(qos_obw * (( wan_mtu - 20 - 20 ) / ( 1500 + <% nvram_get("qos_overhead"); %> ))/1024).toLocaleFixed(2);
-	document.getElementById('cakeqos_ibw').title = 'Expect ' + effective_dlbw + ' Mb/s';
-	document.getElementById('cakeqos_obw').title = 'Expect ' + effective_ulbw + ' Mb/s';
 	show_iptables_rules();
 	show_appdb_rules();
 	well_known_rules();
