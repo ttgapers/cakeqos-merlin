@@ -308,6 +308,29 @@ Cake_Mount_UI(){
 	[ ! -d "/www/ext/${SCRIPT_NAME}" ] && mkdir -p "/www/ext/${SCRIPT_NAME}"
 }
 
+Init_UserScript() {
+	# Properly setup an empty Merlin user script
+	if [ -z "$1" ]; then
+		return
+	fi
+	userscript="/jffs/scripts/$1"
+	if [ ! -f "$userscript" ]; then
+		# If script doesn't exist yet, create with shebang
+		printf "#!/bin/sh\n\n" > "$userscript"
+	elif [ -f "$userscript" ] && ! head -1 "$userscript" | /bin/grep -qE "^#!/bin/sh"; then
+		#  Script exists but no shebang, so insert it at line 1
+		sed -i '1s~^~#!/bin/sh\n~' "$userscript"
+	elif [ "$(tail -c1 "$userscript" | wc -l)" = "0" ]; then
+		# Script exists with shebang, but no linefeed before EOF; makes appending content unpredictable if missing
+		printf "\n" >> "$userscript"
+	fi
+	if [ ! -x "$userscript" ]; then
+		# Ensure script is executable by owner
+		chmod 755 "$userscript"
+	fi
+	unset userscript
+} # Init_UserScript
+
 Cake_Install(){
 	if ! nvram get rc_support | /bin/grep -q "cake"; then
 		Print_Output "false" "This version of the script is not compatible with your router firmware version. Installing legacy version 1.0.7!" "$WARN"
@@ -321,54 +344,20 @@ Cake_Install(){
 	fi
 
 	# Add to service-event
-	if [ ! -f "/jffs/scripts/service-event" ]; then
-		echo "#!/bin/sh" > /jffs/scripts/service-event
-		echo >> /jffs/scripts/service-event
-	elif [ -f "/jffs/scripts/service-event" ] && ! head -1 /jffs/scripts/service-event | grep -qE "^#!/bin/sh"; then
-		sed -i '1s~^~#!/bin/sh\n~' /jffs/scripts/service-event
-	fi
-	if ! grep -q "${SCRIPT_DIR}/${SCRIPT_NAME} config # $SCRIPT_NAME_FANCY" /jffs/scripts/service-event; then
-		sed -i '\~# CakeQOS-Merlin~d' /jffs/scripts/service-event
-		echo "[ \"\$2\" = \"qos\" ] && ${SCRIPT_DIR}/${SCRIPT_NAME} config # $SCRIPT_NAME_FANCY" >> /jffs/scripts/service-event
-		chmod 0755 /jffs/scripts/service-event
-	fi
+	Init_UserScript "/jffs/scripts/service-event"
+	sed -i '\~# CakeQOS-Merlin~d' /jffs/scripts/service-event
+	echo "[ \"\$2\" = \"qos\" ] && ${SCRIPT_DIR}/${SCRIPT_NAME} config # $SCRIPT_NAME_FANCY" >> /jffs/scripts/service-event
 
 	# Add to service-event-end
-	if [ ! -f "/jffs/scripts/service-event-end" ]; then
-		echo "#!/bin/sh" > /jffs/scripts/service-event-end
-		echo >> /jffs/scripts/service-event-end
-	elif [ -f "/jffs/scripts/service-event-end" ] && ! head -1 /jffs/scripts/service-event-end | grep -qE "^#!/bin/sh"; then
-		sed -i '1s~^~#!/bin/sh\n~' /jffs/scripts/service-event-end
-	fi
+	Init_UserScript "/jffs/scripts/service-event-end"
 	sed -i '\~# CakeQOS-Merlin~d' /jffs/scripts/service-event-end
 	echo "if echo \"\$2\" | /bin/grep -q \"^${SCRIPT_NAME}\"; then { sh ${SCRIPT_DIR}/${SCRIPT_NAME} \"\${2#${SCRIPT_NAME}}\" & } ; fi # $SCRIPT_NAME_FANCY" >> /jffs/scripts/service-event-end
 	echo "[ \"\$2\" = \"qos\" ] && ${SCRIPT_DIR}/${SCRIPT_NAME} statsupdate # $SCRIPT_NAME_FANCY" >> /jffs/scripts/service-event-end
-	chmod 0755 /jffs/scripts/service-event-end
 
 	# Add to services-start
-	if [ ! -f "/jffs/scripts/services-start" ]; then
-		echo "#!/bin/sh" > /jffs/scripts/services-start
-		echo >> /jffs/scripts/services-start
-	elif [ -f "/jffs/scripts/services-start" ] && ! head -1 /jffs/scripts/services-start | grep -qE "^#!/bin/sh"; then
-		sed -i '1s~^~#!/bin/sh\n~' /jffs/scripts/services-start
-	fi
-	if ! grep -q "$SCRIPT_NAME_FANCY" /jffs/scripts/services-start; then
-		sed -i '\~# CakeQOS-Merlin~d' /jffs/scripts/services-start
-		echo "sh ${SCRIPT_DIR}/${SCRIPT_NAME} mountui # $SCRIPT_NAME_FANCY" >> /jffs/scripts/services-start
-		chmod 0755 /jffs/scripts/services-start
-	fi
-
-	# Add to qos-start
-#	if [ ! -f "/jffs/scripts/qos-start" ]; then
-#		echo "#!/bin/sh" > /jffs/scripts/qos-start
-#		echo >> /jffs/scripts/qos-start
-#	elif [ -f "/jffs/scripts/qos-start" ] && ! head -1 /jffs/scripts/qos-start | grep -qE "^#!/bin/sh"; then
-#		sed -i '1s~^~#!/bin/sh\n~' /jffs/scripts/qos-start
-#	fi
-#	if ! grep -q "# $SCRIPT_NAME_FANCY" /jffs/scripts/qos-start; then
-#		echo "${SCRIPT_DIR}/${SCRIPT_NAME} \$1 # $SCRIPT_NAME_FANCY" >> /jffs/scripts/qos-start
-#		chmod 0755 /jffs/scripts/qos-start
-#	fi
+	Init_UserScript "/jffs/scripts/services-start"
+	sed -i '\~# CakeQOS-Merlin~d' /jffs/scripts/services-start
+	echo "sh ${SCRIPT_DIR}/${SCRIPT_NAME} mountui # $SCRIPT_NAME_FANCY" >> /jffs/scripts/services-start
 
 	if [ ! -L "/opt/bin/${SCRIPT_NAME}" ] || [ "$(readlink /opt/bin/${SCRIPT_NAME})" != "${SCRIPT_DIR}/${SCRIPT_NAME}" ]; then
 		rm -rf /opt/bin/${SCRIPT_NAME}
