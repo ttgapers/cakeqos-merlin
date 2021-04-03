@@ -78,6 +78,14 @@ var overhead_presets = [["1", "48", "0", "Conservative default"],
 			["2", "22", "0", "VDSL2 Bridged PTM"]
 			];
 
+/* prototype function to respect user locale number formatting for fixed decimal point numbers */
+Number.prototype.toLocaleFixed = function(n) {
+	return this.toLocaleString(undefined, {
+		minimumFractionDigits: n,
+		maximumFractionDigits: n
+	});
+};
+
 function YazHint(hintid) {
 	var tag_name = document.getElementsByTagName('a');
 	for (var i = 0; i < tag_name.length; i++) {
@@ -1110,8 +1118,7 @@ function refresh_Cake_StatsInfo(){
 	code += '<tr><th width="34%">Attribute</th>';
 	code += '<th width="33%">Download</th>';
 	code += '<th width="33%">Upload</th></tr>';
-	code += '<tr><th>qdisc</th><td>' + cake_download_stats.kind + '</td><td>' + cake_upload_stats.kind + '</td>';
-	code += '<tr><th>Bandwidth (Mb/s)</th><td>' + ( cake_download_stats.options.bandwidth * 8 / 1024000 ) + '</td><td>' + ( cake_upload_stats.options.bandwidth * 8 / 1024000 ) + '</td>';
+	code += '<tr><th>Bandwidth (Mb/s)</th><td>' + ( cake_download_stats.options.bandwidth * 8 / 1024000 ).toLocaleFixed(2) + '</td><td>' + ( cake_upload_stats.options.bandwidth * 8 / 1024000 ).toLocaleFixed(2) + '</td>';
 	code += '<tr><th>Priority Queue</th><td>' + cake_download_stats.options.diffserv + '</td><td>' + cake_upload_stats.options.diffserv + '</td>';
 	code += '<tr><th>Flow Isolation</th><td>' + cake_download_stats.options.flowmode + '</td><td>' + cake_upload_stats.options.flowmode + '</td>';
 	code += '<tr><th>NAT</th><td>' + cake_download_stats.options.nat + '</td><td>' + cake_upload_stats.options.nat + '</td>';
