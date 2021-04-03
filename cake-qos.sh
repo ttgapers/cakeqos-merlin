@@ -240,7 +240,6 @@ DLPRIOQUEUE="$(Cake_Get_Prio 'dl')"
 ULOPTIONS="$(Cake_Get_FlowIso 'ul') $(Cake_Get_NAT 'ul') $(Cake_Get_Wash 'ul') $(Cake_Get_ACK 'ul') $(Cake_Get_CustomOpts 'ul')"
 DLOPTIONS="ingress $(Cake_Get_FlowIso 'dl') $(Cake_Get_NAT 'dl') $(Cake_Get_Wash 'dl') $(Cake_Get_ACK 'dl') $(Cake_Get_CustomOpts 'dl')"
 EOF
-
 }
 
 Cake_CheckStatus(){
@@ -251,6 +250,16 @@ Cake_CheckStatus(){
 	else
 		return 1
 	fi
+}
+
+Cake_GetStatus(){
+	STATS_UPLOAD="$(tc -s -j qdisc show dev ${iface} root 2>/dev/null)"
+	STATS_DOWNLOAD="$(tc -s -j qdisc show dev ifb4${iface} root 2>/dev/null)"
+	STATS_UPLOAD="${STATS_UPLOAD#[}"; STATS_UPLOAD="${STATS_UPLOAD%]}"
+	STATS_DOWNLOAD="${STATS_DOWNLOAD#[}"; STATS_DOWNLOAD="${STATS_DOWNLOAD%]}"
+	[ -z "$STATS_UPLOAD" ] && STATS_UPLOAD='{}'
+	[ -z "$STATS_DOWNLOAD" ] && STATS_DOWNLOAD='{}'
+	printf "var cake_upload_stats=%s;\nvar cake_download_stats=%s;\n" "$STATS_UPLOAD" "$STATS_DOWNLOAD" > /www/ext/${SCRIPT_NAME}/cake_status.js
 }
 
 Download_File() {
@@ -331,11 +340,10 @@ Cake_Install(){
 	elif [ -f "/jffs/scripts/service-event-end" ] && ! head -1 /jffs/scripts/service-event-end | grep -qE "^#!/bin/sh"; then
 		sed -i '1s~^~#!/bin/sh\n~' /jffs/scripts/service-event-end
 	fi
-	if ! grep -q "$SCRIPT_NAME_FANCY" /jffs/scripts/service-event-end; then
-		sed -i '\~# CakeQOS-Merlin~d' /jffs/scripts/service-event-end
-		echo "if echo \"\$2\" | /bin/grep -q \"^${SCRIPT_NAME}\"; then { sh ${SCRIPT_DIR}/${SCRIPT_NAME} \"\${2#${SCRIPT_NAME}}\" & } ; fi # $SCRIPT_NAME_FANCY" >> /jffs/scripts/service-event-end
-		chmod 0755 /jffs/scripts/service-event-end
-	fi
+	sed -i '\~# CakeQOS-Merlin~d' /jffs/scripts/service-event-end
+	echo "if echo \"\$2\" | /bin/grep -q \"^${SCRIPT_NAME}\"; then { sh ${SCRIPT_DIR}/${SCRIPT_NAME} \"\${2#${SCRIPT_NAME}}\" & } ; fi # $SCRIPT_NAME_FANCY" >> /jffs/scripts/service-event-end
+	echo "[ \"\$2\" = \"qos\" ] && ${SCRIPT_DIR}/${SCRIPT_NAME} statsupdate # $SCRIPT_NAME_FANCY" >> /jffs/scripts/service-event-end
+	chmod 0755 /jffs/scripts/service-event-end
 
 	# Add to services-start
 	if [ ! -f "/jffs/scripts/services-start" ]; then
@@ -532,6 +540,9 @@ case "$arg1" in
 		printf "ACK: %s %s\n" "$(Cake_Get_ACK 'dl')" "$(Cake_Get_ACK 'ul')"
 		printf "Custom: %s %s\n" "$(Cake_Get_CustomOpts 'dl')" "$(Cake_Get_CustomOpts 'ul')"
 	;;	
+	statsupdate)
+		Cake_GetStatus
+	;;
 	*)
 		Print_Output "false" "Usage;" "$WARN"
 		printf '\n%-32s |  %-55s\n' "cake-qos status download" "check the current download status of $SCRIPT_NAME"

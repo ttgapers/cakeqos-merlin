@@ -147,6 +147,7 @@ function initial() {
 	show_iptables_rules();
 	show_appdb_rules();
 	well_known_rules();
+	submit_refresh_status();
 }
 
 function check_duplicate(){
@@ -1051,6 +1052,98 @@ function SetCurrentPage() {
 	document.form.current_page.value = window.location.pathname.substring(1);
 }
 
+function refresh_Cake_StatsInfo(){
+	var code='<table width="100%" border="1" align="center" cellpadding="4" cellspacing="0" bordercolor="#6b8fa3" class="FormTable_table">';
+	code += '<thead><tr><td colspan="3">Cake Current Status</td></tr></thead>';
+	code += '<tr><th width="34%">Attribute</th>';
+	code += '<th width="33%">Download</th>';
+	code += '<th width="33%">Upload</th></tr>';
+	code += '<tr><th>qdisc</th><td>' + cake_download_stats.kind + '</td><td>' + cake_upload_stats.kind + '</td>';
+	code += '<tr><th>Bandwidth (Mb/s)</th><td>' + ( cake_download_stats.options.bandwidth * 8 / 1024000 ) + '</td><td>' + ( cake_upload_stats.options.bandwidth * 8 / 1024000 ) + '</td>';
+	code += '<tr><th>Priority Queue</th><td>' + cake_download_stats.options.diffserv + '</td><td>' + cake_upload_stats.options.diffserv + '</td>';
+	code += '<tr><th>Flow Isolation</th><td>' + cake_download_stats.options.flowmode + '</td><td>' + cake_upload_stats.options.flowmode + '</td>';
+	code += '<tr><th>NAT</th><td>' + cake_download_stats.options.nat + '</td><td>' + cake_upload_stats.options.nat + '</td>';
+	code += '<tr><th>Wash</th><td>' + cake_download_stats.options.wash + '</td><td>' + cake_upload_stats.options.wash + '</td>';
+	code += '<tr><th>Ingress</th><td>' + cake_download_stats.options.ingress + '</td><td>' + cake_upload_stats.options.ingress + '</td>';
+	code += '<tr><th>ACK Filter</th><td>' + cake_download_stats.options["ack-filter"] + '</td><td>' + cake_upload_stats.options["ack-filter"] + '</td>';
+	code += '<tr><th>Split GSO</th><td>' + cake_download_stats.options["split_gso"] + '</td><td>' + cake_upload_stats.options["split_gso"] + '</td>';
+	code += '<tr><th>Rount Trip Time (ms)</th><td>' + ( cake_download_stats.options.rtt / 1000 ) + '</td><td>' + ( cake_upload_stats.options.rtt / 1000 ) + '</td>';
+	code += '<tr><th>Overhead</th><td>' + cake_download_stats.options.overhead + '</td><td>' + cake_upload_stats.options.overhead + '</td>';
+	code += '<tr><th>ATM</th><td>' + cake_download_stats.options.atm + '</td><td>' + cake_upload_stats.options.atm + '</td>';
+	code += '<tr><th>MPU</th><td>' + cake_download_stats.options.mpu + '</td><td>' + cake_upload_stats.options.mpu + '</td>';
+	code += '</table>';
+
+	code +='<table width="100%" border="1" align="center" cellpadding="4" cellspacing="0" bordercolor="#6b8fa3" class="FormTable_table">';
+	code += '<thead><tr><td colspan="' + ( cake_download_stats.tins.length + 1 ) + '">Cake Download Statistics</td></tr></thead>';
+	code += '<tr><th width="25%">Statistic</th>';
+	switch (cake_download_stats.tins.length) {
+		case 3:
+			code += '<th width="25%">Bulk</th><th width="25%">Best Effort</th><th width="25%">Voice</th></tr>';
+			break;
+		case 4:
+			code += '<th width="18%">Bulk</th><th width="18%">Best Effort</th><th width="18%">Video</th><th width="18%">Voice</th></tr>';
+			break;
+		default:
+			for (var i=0;i<cake_download_stats.tins.length;i++)
+				code += '<th width="' + ( 75 / cake_download_stats.tins.length ) +'%">Tin ' + i + '</th>';
+			break;
+	}
+	for (const key in cake_download_stats.tins[0]) {
+		if (cake_download_stats.tins[0].hasOwnProperty(key)) {
+			code += '<tr><th>' + key + '</th>';
+			for (var i=0;i<cake_download_stats.tins.length;i++) {
+				code += '<td>' + cake_download_stats.tins[i][key] + '</td>';
+			}
+			code += '</tr>';
+		}
+	}
+	code += '</table>';
+
+	code +='<table width="100%" border="1" align="center" cellpadding="4" cellspacing="0" bordercolor="#6b8fa3" class="FormTable_table">';
+	code += '<thead><tr><td colspan="' + ( cake_upload_stats.tins.length + 1 ) + '">Cake Upload Statistics</td></tr></thead>';
+	code += '<tr><th width="25%">Statistic</th>';
+	switch (cake_upload_stats.tins.length) {
+		case 3:
+			code += '<th width="25%">Bulk</th><th width="25%">Best Effort</th><th width="25%">Voice</th></tr>';
+			break;
+		case 4:
+			code += '<th width="18%">Bulk</th><th width="18%">Best Effort</th><th width="18%">Video</th><th width="18%">Voice</th></tr>';
+			break;
+		default:
+			for (var i=0;i<cake_upload_stats.tins.length;i++)
+				code += '<th width="' + ( 75 / cake_upload_stats.tins.length ) +'%">Tin ' + i + '</th>';
+			break;
+	}
+	for (const key in cake_upload_stats.tins[0]) {
+		if (cake_upload_stats.tins[0].hasOwnProperty(key)) {
+			code += '<tr><th>' + key + '</th>';
+			for (var i=0;i<cake_upload_stats.tins.length;i++) {
+				code += '<td>' + cake_upload_stats.tins[i][key] + '</td>';
+			}
+			code += '</tr>';
+		}
+	}
+	code += '</table>';
+
+	return code;
+}
+
+function update_cake_status(){
+	$.ajax({
+		url: '/ext/cake-qos/cake_status.js',
+		dataType: 'script',
+		timeout: 3000,
+		error:	function(xhr){
+			setTimeout('update_cake_status();', 3000);
+		},
+		success: function(){
+			document.getElementById("cake_status_check").disabled = false;
+			if ( cake_upload_stats && cake_download_stats )
+				document.getElementById('cakeqos_status').innerHTML=refresh_Cake_StatsInfo();
+		}
+	});
+}
+
 function update_status(){
 	$.ajax({
 		url: '/ext/cake-qos/detect_update.js',
@@ -1084,6 +1177,12 @@ function update_status(){
 			}
 		}
 	});
+}
+
+function submit_refresh_status() {
+	document.getElementById("cake_status_check").disabled = true;
+	document.cake_status_check.submit();
+	setTimeout("update_cake_status();", 2000);
 }
 
 function version_check() {
@@ -1391,6 +1490,11 @@ function change_wizard(o){
 <div style="display:none;" id="appdb_rules_block"></div>
 <p style="clear:left;clear:right;"></p>
 </div>
+<div id="cakeqos_status"></div>
+<div class="apply_gen">
+	<input type="button" id="cake_status_check" class="button_gen" onclick="submit_refresh_status();" value="Refresh Status">
+</div>
+
 <!-- CakeQoS UI END-->
 <br>
 <div id="no_aqos_notice" style="display:none;font-size:125%;color:#FFCC00;">Note: Cake QoS is not enabled.</div>
@@ -1413,6 +1517,14 @@ function change_wizard(o){
 	<input type="hidden" name="next_page" value="">
 	<input type="hidden" name="action_mode" value="apply">
 	<input type="hidden" name="action_script" value="">
+	<input type="hidden" name="action_wait" value="">
+</form>
+<form method="post" name="cake_status_check" action="/start_apply.htm" target="hidden_frame">
+	<input type="hidden" name="productid" value="<% nvram_get("productid"); %>">
+	<input type="hidden" name="current_page" value="">
+	<input type="hidden" name="next_page" value="">
+	<input type="hidden" name="action_mode" value="apply">
+	<input type="hidden" name="action_script" value="start_cake-qosstatsupdate">
 	<input type="hidden" name="action_wait" value="">
 </form>
 <div id="footer"></div>
