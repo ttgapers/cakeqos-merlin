@@ -25,6 +25,17 @@ CakeQoS v0.0.1 released 2021-03-15
 <script type="text/javascript" src="/validator.js"></script>
 <script type="text/javascript" src="/js/table/table.js"></script>
 <script language="JavaScript" type="text/javascript" src="/base64.js"></script>
+<style>
+thead.collapsible-jquery {
+  color: white;
+  padding: 0px;
+  width: 100%;
+  border: none;
+  text-align: left;
+  outline: none;
+  cursor: pointer;
+}
+</style>
 <script>
 <% login_state_hook(); %>
 var custom_settings = <% get_custom_settings(); %>;
@@ -1052,9 +1063,50 @@ function SetCurrentPage() {
 	document.form.current_page.value = window.location.pathname.substring(1);
 }
 
+function GetCookie(cookiename,returntype){
+	var s;
+	if((s = cookie.get("cakeqos_"+cookiename)) != null){
+		return cookie.get("cakeqos_"+cookiename);
+	}
+	else{
+		if(returntype == "string"){
+			return "";
+		}
+		else if(returntype == "number"){
+			return 0;
+		}
+	}
+}
+
+function SetCookie(cookiename,cookievalue){
+	cookie.set("cakeqos_"+cookiename, cookievalue, 10 * 365);
+}
+
+function AddEventHandlers(){
+	$(".collapsible-jquery").off('click').on('click', function(){
+		$(this).siblings().toggle("fast",function(){
+			if($(this).css("display") == "none"){
+				SetCookie($(this).siblings()[0].id,"collapsed");
+			}
+			else{
+				SetCookie($(this).siblings()[0].id,"expanded");
+			}
+		})
+	});
+
+	$(".collapsible-jquery").each(function(index,element){
+		if(GetCookie($(this)[0].id,"string") == "collapsed"){
+			$(this).siblings().toggle(false);
+		}
+		else{
+			$(this).siblings().toggle(true);
+		}
+	});
+}
+
 function refresh_Cake_StatsInfo(){
 	var code='<table width="100%" border="1" align="center" cellpadding="4" cellspacing="0" bordercolor="#6b8fa3" class="FormTable_table">';
-	code += '<thead><tr><td colspan="3">Cake Current Status</td></tr></thead>';
+	code += '<thead class="collapsible-jquery" id="qdisc_status"><tr><td colspan="3">Cake Current Status (click to expand/collapse)</td></tr></thead>';
 	code += '<tr><th width="34%">Attribute</th>';
 	code += '<th width="33%">Download</th>';
 	code += '<th width="33%">Upload</th></tr>';
@@ -1074,18 +1126,18 @@ function refresh_Cake_StatsInfo(){
 	code += '</table>';
 
 	code +='<table width="100%" border="1" align="center" cellpadding="4" cellspacing="0" bordercolor="#6b8fa3" class="FormTable_table">';
-	code += '<thead><tr><td colspan="' + ( cake_download_stats.tins.length + 1 ) + '">Cake Download Statistics</td></tr></thead>';
-	code += '<tr><th width="25%">Statistic</th>';
+	code += '<thead class="collapsible-jquery" id="dl_status"><tr><td colspan="' + ( cake_download_stats.tins.length + 1 ) + '">Cake Download Statistics (click to expand/collapse)</td></tr></thead>';
+	code += '<tr><th width="20%">Statistic</th>';
 	switch (cake_download_stats.tins.length) {
 		case 3:
-			code += '<th width="25%">Bulk</th><th width="25%">Best Effort</th><th width="25%">Voice</th></tr>';
+			code += '<th width="26%">Bulk</th><th width="27%">Best Effort</th><th width="27%">Voice</th></tr>';
 			break;
 		case 4:
-			code += '<th width="18%">Bulk</th><th width="18%">Best Effort</th><th width="18%">Video</th><th width="18%">Voice</th></tr>';
+			code += '<th width="20%">Bulk</th><th width="20%">Best Effort</th><th width="20%">Video</th><th width="20%">Voice</th></tr>';
 			break;
 		default:
 			for (var i=0;i<cake_download_stats.tins.length;i++)
-				code += '<th width="' + ( 75 / cake_download_stats.tins.length ) +'%">Tin ' + i + '</th>';
+				code += '<th width="' + ( 80 / cake_download_stats.tins.length ) +'%">Tin ' + i + '</th>';
 			break;
 	}
 	for (const key in cake_download_stats.tins[0]) {
@@ -1100,18 +1152,18 @@ function refresh_Cake_StatsInfo(){
 	code += '</table>';
 
 	code +='<table width="100%" border="1" align="center" cellpadding="4" cellspacing="0" bordercolor="#6b8fa3" class="FormTable_table">';
-	code += '<thead><tr><td colspan="' + ( cake_upload_stats.tins.length + 1 ) + '">Cake Upload Statistics</td></tr></thead>';
-	code += '<tr><th width="25%">Statistic</th>';
+	code += '<thead class="collapsible-jquery" id="ul_status"><tr><td colspan="' + ( cake_upload_stats.tins.length + 1 ) + '">Cake Upload Statistics (click to expand/collapse)</td></tr></thead>';
+	code += '<tr><th width="20%">Statistic</th>';
 	switch (cake_upload_stats.tins.length) {
 		case 3:
-			code += '<th width="25%">Bulk</th><th width="25%">Best Effort</th><th width="25%">Voice</th></tr>';
+			code += '<th width="26%">Bulk</th><th width="27%">Best Effort</th><th width="27%">Voice</th></tr>';
 			break;
 		case 4:
-			code += '<th width="18%">Bulk</th><th width="18%">Best Effort</th><th width="18%">Video</th><th width="18%">Voice</th></tr>';
+			code += '<th width="20%">Bulk</th><th width="20%">Best Effort</th><th width="20%">Video</th><th width="20%">Voice</th></tr>';
 			break;
 		default:
 			for (var i=0;i<cake_upload_stats.tins.length;i++)
-				code += '<th width="' + ( 75 / cake_upload_stats.tins.length ) +'%">Tin ' + i + '</th>';
+				code += '<th width="' + ( 80 / cake_upload_stats.tins.length ) +'%">Tin ' + i + '</th>';
 			break;
 	}
 	for (const key in cake_upload_stats.tins[0]) {
@@ -1138,8 +1190,10 @@ function update_cake_status(){
 		},
 		success: function(){
 			document.getElementById("cake_status_check").disabled = false;
-			if ( cake_upload_stats && cake_download_stats )
+			if ( cake_upload_stats && cake_download_stats ) {
 				document.getElementById('cakeqos_status').innerHTML=refresh_Cake_StatsInfo();
+				AddEventHandlers();
+			}
 		}
 	});
 }
@@ -1296,9 +1350,9 @@ function change_wizard(o){
 
 <!-- CakeQoS UI Start-->
 <table width="100%" border="1" align="center" cellpadding="4" cellspacing="0" class="FormTable">
-	<thead>
+	<thead class="collapsible-jquery" id="options">
 		<tr>
-			<td colspan="3">Options</td>
+			<td colspan="3">Options (click to expand/collapse)</td>
 		</tr>
 	</thead>
 	<tr>
