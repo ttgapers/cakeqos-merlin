@@ -253,13 +253,14 @@ Cake_CheckStatus(){
 }
 
 Cake_GetStatus(){
+	STATS_TIME="$(/bin/date +%s)"
 	STATS_UPLOAD="$(tc -s -j qdisc show dev ${iface} root 2>/dev/null)"
 	STATS_DOWNLOAD="$(tc -s -j qdisc show dev ifb4${iface} root 2>/dev/null)"
 	STATS_UPLOAD="${STATS_UPLOAD#[}"; STATS_UPLOAD="${STATS_UPLOAD%]}"
 	STATS_DOWNLOAD="${STATS_DOWNLOAD#[}"; STATS_DOWNLOAD="${STATS_DOWNLOAD%]}"
 	[ -z "$STATS_UPLOAD" ] && STATS_UPLOAD='{}'
 	[ -z "$STATS_DOWNLOAD" ] && STATS_DOWNLOAD='{}'
-	printf "var cake_upload_stats=%s;\nvar cake_download_stats=%s;\n" "$STATS_UPLOAD" "$STATS_DOWNLOAD" > /www/ext/${SCRIPT_NAME}/cake_status.js
+	printf "var cake_upload_stats=%s;\nvar cake_download_stats=%s;\nvar cake_statstime=%d;\n" "$STATS_UPLOAD" "$STATS_DOWNLOAD" "$STATS_TIME" > /www/ext/${SCRIPT_NAME}/cake_status.js
 }
 
 Download_File() {
