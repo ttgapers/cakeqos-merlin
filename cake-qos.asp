@@ -794,7 +794,7 @@ function get_config()
 		document.getElementById('cakeqos_obw').innerText = "Auto";
 	} else {
 		document.getElementById('cakeqos_ibw').innerText = (qos_ibw/1024).toFixed(2) + ' Mb/s';
-		document.getElementById('cakeqos_obw').innerText = (qos_ibw/1024).toFixed(2) + ' Mb/s';
+		document.getElementById('cakeqos_obw').innerText = (qos_obw/1024).toFixed(2) + ' Mb/s';
 	}
 	if ( custom_settings.cakeqos_ver != undefined )
 		document.getElementById("cakeqos_version").innerText = "v" + custom_settings.cakeqos_ver;
