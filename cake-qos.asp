@@ -79,15 +79,15 @@ var overhead_presets = [["1", "48", "0", "Conservative default"],
 			];
 
 var cake_stats_labels = {
-	"threshold_rate": "Threshold Rate (kbyte)",
-	"sent_bytes": "Sent (bytes)",
-	"backlog_bytes": "Backlog (bytes)",
-	"target_us": "Target (μs)",
-	"interval_us": "Interval (μs)",
-	"peak_delay_us": "Peak Delay (μs)",
-	"avg_delay_us": "Average Delay (μs)",
-	"base_delay_us": "Sparse Delay (μs)",
+	"threshold_rate": "Threshold Rate",
+	"target_us": "Target",
+	"interval_us": "Interval",
+	"peak_delay_us": "Peak Delay",
+	"avg_delay_us": "Average Delay",
+	"base_delay_us": "Sparse Delay",
+	"backlog_bytes": "Backlog",
 	"sent_packets": "Packets Sent",
+	"sent_bytes": "Sent",
 	"way_indirect_hits": "Hash Indirect Hits",
 	"way_misses": "Hash Misses",
 	"way_collisions": "Hash Collisions",
@@ -98,14 +98,14 @@ var cake_stats_labels = {
 	"bulk_flows": "Bulk Flows",
 	"unresponsive_flows": "Unresponsive Flows",
 	"max_pkt_len": "Max Packet Length",
-	"flow_quantum": "Flow Quantum (bytes)"
+	"flow_quantum": "Flow Quantum"
 };
 
 /* prototype function to respect user locale number formatting for fixed decimal point numbers */
-Number.prototype.toLocaleFixed = function(n) {
+Number.prototype.toLocaleFixed = function(min, max) {
 	return this.toLocaleString(undefined, {
-		minimumFractionDigits: n,
-		maximumFractionDigits: n
+		minimumFractionDigits: min,
+		maximumFractionDigits: max
 	});
 };
 
@@ -790,11 +790,11 @@ function show_appdb_rules() {
 function get_config()
 {
 	if ( qos_ibw == 0 && qos_obw == 0 ) {
-		document.form.cakeqos_ibw.value = "Auto";
-		document.form.cakeqos_obw.value = "Auto";
+		document.getElementById('cakeqos_ibw').innerText = "Auto";
+		document.getElementById('cakeqos_obw').innerText = "Auto";
 	} else {
-		document.form.cakeqos_ibw.value = (qos_ibw/1024).toFixed(2);
-		document.form.cakeqos_obw.value = (qos_obw/1024).toFixed(2);
+		document.getElementById('cakeqos_ibw').innerText = (qos_ibw/1024).toFixed(2) + ' Mb/s';
+		document.getElementById('cakeqos_obw').innerText = (qos_ibw/1024).toFixed(2) + ' Mb/s';
 	}
 	if ( custom_settings.cakeqos_ver != undefined )
 		document.getElementById("cakeqos_version").innerText = "v" + custom_settings.cakeqos_ver;
@@ -1135,79 +1135,90 @@ function AddEventHandlers(){
 	});
 }
 
+function format_Cake_Stat(statname, statval) {
+	var usec = new RegExp("^.*_us$", "gi");
+	var bytes = new RegExp("^.*_bytes$", "gi");
+	var unit = ' B';
+
+	if (statname.match(usec)) {
+		if (statval >= 1000)
+			return ( statval / 1000 ).toLocaleFixed(0,2) + ' ms';
+		else
+			return statval.toLocaleString() + ' μs';
+	}
+	if (statname.match(bytes)) {
+		if (statval > 1024) {
+			statval = statval / 1024;
+			unit = " KB";
+		}
+		if (statval > 1024) {
+			statval = statval / 1024;
+			unit = " MB";
+		}
+		if (statval > 1024) {
+			statval = statval / 1024;
+			unit = " GB";
+		}
+		return statval.toLocaleFixed(0,2) + unit;
+	}
+	if (statname == 'threshold_rate')
+		return ( statval * 8 / 1000 ).toLocaleString() + ' Kbit';
+	return statval.toLocaleString();
+}
+
+function generate_Cake_StatsTable(cake_stats_object, dir){
+	var code = '';
+	var lastUpdated = new Date(cake_statstime*1000);
+	code +='<table width="100%" border="1" align="center" cellpadding="4" cellspacing="0" bordercolor="#6b8fa3" class="FormTable_table">';
+	code += '<thead class="collapsible-jquery" id="dl_status"><tr><td colspan="' + ( cake_stats_object.tins.length + 1 ) + '">Cake ' + dir + ' Statistics (click to expand/collapse)<small style="float:right;font-weight:normal;">Last Updated: ' + lastUpdated.toLocaleDateString() + ' ' + lastUpdated.toLocaleTimeString() + '</small></td></tr></thead>';
+	code += '<tr><th></th>';
+	switch (cake_stats_object.tins.length) {
+		case 3:
+			code += '<th width="26%">Bulk</th><th width="27%">Best Effort</th><th width="27%">Voice</th>';
+			break;
+		case 4:
+			code += '<th width="20%">Bulk</th><th width="20%">Best Effort</th><th width="20%">Video</th><th width="20%">Voice</th>';
+			break;
+		default:
+			for (var i=0;i<cake_stats_object.tins.length;i++)
+				code += '<th width="' + ( 80 / cake_stats_object.tins.length ) +'%">Tin ' + i + '</th>';
+			break;
+	}
+	code += '</tr>';
+	for (const key in cake_stats_labels) {
+		code += '<tr><th title="' + key + '">' + cake_stats_labels[key] + '</th>';
+		for (var i=0;i<cake_stats_object.tins.length;i++) {
+			code += '<td title="' + cake_stats_object.tins[i][key] + '">' + format_Cake_Stat(key, cake_stats_object.tins[i][key]) + '</td>';
+		}
+		code += '</tr>';
+	}
+	code += '</table>';
+	return code;
+}
+
 function refresh_Cake_StatsInfo(){
+	var lastUpdated = new Date(cake_statstime*1000);
 	var code='<table width="100%" border="1" align="center" cellpadding="4" cellspacing="0" bordercolor="#6b8fa3" class="FormTable_table">';
-	code += '<thead class="collapsible-jquery" id="qdisc_status"><tr><td colspan="3">Cake Current Status (click to expand/collapse)<div style="float:right;font-weight:normal;">' + (new Date(cake_statstime*1000)) + '</div></td></tr></thead>';
-	code += '<tr><th width="34%">Option</th>';
+	code += '<thead class="collapsible-jquery" id="qdisc_status"><tr><td colspan="3">Cake Current Status (click to expand/collapse)<small style="float:right;font-weight:normal;">Last Updated: ' + lastUpdated.toLocaleDateString() + ' ' + lastUpdated.toLocaleTimeString() + '</small></td></tr></thead>';
+	code += '<tr><th width="34%"></th>';
 	code += '<th width="33%">Download</th>';
 	code += '<th width="33%">Upload</th></tr>';
-	code += '<tr><th>Bandwidth (Mb/s)</th><td>' + ( cake_download_stats.options.bandwidth * 8 / 1024000 ).toLocaleFixed(2) + '</td><td>' + ( cake_upload_stats.options.bandwidth * 8 / 1024000 ).toLocaleFixed(2) + '</td></tr>';
+	code += '<tr><th>Bandwidth (Mb/s)</th><td>' + ( cake_download_stats.options.bandwidth * 8 / 1024000 ).toLocaleFixed(2,2) + '</td><td>' + ( cake_upload_stats.options.bandwidth * 8 / 1024000 ).toLocaleFixed(2,2) + '</td></tr>';
 	code += '<tr><th>Priority Queue</th><td>' + cake_download_stats.options.diffserv + '</td><td>' + cake_upload_stats.options.diffserv + '</td></tr>';
 	code += '<tr><th>Flow Isolation</th><td>' + cake_download_stats.options.flowmode + '</td><td>' + cake_upload_stats.options.flowmode + '</td></tr>';
-	code += '<tr><th>NAT</th><td>' + cake_download_stats.options.nat + '</td><td>' + cake_upload_stats.options.nat + '</td></tr>';
-	code += '<tr><th>Wash</th><td>' + cake_download_stats.options.wash + '</td><td>' + cake_upload_stats.options.wash + '</td></tr>';
-	code += '<tr><th>Ingress</th><td>' + cake_download_stats.options.ingress + '</td><td>' + cake_upload_stats.options.ingress + '</td></tr>';
+	code += '<tr><th>NAT</th><td>' + ( cake_download_stats.options.nat ? 'Yes' : 'No' ) + '</td><td>' + ( cake_upload_stats.options.nat ? 'Yes' : 'No' ) + '</td></tr>';
+	code += '<tr><th>Wash</th><td>' + ( cake_download_stats.options.wash ? 'Yes' : 'No' ) + '</td><td>' + ( cake_upload_stats.options.wash ? 'Yes' : 'No' ) + '</td></tr>';
+	code += '<tr><th>Ingress</th><td>' + ( cake_download_stats.options.ingress ? 'ingress' : 'egress' ) + '</td><td>' + ( cake_upload_stats.options.ingress ? 'ingress' : 'egress' )  + '</td></tr>';
 	code += '<tr><th>ACK Filter</th><td>' + cake_download_stats.options["ack-filter"] + '</td><td>' + cake_upload_stats.options["ack-filter"] + '</td></tr>';
-	code += '<tr><th>Split GSO</th><td>' + cake_download_stats.options["split_gso"] + '</td><td>' + cake_upload_stats.options["split_gso"] + '</td></tr>';
+	code += '<tr><th>Split GSO</th><td>' + ( cake_download_stats.options["split_gso"] ? 'Yes' : 'No' ) + '</td><td>' + ( cake_upload_stats.options["split_gso"] ? 'Yes' : 'No' ) + '</td></tr>';
 	code += '<tr><th>Rount Trip Time (ms)</th><td>' + ( cake_download_stats.options.rtt / 1000 ) + '</td><td>' + ( cake_upload_stats.options.rtt / 1000 ) + '</td></tr>';
 	code += '<tr><th>Overhead</th><td>' + cake_download_stats.options.overhead + '</td><td>' + cake_upload_stats.options.overhead + '</td></tr>';
 	code += '<tr><th>ATM</th><td>' + cake_download_stats.options.atm + '</td><td>' + cake_upload_stats.options.atm + '</td></tr>';
 	code += '<tr><th>MPU</th><td>' + cake_download_stats.options.mpu + '</td><td>' + cake_upload_stats.options.mpu + '</td></tr>';
 	code += '</table>';
 
-	code +='<table width="100%" border="1" align="center" cellpadding="4" cellspacing="0" bordercolor="#6b8fa3" class="FormTable_table">';
-	code += '<thead class="collapsible-jquery" id="dl_status"><tr><td colspan="' + ( cake_download_stats.tins.length + 1 ) + '">Cake Download Statistics (click to expand/collapse)<div style="float:right;font-weight:normal;">' + (new Date(cake_statstime*1000)) + '</div></td></tr></thead>';
-	code += '<tr><th width="20%">Tin</th>';
-	switch (cake_download_stats.tins.length) {
-		case 3:
-			code += '<th width="26%">Bulk</th><th width="27%">Best Effort</th><th width="27%">Voice</th>';
-			break;
-		case 4:
-			code += '<th width="20%">Bulk</th><th width="20%">Best Effort</th><th width="20%">Video</th><th width="20%">Voice</th>';
-			break;
-		default:
-			for (var i=0;i<cake_download_stats.tins.length;i++)
-				code += '<th width="' + ( 80 / cake_download_stats.tins.length ) +'%">Tin ' + i + '</th>';
-			break;
-	}
-	code += '</tr>';
-	for (const key in cake_download_stats.tins[0]) {
-		if (cake_download_stats.tins[0].hasOwnProperty(key)) {
-			code += '<tr><th title="' + key + '">' + cake_stats_labels[key] + '</th>';
-			for (var i=0;i<cake_download_stats.tins.length;i++) {
-				code += '<td>' + cake_download_stats.tins[i][key] + '</td>';
-			}
-			code += '</tr>';
-		}
-	}
-	code += '</table>';
-
-	code +='<table width="100%" border="1" align="center" cellpadding="4" cellspacing="0" bordercolor="#6b8fa3" class="FormTable_table">';
-	code += '<thead class="collapsible-jquery" id="ul_status"><tr><td colspan="' + ( cake_upload_stats.tins.length + 1 ) + '">Cake Upload Statistics (click to expand/collapse)<div style="float:right;font-weight:normal;">' + (new Date(cake_statstime*1000)) + '</div></td></tr></thead>';
-	code += '<tr><th width="20%">Tin</th>';
-	switch (cake_upload_stats.tins.length) {
-		case 3:
-			code += '<th width="26%">Bulk</th><th width="27%">Best Effort</th><th width="27%">Voice</th>';
-			break;
-		case 4:
-			code += '<th width="20%">Bulk</th><th width="20%">Best Effort</th><th width="20%">Video</th><th width="20%">Voice</th>';
-			break;
-		default:
-			for (var i=0;i<cake_upload_stats.tins.length;i++)
-				code += '<th width="' + ( 80 / cake_upload_stats.tins.length ) +'%">Tin ' + i + '</th>';
-			break;
-	}
-	code += '</tr>';
-	for (const key in cake_upload_stats.tins[0]) {
-		if (cake_upload_stats.tins[0].hasOwnProperty(key)) {
-			code += '<tr><th title="' + key + '">' + cake_stats_labels[key] + '</th>';
-			for (var i=0;i<cake_upload_stats.tins.length;i++) {
-				code += '<td>' + cake_upload_stats.tins[i][key] + '</td>';
-			}
-			code += '</tr>';
-		}
-	}
-	code += '</table>';
+	code += generate_Cake_StatsTable(cake_download_stats, "Download");
+	code += generate_Cake_StatsTable(cake_upload_stats, "Upload");
 
 	return code;
 }
@@ -1425,12 +1436,10 @@ function change_wizard(o){
 	<tr>
 		<th>Bandwidth (read-only)&nbsp;&nbsp;&nbsp;<span><a style="color:#FC0;text-decoration: underline;" href="QoS_EZQoS.asp">Manage</a></span></th>
 		<td>
-			<label for="cakeqos_ibw">Download:</label>
-			<input type="text" maxlength="10" id="cakeqos_ibw" name="cakeqos_ibw" class="input_12_table" value="" readonly>&nbsp;Mb/s
-			</td>
-			<td>
-			<label for="cakeqos_obw">Upload:</label>
-			<input type="text" maxlength="10" id="cakeqos_obw" name="cakeqos_obw" class="input_12_table" value="" readonly>&nbsp;Mb/s
+			Download:&nbsp;<div id="cakeqos_ibw" style="display:inline;"></div>
+		</td>
+		<td>
+			Upload:&nbsp;<div id="cakeqos_obw" style="display:inline;"></div>
 		</td>
 	</tr>
 	<tr>
