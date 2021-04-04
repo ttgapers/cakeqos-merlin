@@ -345,18 +345,18 @@ Cake_Install(){
 	fi
 
 	# Add to service-event
-	Init_UserScript "/jffs/scripts/service-event"
+	Init_UserScript "service-event"
 	sed -i '\~# CakeQOS-Merlin~d' /jffs/scripts/service-event
 	echo "[ \"\$2\" = \"qos\" ] && ${SCRIPT_DIR}/${SCRIPT_NAME} config # $SCRIPT_NAME_FANCY" >> /jffs/scripts/service-event
 
 	# Add to service-event-end
-	Init_UserScript "/jffs/scripts/service-event-end"
+	Init_UserScript "service-event-end"
 	sed -i '\~# CakeQOS-Merlin~d' /jffs/scripts/service-event-end
 	echo "if echo \"\$2\" | /bin/grep -q \"^${SCRIPT_NAME}\"; then { sh ${SCRIPT_DIR}/${SCRIPT_NAME} \"\${2#${SCRIPT_NAME}}\" & } ; fi # $SCRIPT_NAME_FANCY" >> /jffs/scripts/service-event-end
 	echo "[ \"\$2\" = \"qos\" ] && ${SCRIPT_DIR}/${SCRIPT_NAME} statsupdate # $SCRIPT_NAME_FANCY" >> /jffs/scripts/service-event-end
 
 	# Add to services-start
-	Init_UserScript "/jffs/scripts/services-start"
+	Init_UserScript "services-start"
 	sed -i '\~# CakeQOS-Merlin~d' /jffs/scripts/services-start
 	echo "sh ${SCRIPT_DIR}/${SCRIPT_NAME} mountui # $SCRIPT_NAME_FANCY" >> /jffs/scripts/services-start
 
