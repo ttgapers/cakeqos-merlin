@@ -1286,6 +1286,7 @@ function version_check() {
 	document.getElementById("ver_check").disabled = true;
 	document.ver_check.action_script.value="start_cake-qosupdatecheck"
 	document.ver_check.submit();
+	document.getElementById("versionStatus").style.display = "none";
 	document.getElementById("ver_update_scan").style.display = "";
 	setTimeout("update_status();", 2000);
 }
