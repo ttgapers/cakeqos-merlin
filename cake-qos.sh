@@ -36,6 +36,7 @@ readonly ERR="\\e[31m"
 readonly WARN="\\e[33m"
 readonly PASS="\\e[32m"
 
+# shellcheck disable=SC1091
 . /usr/sbin/helper.sh
 
 # Update version number in custom_settings.txt for reading in WebUI
@@ -401,7 +402,7 @@ compare_remote_version() {
 	# Outcomes: Version update, Hotfix (w/o version change), or no update
 	# Fetch version of the shell script on Github
 	remotever="$(curl -fsN --retry 3 --connect-timeout 3 "${SCRIPT_REMOTEDIR}/${SCRIPT_NAME}.sh" | /bin/grep "^version=" | sed -e 's/version=//')"
-	if [ "${version//.}" -lt "${remotever//.}" ]; then		# strip the . from version string for numeric comparison
+	if [ "$(echo $version | sed 's/[^0-9]*//g')" -lt "$(echo $remotever | sed 's/[^0-9]*//g')" ]; then		# strip the . from version string for numeric comparison
 		# version upgrade
 		echo "$remotever"
 	else
