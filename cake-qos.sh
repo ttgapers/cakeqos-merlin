@@ -218,6 +218,10 @@ Cake_Get_CustomOpts(){
 }
 
 Cake_Write_QOS(){
+	if [ "$(nvram get qos_enable)" != "1" ] || [ "$(nvram get qos_type)" != "9" ]; then
+		logger -t "$SCRIPT_NAME_FANCY" "Cake QoS not enabled in firmware. Skipping configuration."
+		return 1
+	fi
 	logger -t "$SCRIPT_NAME_FANCY" "Configuring Cake options..."
 	# cat >/tmp/qos2 <<EOF
 #  !/bin/sh
@@ -267,9 +271,9 @@ Cake_GetStatus(){
 Download_File() {
 	if [ "$(curl -fsL --retry 3 --connect-timeout 3 "${SCRIPT_REMOTEDIR}/${1}" | md5sum | awk '{print $1}')" != "$(md5sum "$2" 2>/dev/null | awk '{print $1}')" ]; then
 		if curl -fsL --retry 3 --connect-timeout 3 "${SCRIPT_REMOTEDIR}/${1}" -o "$2"; then
-			Print_Output "false" "Updated $(echo "$1" | awk -F / '{print $NF}')" "$PASS"
+			Print_Output "false" "Downloaded $(echo "$1" | awk -F / '{print $NF}')" "$PASS"
 		else
-			Print_Output "false" "Updating $(echo "$1" | awk -F / '{print $NF}') Failed" "$ERR"
+			Print_Output "false" "Downloading $(echo "$1" | awk -F / '{print $NF}') Failed" "$ERR"
 			return 1
 		fi
 	else
@@ -337,6 +341,10 @@ Cake_Install(){
 	if ! nvram get rc_support | /bin/grep -q "cake"; then
 		Print_Output "false" "This version of the script is not compatible with your router firmware version. Installing legacy version 1.0.7!" "$WARN"
 		curl -fsL --retry 3 --connect-timeout 3 "https://raw.githubusercontent.com/ttgapers/cakeqos-merlin/384/cake-qos.sh" -o "$0" && exec sh "$0" install
+		exit 1
+	fi
+	if [ "$(nvram get qos_enable)" != "1" ] || [ "$(nvram get qos_type)" != "9" ]; then
+		Print_Output "true" "Cake QoS is not enabled in the firmware. Aborting installation!" "$ERR"
 		exit 1
 	fi
 	if [ "$(nvram get jffs2_scripts)" != "1" ]; then

@@ -11,7 +11,7 @@ CakeQoS v0.0.1 released 2021-03-15
 <meta HTTP-EQUIV="Expires" CONTENT="-1">
 <link rel="shortcut icon" href="images/favicon.png">
 <link rel="icon" href="images/favicon.png">
-<title>ASUS Wireless Router - CakeQoS</title>
+<title>ASUS Wireless Router - CakeQOS-Merlin</title>
 <link rel="stylesheet" type="text/css" href="index_style.css">
 <link rel="stylesheet" type="text/css" href="form_style.css">
 <link rel="stylesheet" type="text/css" href="usp_style.css">
@@ -177,15 +177,12 @@ function set_overhead(entry) {
 function initial() {
 	SetCurrentPage();
 	show_menu();
-	if (qos_mode != 9){		//if Cake is not enabled
-		document.getElementById('no_aqos_notice').style.display = "";
-		var element = document.getElementById('CakeQoS_mod_toggle');
-		element.innerText="Cake Disabled";
-		element.setAttribute("onclick","location.href='QoS_EZQoS.asp';");
-		return;
-	}
 	get_config();
 	build_overhead_presets();
+	if (qos_mode != 9){		//if Cake is not enabled
+		document.getElementById('no_aqos_notice').style.display = "";
+		return;
+	}
 	show_iptables_rules();
 	show_appdb_rules();
 	well_known_rules();
@@ -1089,7 +1086,7 @@ function validate_mark(input)
 function SetCurrentPage() {
 	var model = '<% nvram_get("odmpid"); %>';
 	if ( model == "" ) model = '<% nvram_get("productid"); %>';
-	document.title = "ASUS Wireless Router " + model + " - CakeQoS";
+	document.title = "ASUS Wireless Router " + model + " - CakeQOS-Merlin";
 	document.form.next_page.value = window.location.pathname.substring(1);
 	document.form.current_page.value = window.location.pathname.substring(1);
 }
@@ -1390,6 +1387,7 @@ function change_wizard(o){
 <tr>
 <td valign="top">
 <div class="formfonttitle" style="margin:10px 0px 10px 5px; display:inline-block;">CakeQOS-Merlin</div>
+<div id="no_aqos_notice" style="display:none;margin:10px 0px 10px 5px;font-size:125%;color:#FFCC00;float:right;">Note: Cake QoS is not enabled.</div>
 <div style="margin-bottom:10px" class="splitLine"></div>
 
 <!-- CakeQoS UI Start-->
@@ -1592,8 +1590,6 @@ function change_wizard(o){
 </div>
 
 <!-- CakeQoS UI END-->
-<br>
-<div id="no_aqos_notice" style="display:none;font-size:125%;color:#FFCC00;">Note: Cake QoS is not enabled.</div>
 <br>
 </td>
 </tr>
