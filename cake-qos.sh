@@ -60,14 +60,6 @@ Print_Output(){
 	fi
 }
 
-Validate_Bandwidth(){
-	grep -qE "^[0-9]{1,3}(\.[0-9]+)?$"
-}
-
-Display_Line(){
-	printf '\n#########################################################\n\n'
-}
-
 get_wanif() {
 	prefixes="wan0_ wan1_"
 
@@ -108,30 +100,6 @@ get_wanif() {
 	fi
 	printf "%s" "$ifname"
 }
-
-Cake_Get_DLIF(){
-	DLIF="$(am_settings_get cakeqos_dlif)"
-	[ -z "$DLIF" ] && DLIF="0"
-	case $DLIF in
-		1) printf "%s\n" "$(nvram get lan_ifname)" ;;
-		*) printf "%s\n" "$(get_wanif)" ;;
-	esac
-}
-
-# Cake_Get_Overhead(){
-	# OVERHEAD="$(nvram get qos_overhead)"
-	# MPU="$(nvram get qos_mpu)"
-	# ATM="$(nvram get qos_atm)"
-	# [ -z "$OVERHEAD" ] && OVERHEAD="0"
-	# [ -z "$MPU" ] && MPU="0"
-	# [ -z "$ATM" ] && ATM=""
-	# case $ATM in
-		# 1) ATM="atm" ;;
-		# 2) ATM="ptm" ;;
-		# *) ATM="" ;;
-	# esac
-	# printf "overhead %d mpu %d %s\n" "$OVERHEAD" "$MPU" "$ATM"
-# }
 
 Cake_Get_Prio(){
 	DIR="$1"
@@ -223,21 +191,6 @@ Cake_Write_QOS(){
 		return 1
 	fi
 	logger -t "$SCRIPT_NAME_FANCY" "Configuring Cake options..."
-	# cat >/tmp/qos2 <<EOF
-#  !/bin/sh
-# source /etc/cake-qos.conf
-# case "\$1" in
-# start)
-	# /jffs/addons/cakeqos-merlin/cake-qos.sh start
-	# ;;
-# stop)
-	# /jffs/addons/cakeqos-merlin/cake-qos.sh stop
-	# ;;
-# *)
-	# /jffs/addons/cakeqos-merlin/cake-qos.sh status
-	# ;;
-# esac
-# EOF
 
 	cat >/jffs/configs/cake-qos.conf.add <<EOF
 ULPRIOQUEUE="$(Cake_Get_Prio 'ul')"
@@ -530,8 +483,6 @@ case "$arg1" in
 		exit 0
 	;;
 	debug)
-#		printf "DLIF: %s\n" "$(Cake_Get_DLIF)"
-#		printf "Overhead: %s\n" "$(Cake_Get_Overhead)"
 		printf "Prio: %s %s\n" "$(Cake_Get_Prio 'dl')" "$(Cake_Get_Prio 'ul')"
 		printf "Flow Iso: %s %s\n" "$(Cake_Get_FlowIso 'dl')" "$(Cake_Get_FlowIso 'ul')"
 		printf "NAT: %s %s\n" "$(Cake_Get_NAT 'dl')" "$(Cake_Get_NAT 'ul')"
