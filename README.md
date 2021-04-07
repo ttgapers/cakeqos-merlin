@@ -21,7 +21,7 @@
 3.  To check that CakeQOS-Merlin is running, use `option 3` and/or do a bufferbloat test on [dslreports](https://www.dslreports.com/speedtest)
 
 ## Web Interface
-[![Web Interface](https://i.imgur.com/6rqQlcG.png "Web Interface")](https://i.imgur.com/6rqQlcG.png "Web Interface")
+[![Web Interface](https://i.imgur.com/W5nMiaf.png "Web Interface")](https://i.imgur.com/W5nMiaf.png "Web Interface")
 
 ## Usage
 
