@@ -292,9 +292,15 @@ Init_UserScript() {
 
 Cake_Install(){
 	if ! nvram get rc_support | /bin/grep -q "cake"; then
-		Print_Output "false" "This version of the script is not compatible with your router firmware version. Installing legacy version 1.0.7!" "$WARN"
-		curl -fsL --retry 3 --connect-timeout 3 "https://raw.githubusercontent.com/ttgapers/cakeqos-merlin/384/cake-qos.sh" -o "$0" && exec sh "$0" install
-		exit 1
+		if nvram get buildno | /bin/grep -q "^386"; then
+			Print_Output "false" "This version of the script is not compatible with your router firmware version. Installing legacy version 1.0.8!" "$WARN"
+			curl -fsL --retry 3 --connect-timeout 3 "https://raw.githubusercontent.com/ttgapers/cakeqos-merlin/386/cake-qos.sh" -o "$0" && exec sh "$0" install
+			exit 1
+		else
+			Print_Output "false" "This version of the script is not compatible with your router firmware version. Installing legacy version 1.0.7!" "$WARN"
+			curl -fsL --retry 3 --connect-timeout 3 "https://raw.githubusercontent.com/ttgapers/cakeqos-merlin/384/cake-qos.sh" -o "$0" && exec sh "$0" install
+			exit 1
+		fi
 	fi
 	if [ "$(nvram get qos_enable)" != "1" ] || [ "$(nvram get qos_type)" != "9" ]; then
 		Print_Output "true" "Cake QoS is not enabled in the firmware. Aborting installation!" "$ERR"
