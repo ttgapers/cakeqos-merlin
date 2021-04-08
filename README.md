@@ -5,7 +5,7 @@
 2.  Not recommended for connection up/down of 250Mbps or higher. **Note:** Users with higher up/down connections have reported lower peaks but better stability and user experience overall and continue to use Cake.
 
 ## Tips
-1.  If you use connections like ADSL, VDSL, Docsis, learn about the [overhead keyword](https://man7.org/linux/man-pages/man8/tc-cake.8.html#OVERHEAD_COMPENSATION_PARAMETERS) at the tc-cake man page.
+1.  If you use connections like ADSL, VDSL, Docsis, learn about the [overhead keyword](https://man7.org/linux/man-pages/man8/tc-cake.8.html#OVERHEAD_COMPENSATION_PARAMETERS) at the [tc-cake](https://man7.org/linux/man-pages/man8/tc-cake.8.html) man page.
 2.  Read and understand the different [Priority Queue Parameters](https://man7.org/linux/man-pages/man8/tc-cake.8.html#PRIORITY_QUEUE_PARAMETERS) and [Flow Isolation Parameters](https://man7.org/linux/man-pages/man8/tc-cake.8.html#FLOW_ISOLATION_PARAMETERS).
 3.  Use 90-95% of your line speed as upload/download limits
 
