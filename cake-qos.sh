@@ -312,6 +312,22 @@ Cake_Install(){
 		Print_Output "true" "Custom JFFS scripts enabled" "$WARN"
 	fi
 
+	# Remove old Cake packages
+	if [ -f /opt/lib/modules/sch_cake.ko ]; then
+		Print_Output "true" "Removing old CakeQOS-Merlin 1.0 packages and modifications" "$WARN"
+		oldiface="$(nvram get wan0_ifname)"
+		cru d "$SCRIPT_NAME_FANCY"
+		sed -i '\~# CakeQOS-Merlin~d' /jffs/scripts/nat-start /jffs/scripts/services-stop
+		/opt/sbin/tc qdisc del dev ${oldiface} ingress 2>/dev/null
+		/opt/sbin/tc qdisc del dev ifb9${oldiface} root 2>/dev/null
+		/opt/sbin/tc qdisc del dev ${oldiface} root 2>/dev/null
+		ip link del ifb9${oldiface} 2>/dev/null
+		rmmod sch_cake 2>/dev/null
+		opkg --autoremove remove sched-cake-oot
+		opkg --autoremove remove tc-adv
+	fi
+
+	Print_Output "false" "Installing CakeQOS-Merlin $version..." "$PASS"
 	# Add to service-event
 	Init_UserScript "service-event"
 	sed -i '\~# CakeQOS-Merlin~d' /jffs/scripts/service-event
