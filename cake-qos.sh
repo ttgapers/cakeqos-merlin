@@ -497,11 +497,11 @@ case "$arg1" in
 	install)
 		Cake_Install
 		printf "Restarting QoS..."
-		service restart_qos
+		service "restart_qos;restart_firewall"
 	;;
 	uninstall)
 		Cake_Uninstall
-		service restart_qos
+		service "restart_qos;restart_firewall"
 		echo
 		exit 0
 	;;
