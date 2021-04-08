@@ -1,24 +1,26 @@
 # CakeQOS-Merlin
 
 ## Pre-requisites
-1.  Currently supports ASUS HND models running [Merlin firmware](https://github.com/RMerl/asuswrt-merlin.ng) (386.2 and above).
+1.  Currently supports ASUS HND models running [ASUSWRT-Merlin firmware](https://github.com/RMerl/asuswrt-merlin.ng) version 386.2 and above. Versions prior to 386.2 are supported on the legacy 386 branch or 384 branch. This script will automatically install the appropriate legacy version if your firmware does not support Cake natively.
 2.  Not recommended for connection up/down of 250Mbps or higher. **Note:** Users with higher up/down connections have reported lower peaks but better stability and user experience overall and continue to use Cake.
 
 ## Tips
-1.  If you use connections like ADSL, VDSL, Docsis, learn about the overhead keyword. [https://man7.org/linux/man-pages/man8/tc-cake.8.html](https://man7.org/linux/man-pages/man8/tc-cake.8.html)
-2.  If you want to understand and change Priority Queue Parameters. [https://man7.org/linux/man-pages/man8/tc-cake.8.html#PRIORITY_QUEUE_PARAMETERS](https://man7.org/linux/man-pages/man8/tc-cake.8.html#PRIORITY_QUEUE_PARAMETERS)
+1.  If you use connections like ADSL, VDSL, Docsis, learn about the [overhead keyword](https://man7.org/linux/man-pages/man8/tc-cake.8.html#OVERHEAD_COMPENSATION_PARAMETERS) at the tc-cake man page.
+2.  Read and understand the different [Priority Queue Parameters](https://man7.org/linux/man-pages/man8/tc-cake.8.html#PRIORITY_QUEUE_PARAMETERS) and [Flow Isolation Parameters](https://man7.org/linux/man-pages/man8/tc-cake.8.html#FLOW_ISOLATION_PARAMETERS).
 3.  Use 90-95% of your line speed as upload/download limits
 
 ## Install Example
 
-1.  Run the installer:
+1.  For best results, uninstall the legacy CakeQOS-Merlin v1.0 script, then enable Cake in the router WebUI under Adaptive QoS / QoS (a reboot may be required).
+
+2.  Run the installer:
 	```sh
 	mkdir -p /jffs/addons/cake-qos && /usr/sbin/curl -s "https://raw.githubusercontent.com/ttgapers/cakeqos-merlin/alpha/cake-qos.sh" -o "/jffs/addons/cake-qos/cake-qos" && chmod 755 /jffs/addons/cake-qos/cake-qos && sh /jffs/addons/cake-qos/cake-qos install
 	```
 
-2.  Configure your preferred settings in the WebUI under Adaptive QoS / CakeQOS-Merlin.
+3.  Configure your preferred settings in the WebUI under Adaptive QoS / CakeQOS-Merlin.
 
-3.  To check that CakeQOS-Merlin is running, use `option 3` and/or do a bufferbloat test on [dslreports](https://www.dslreports.com/speedtest)
+4.  To check that CakeQOS-Merlin is running, check the Cake Current Status section of the WebUI, and/or do a bufferbloat test on [DSLReports](https://www.dslreports.com/speedtest)
 
 ## Web Interface
 [![Web Interface](https://i.imgur.com/W5nMiaf.png "Web Interface")](https://i.imgur.com/W5nMiaf.png "Web Interface")
