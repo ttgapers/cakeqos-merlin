@@ -325,6 +325,7 @@ Cake_Install(){
 		rmmod sch_cake 2>/dev/null
 		opkg --autoremove remove sched-cake-oot
 		opkg --autoremove remove tc-adv
+		rm "${SCRIPT_DIR}/${SCRIPT_NAME}.cfg" 2>/dev/null
 	fi
 
 	Print_Output "false" "Installing CakeQOS-Merlin $version..." "$PASS"
