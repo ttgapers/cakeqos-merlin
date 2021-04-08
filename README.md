@@ -20,7 +20,7 @@
 
 3.  Configure your preferred settings in the WebUI under Adaptive QoS / CakeQOS-Merlin.
 
-4.  To check that CakeQOS-Merlin is running, check the Cake Current Status section of the WebUI, and/or do a bufferbloat test on [DSLReports](https://www.dslreports.com/speedtest)
+4.  To check that CakeQOS-Merlin is running, check the Cake Current Status section of the WebUI, and/or do a bufferbloat test on [DSLReports](https://www.dslreports.com/speedtest).
 
 ## Web Interface
 [![Web Interface](https://i.imgur.com/W5nMiaf.png "Web Interface")](https://i.imgur.com/W5nMiaf.png "Web Interface")
