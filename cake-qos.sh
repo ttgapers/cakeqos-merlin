@@ -236,6 +236,10 @@ Download_File() {
 
 Cake_Mount_UI(){
 	# Check if the webpage is already mounted in the GUI and reuse that page
+	LOCKFILE=/tmp/addonwebui.lock
+	FD=386
+	eval exec "$FD>$LOCKFILE"
+	/usr/bin/flock -x "$FD"
 	prev_webui_page="$(sed -nE "s/^\{url\: \"(user[0-9]+\.asp)\"\, tabName\: \"${SCRIPT_NAME_FANCY}\"\}\,$/\1/p" /tmp/menuTree.js 2>/dev/null)"
 	if [ -n "$prev_webui_page" ]; then
 		# use the same filename as before
@@ -248,10 +252,6 @@ Cake_Mount_UI(){
 		logmsg "No API slots available to install web page"
 	else
 		cp -p "${SCRIPT_DIR}/${SCRIPT_NAME}.asp" /www/user/"$am_webui_page"
-		LOCKFILE=/tmp/addonwebui.lock
-		FD=386
-		eval exec "$FD>$LOCKFILE"
-		/usr/bin/flock -x "$FD"
 		if [ ! -f /tmp/menuTree.js ]; then
 			cp /www/require/modules/menuTree.js /tmp/
 			mount -o bind /tmp/menuTree.js /www/require/modules/menuTree.js
@@ -262,8 +262,8 @@ Cake_Mount_UI(){
 			sed -i "/url: \"QoS_Stats.asp\", tabName:/i {url: \"$am_webui_page\", tabName: \"${SCRIPT_NAME_FANCY}\"}," /tmp/menuTree.js
 			mount -o bind /tmp/menuTree.js /www/require/modules/menuTree.js
 		fi
-		/usr/bin/flock -u "$FD"
 	fi
+	/usr/bin/flock -u "$FD"
 	[ ! -d "/www/ext/${SCRIPT_NAME}" ] && mkdir -p "/www/ext/${SCRIPT_NAME}"
 }
 
