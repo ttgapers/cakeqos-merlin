@@ -64,6 +64,7 @@ if ('<% nvram_get("qos_enable"); %>' == 0) { // QoS disabled
 } else { // invalid mode
 	var qos_mode = 0;
 }
+var stat_retries = 0;
 
 /* ATM, overhead, pmu, label */
 var overhead_presets = [["1", "48", "0", "Conservative default"],
@@ -1226,14 +1227,24 @@ function update_cake_status(){
 		dataType: 'script',
 		timeout: 3000,
 		error:	function(xhr){
-			setTimeout('update_cake_status();', 3000);
+			if ( stat_retries < 5 ) {
+				setTimeout('update_cake_status();', 3000);
+				stat_retries++;
+			} else {
+				stat_retries = 0;
+				document.getElementById("cake_status_check").disabled = false;
+				document.getElementById('cakeqos_status').innerHTML='<div style="font-size: 125%; color: rgb(255, 204, 0);">Timeout retrieving Cake stats. Try again later.</div>';
+			}
 		},
 		success: function(){
+			stat_retries = 0;
 			document.getElementById("cake_status_check").disabled = false;
-			if ( cake_upload_stats && cake_download_stats ) {
+			if ( cake_upload_stats.kind == 'cake' && cake_download_stats.kind == 'cake' ) {
 				document.getElementById('cakeqos_status').innerHTML=refresh_Cake_StatsInfo();
 				AddEventHandlers();
 			}
+			else
+				document.getElementById('cakeqos_status').innerHTML='<div style="font-size: 125%; color: rgb(255, 204, 0);">Cake is not running. Try again later.</div>';
 		}
 	});
 }
