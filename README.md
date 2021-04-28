@@ -1,49 +1,49 @@
 # CakeQOS-Merlin
 
 ## Pre-requisites
-1.  Currently only supports RT-AC86U / RT-AX88U / RT-AX56U / RT-AX58U / RT-AX3000 running [Merlin firmware](https://github.com/RMerl/asuswrt-merlin.ng) (384.xx and above)
+1.  Currently supports ASUS HND models running [ASUSWRT-Merlin firmware](https://github.com/RMerl/asuswrt-merlin.ng) version 386.2 and above. Versions prior to 386.2 are supported on the legacy 386 branch or 384 branch. This script will automatically install the appropriate legacy version if your firmware does not support Cake natively.
 2.  Not recommended for connection up/down of 250Mbps or higher. **Note:** Users with higher up/down connections have reported lower peaks but better stability and user experience overall and continue to use Cake.
-3.  Entware
-4.  USB Storage
 
 ## Tips
-1.  If you use connections like ADSL, VDSL, Docsis, learn about the overhead keyword. [https://man7.org/linux/man-pages/man8/tc-cake.8.html](https://man7.org/linux/man-pages/man8/tc-cake.8.html)
-2.  If you want to understand and change Priority Queue Parameters. [https://man7.org/linux/man-pages/man8/tc-cake.8.html#PRIORITY_QUEUE_PARAMETERS](https://man7.org/linux/man-pages/man8/tc-cake.8.html#PRIORITY_QUEUE_PARAMETERS)
+1.  If you use connections like ADSL, VDSL, Docsis, learn about the [overhead keyword](https://man7.org/linux/man-pages/man8/tc-cake.8.html#OVERHEAD_COMPENSATION_PARAMETERS) at the [tc-cake](https://man7.org/linux/man-pages/man8/tc-cake.8.html) man page.
+2.  Read and understand the different [Priority Queue Parameters](https://man7.org/linux/man-pages/man8/tc-cake.8.html#PRIORITY_QUEUE_PARAMETERS) and [Flow Isolation Parameters](https://man7.org/linux/man-pages/man8/tc-cake.8.html#FLOW_ISOLATION_PARAMETERS).
 3.  Use 90-95% of your line speed as upload/download limits
 
 ## Install Example
 
-1.  Run the installer:
+1.  For best results, uninstall the legacy CakeQOS-Merlin v1.0 script, then enable Cake in the router WebUI under Adaptive QoS / QoS (a reboot may be required).
+
+2.  Run the installer:
 	```sh
 	mkdir -p /jffs/addons/cake-qos && /usr/sbin/curl -s "https://raw.githubusercontent.com/ttgapers/cakeqos-merlin/develop/cake-qos.sh" -o "/jffs/addons/cake-qos/cake-qos" && chmod 755 /jffs/addons/cake-qos/cake-qos && sh /jffs/addons/cake-qos/cake-qos install
 	```
 
-2.  Configure the install command prompts with the params you want (installer will detect your router model). If you receive any errors (e.g. libnl-tiny package size mismatch) please ensure your Entware instance is up-to-date. (For cable connections you can use "docsis ack-filter" as optional extra parameters).
+3.  Configure your preferred settings in the WebUI under Adaptive QoS / CakeQOS-Merlin.
 
-3.  To check that CakeQOS-Merlin is running, use `option 3` and/or do a bufferbloat test on [dslreports](https://www.dslreports.com/speedtest)
+4.  To check that CakeQOS-Merlin is running, check the Cake Current Status section of the WebUI, and/or do a bufferbloat test on [DSLReports](https://www.dslreports.com/speedtest).
+
+## Web Interface
+[![Web Interface](https://i.imgur.com/W5nMiaf.png "Web Interface")](https://i.imgur.com/W5nMiaf.png "Web Interface")
 
 ## Usage
 
 ```sh
-cake-qos {start|stop|status download|status upload|status general|settings|update|install|uninstall}
+cake-qos {status|status download|status upload|update|install|uninstall}
 ```
 
--   start:   start cake-qos
--   stop:    stop cake-qos
--   status download:   check the current download status of cake-qos
--   status upload:   check the current upload status of cake-qos
--   status general:   check the current general status of cake-qos
--   settings: configure cake-qos settings
--   update: update cake-qos binaries and installer (if any available)
--   install: download and install necessary cake-qos binaries and configure settings
--   uninstall: stop cake-qos, remove from startup, and remove cake binaries
+-   status: check the current general status of cake-qos
+-   status download: check the current download status of cake-qos
+-   status upload: check the current upload status of cake-qos
+-   update: update cake-qos installer (if any available)
+-   install: download and install necessary cake-qos files
+-   uninstall: remove from startup, and remove cake-qos files
 
 ## CLI
 ```sh
 tc qdisc
 tc qdisc show | grep root
 tc -s qdisc show dev eth0 # for upload
-tc -s qdisc show dev ifb9eth0 # for download
+tc -s qdisc show dev ifb4eth0 # for download
 cake-qos status
 ```
 ## Uninstall/Remove
