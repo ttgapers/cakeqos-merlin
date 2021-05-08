@@ -21,9 +21,6 @@
 
 # shellcheck disable=SC2086
 
-clear
-sed -n '6,21p' "$0"
-
 version=2.0.0
 readonly SCRIPT_NAME="cake-qos"
 readonly SCRIPT_NAME_FANCY="CakeQOS-Merlin"
@@ -47,6 +44,8 @@ fi
 # Detect if script is run from an SSH shell interactively or being invoked via cron or from the WebUI (unattended)
 if tty >/dev/null 2>&1; then
 	mode="interactive"
+	clear
+	sed -n '6,21p' "$0"
 else
 	mode="unattended"
 fi
@@ -457,7 +456,106 @@ Cake_Update(){
 	exit
 }
 
+Display_Line(){
+	printf '\n#########################################################\n\n'
+}
+
+Cake_Menu(){
+	reloadmenu="1"
+	echo "Select an option"
+	echo "[1]  --> Check cake status"
+	echo "[2]  --> Update $SCRIPT_NAME_FANCY"
+	echo "[3]  --> Install $SCRIPT_NAME_FANCY"
+	echo "[4]  --> Uninstall $SCRIPT_NAME_FANCY"
+	echo "[5]  --> Debug info"
+	echo
+	echo "[e]  --> Exit"
+	echo
+	Display_Line
+	while true; do
+		echo
+		printf "[1-5]: "
+		read -r "menu1"
+		echo
+		case "$menu1" in
+			1)
+				option1="status"
+				while true; do
+					echo "Select Status Option:"
+					echo "[1]  --> Download Status"
+					echo "[2]  --> Upload Status"
+					echo "[3]  --> General Status"
+					echo
+					echo "[e]  --> Exit"
+					echo
+					printf "[1-3]: "
+					read -r "menu2"
+					echo
+					case "$menu2" in
+						1)
+							option2="download"
+							break
+						;;
+						2)
+							option2="upload"
+							break
+						;;
+						3)
+							option2="general"
+							break
+						;;
+						e|exit|back|menu)
+							unset "option1" "option2"
+							clear
+							Cake_Menu
+							break
+						;;
+					esac
+				done
+				break
+			;;
+			2)
+				option1="updatecheck"
+				break
+			;;
+			3)
+				option1="install"
+				break
+			;;
+			4)
+				option1="uninstall"
+				break
+			;;
+			5)
+				option1="debug"
+				break
+			;;
+			e)
+				echo "Exiting!"
+				echo
+				exit 0
+			;;
+			*)
+				echo "$menu1 Isn't An Option!"
+				echo
+			;;
+		esac
+	done
+}
+
+if [ -z "$1" ]; then
+	Cake_Menu
+fi
+
+if [ -n "$option1" ]; then
+	set "$option1" "$option2"
+	echo "[$] $0 $*" | tr -s " "
+fi
+
 arg1="$1"
+
+Display_Line
+
 iface="$(get_wanif)"
 
 case "$arg1" in
@@ -479,7 +577,7 @@ case "$arg1" in
 				upload)
 					tc -s qdisc show dev ${iface}
 				;;
-				*)
+				general)
 					Print_Output "false" "> Download Status:" "$PASS"
 					echo "$STATUS_DOWNLOAD"
 					echo
@@ -493,7 +591,7 @@ case "$arg1" in
 	;;
 	update*)		# updatecheck, updatesilent, or plain update
 		Cake_Update "${arg1#update}"		# strip 'update' from arg1 to pass to update function
-		;;
+	;;
 	install)
 		Cake_Install
 		printf "Restarting QoS..."
@@ -520,10 +618,12 @@ case "$arg1" in
 		Print_Output "false" "Usage;" "$WARN"
 		printf '\n%-32s |  %-55s\n' "cake-qos status download" "check the current download status of $SCRIPT_NAME"
 		printf '%-32s |  %-55s\n' "cake-qos status upload" "check the current upload status of $SCRIPT_NAME"
-		printf '%-32s |  %-55s\n\n' "cake-qos status" "check the current general status of $SCRIPT_NAME"
+		printf '%-32s |  %-55s\n\n' "cake-qos status general" "check the current general status of $SCRIPT_NAME"
 		printf '%-32s |  %-55s\n' "cake-qos install" "install and configure $SCRIPT_NAME"
 		printf '%-32s |  %-55s\n' "cake-qos uninstall" "uninstall and remove all traces of $SCRIPT_NAME"
 		printf '%-32s |  %-55s\n' "cake-qos update" "check for updates of $SCRIPT_NAME"
 		printf '%-32s |  %-55s\n' "cake-qos debug" "show debug info from $SCRIPT_NAME"
 	;;
 esac
+Display_Line
+if [ -n "$reloadmenu" ]; then echo; printf "[*] Press Enter To Continue..."; read -r "reloadmenu"; exec "$0"; fi
