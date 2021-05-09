@@ -33,6 +33,8 @@ readonly ERR="\\e[31m"
 readonly WARN="\\e[33m"
 readonly PASS="\\e[32m"
 
+[ -z "$(nvram get odmpid)" ] && RMODEL=$(nvram get productid) || RMODEL=$(nvram get odmpid) #get router model
+
 # shellcheck disable=SC1091
 . /usr/sbin/helper.sh
 
@@ -302,8 +304,27 @@ Cake_Install(){
 		fi
 	fi
 	if [ "$(nvram get qos_enable)" != "1" ] || [ "$(nvram get qos_type)" != "9" ]; then
-		Print_Output "true" "Cake QoS is not enabled in the firmware. Aborting installation!" "$ERR"
-		exit 1
+		Print_Output "true" "Enable Cake QoS scheduler in the firmware..." "$PASS"
+		nvram set qos_enable=1
+		nvram set qos_type=9
+		nvram set fc_disable=0
+		nvram set runner_disable=0
+		if [ "$RMODEL" = "RT-AX58U" ] || [ "$RMODEL" = "RT-AX3000" ]; then
+			fc config --hw-accel 0
+		else
+			runner disable 2>/dev/null
+		fi
+		fc disable 2>/dev/null
+		fc flush 2>/dev/null
+		if [ -z "$(nvram get qos_ibw)" ]; then
+			Print_Output "true" "Download bandwidth not set, setting to Automatic..." "$PASS"
+			nvram set qos_ibw=0;
+		fi
+		if [ -z "$(nvram get qos_obw)" ]; then
+			Print_Output "true" "Upload bandwidth not set, setting to Automatic..." "$PASS"
+			nvram set qos_obw=0;
+		fi
+		nvram commit
 	fi
 	if [ "$(nvram get jffs2_scripts)" != "1" ]; then
 		nvram set jffs2_scripts=1
@@ -592,7 +613,7 @@ case "$arg1" in
 	update*)		# updatecheck, updatesilent, or plain update
 		Cake_Update "${arg1#update}"		# strip 'update' from arg1 to pass to update function
 	;;
-	install)
+	install|start)		# start is used to upgrade v1.0.x users from nat-start invocation
 		Cake_Install
 		printf "Restarting QoS..."
 		service "restart_qos;restart_firewall"
