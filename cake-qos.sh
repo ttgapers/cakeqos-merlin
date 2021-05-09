@@ -596,7 +596,7 @@ case "$arg1" in
 					tc -s qdisc show dev ifb4${iface}
 				;;
 				upload)
-					tc -s qdisc show dev ${iface}
+					tc -s qdisc show dev ${iface} root
 				;;
 				general)
 					Print_Output "false" "> Download Status:" "$PASS"
