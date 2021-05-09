@@ -28,15 +28,16 @@
 ## Usage
 
 ```sh
-cake-qos {status|status download|status upload|update|install|uninstall}
+cake-qos {status general|status download|status upload|update|install|uninstall|debug}
 ```
 
--   status: check the current general status of cake-qos
+-   status general: check the current general status of cake-qos
 -   status download: check the current download status of cake-qos
 -   status upload: check the current upload status of cake-qos
 -   update: update cake-qos installer (if any available)
 -   install: download and install necessary cake-qos files
 -   uninstall: remove from startup, and remove cake-qos files
+-   debug: display config info
 
 ## CLI
 ```sh
@@ -44,7 +45,7 @@ tc qdisc
 tc qdisc show | grep root
 tc -s qdisc show dev eth0 # for upload
 tc -s qdisc show dev ifb4eth0 # for download
-cake-qos status
+cake-qos status general
 ```
 ## Uninstall/Remove
 
