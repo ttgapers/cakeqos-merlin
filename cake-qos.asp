@@ -1,6 +1,6 @@
 ﻿<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
 <!--
-CakeQoS v0.0.1 released 2021-03-15
+CakeQoS v2.1.0 released 2021-08-18
 -->
 <html xmlns="http://www.w3.org/1999/xhtml">
 <html xmlns:v>
@@ -39,15 +39,12 @@ thead.collapsible-jquery {
 <script>
 <% login_state_hook(); %>
 var custom_settings = <% get_custom_settings(); %>;
-const iptables_default_rules = "<>>udp>>500,4500>>3<>>udp>16384:16415>>>3<>>tcp>>119,563>>5<>>tcp>>80,443>08****>5";
-const iptables_default_rulenames = "<WiFi%20Calling<Facetime<Usenet<Game%20Downloads";
-const appdb_default_rules = "<googlevideo.com/*.googlevideo.com>streaming<nflxvideo.net>streaming<windowsupdate.com/update.microsoft.com>bulk";
+const iptables_default_rules = "";
+const iptables_default_rulenames = "";
 var iptables_rulelist_array="";
 var iptables_rulename_array="";
 var iptables_temp_array=[];
 var iptables_names_temp_array=[];
-var appdb_temp_array=[];
-var appdb_rulelist_array="";
 var qos_obw=<% nvram_get("qos_obw"); %>;
 var qos_ibw=<% nvram_get("qos_ibw"); %>;
 var qos_type = '<% nvram_get("qos_type"); %>';
@@ -180,83 +177,15 @@ function initial() {
 	show_menu();
 	get_config();
 	build_overhead_presets();
+	showhide('well_known_rules_tr',(custom_settings.cakeqos_ulrules == 1 ? 1 : 0));
+	showhide('iptables_rules_block',(custom_settings.cakeqos_ulrules == 1 ? 1 : 0));
 	if (qos_mode != 9){		//if Cake is not enabled
 		document.getElementById('no_aqos_notice').style.display = "";
 		return;
 	}
 	show_iptables_rules();
-	show_appdb_rules();
 	well_known_rules();
 	submit_refresh_status();
-}
-
-function check_duplicate(){
-	var rule_num = document.getElementById('appdb_rulelist_table').rows.length;
-	for(i=0; i<rule_num; i++){
-		if(document.getElementById('appdb_rulelist_table').rows[i].cells[1].innerText == document.form.appdb_search_x.value) {
-			alert("A rule for this mark already exists.");
-			return true;
-		}
-	}
-	return false;
-} // check_duplicate
-
-function addAppDBRow(obj, head){
-	if(head == 1)
-		appdb_rulelist_array += "<"
-	else
-		appdb_rulelist_array += ">"
-
-	appdb_rulelist_array += obj.value;
-	obj.value = "";
-}
-
-function validAppDBForm(){
-	if(document.form.appdb_search_x.value.length < 4)
-		return false;
-	return true;
-}
-
-function addRow_AppDB_Group(upper){
-	if(validAppDBForm()){
-		var rule_num = document.getElementById('appdb_rulelist_table').rows.length;
-		if(rule_num >= upper){
-			alert("This table only allows " + upper + " items!");
-			return;
-		}
-		if(check_duplicate() == true)
-			return false;
-		addAppDBRow(document.form.appdb_search_x, 1);
-		addAppDBRow(document.form.appdb_ipset_x, 0);
-		document.form.appdb_search_x.value="";
-		document.form.appdb_ipset_x.value="";
-		show_appdb_rules();
-	}
-}
-
-function del_appdb_Row(r){
-	var i=r.parentNode.parentNode.rowIndex;
-	document.getElementById('appdb_rulelist_table').deleteRow(i);
-	var appdb_rulelist_value = "";
-	for(k=0; k<document.getElementById('appdb_rulelist_table').rows.length; k++){
-		for(j=0; j<document.getElementById('appdb_rulelist_table').rows[k].cells.length-1; j++){
-			if(j == 0)
-				appdb_rulelist_value += "<";
-			else
-				appdb_rulelist_value += ">";
-			appdb_rulelist_value += document.getElementById('appdb_rulelist_table').rows[k].cells[j].innerText;
-		}
-	}
-	appdb_rulelist_array = appdb_rulelist_value;
-	if(appdb_rulelist_array == "")
-	show_appdb_rules();
-}
-
-function edit_appdb_Row(r){
-	var i=r.parentNode.parentNode.rowIndex;
-	document.form.appdb_search_x.value = document.getElementById('appdb_rulelist_table').rows[i].cells[0].innerText;
-	document.form.appdb_ipset_x.value = document.getElementById('appdb_rulelist_table').rows[i].cells[1].innerText;
-	del_appdb_Row(r);
 }
 
 tableValidator.qosPortRange = {
@@ -347,74 +276,6 @@ tableValidator.qosPortRange = {
 				}
 				else
 					hintMsg =  HINTPASS;
-			}
-		}
-		if(_$obj.next().closest(".hint").length) {
-			_$obj.next().closest(".hint").remove();
-		}
-		if(hintMsg != HINTPASS) {
-			var $hintHtml = $('<div>');
-			$hintHtml.addClass("hint");
-			$hintHtml.html(hintMsg);
-			_$obj.after($hintHtml);
-			_$obj.focus();
-			return false;
-		}
-		return true;
-	}
-};
-
-tableValidator.qosMark = {
-	keyPress : function($obj, event) {
-		var objValue = $obj.val();
-		var keyPressed = event.keyCode ? event.keyCode : event.which;
-		if (tableValid_isFunctionButton(event)) {
-			return true;
-		}
-		if ((keyPressed > 47 && keyPressed < 58) || (keyPressed > 64 && keyPressed < 71) || (keyPressed > 96 && keyPressed < 103)) {	//0~9 A~F
-			return true;
-		}
-		if (keyPressed == 42) { // *
-			if (objValue.length > 1) {
-				for(var i=0;i<objValue.length;i++) {
-					var c=objValue.charAt(i);
-					if (c == '*' && i < 2)
-						return false;
-				}
-				if(objValue.charAt(0)=='!')
-					$obj.val(objValue.substr(0,3)+"****");
-				else
-					$obj.val(objValue.substr(0,2)+"****");
-			}
-		}
-		else if (keyPressed == 33) { // exclamation !
-			if(objValue.length > 0 && objValue.length < $obj[0].attributes.maxlength.value && objValue.charAt(0) != '!') { // field already has value; only allow ! as first char
-				$obj.val('!' + objValue);
-			}
-			else if (objValue.length == 0)
-				return true;
-			return false;
-		}
-		return false;
-	},
-	blur : function(_$obj) {
-		var hintMsg = "";
-		var _value = _$obj.val();
-		_value = $.trim(_value);
-		_$obj.val(_value);
-		if(_value == "") {
-			if(_$obj.hasClass("valueMust"))
-				hintMsg = "Fields cannot be blank.";
-			else
-				hintMsg = HINTPASS;
-		}
-		else {
-			var markre = new RegExp("^[!]?([0-9a-fA-F]{2})([0-9a-fA-F]{4}|[\*]{4})$", "gi");
-			if(markre.test(_value)) {
-				hintMsg = HINTPASS;
-			}
-			else {
-				hintMsg = "Please enter a valid mark or wildcard";
 			}
 		}
 		if(_$obj.next().closest(".hint").length) {
@@ -586,12 +447,9 @@ tableRuleDuplicateValidation = {
 
 tableRuleValidation = {
 	iptables_rule : function(_newRuleArray) {
-		if(_newRuleArray.length == 8) {
+		if(_newRuleArray.length == 7) {
 			if(_newRuleArray[1] == "" && _newRuleArray[2] == "" && _newRuleArray[4] == "" && _newRuleArray[5] == "" && _newRuleArray[6] == "") {
 				return "Define at least one criterion for this rule!";
-			}
-			if(_newRuleArray[1] == "" && _newRuleArray[2] == "" && _newRuleArray[4] == "" && _newRuleArray[5] == "" && _newRuleArray[6] != "") {
-				return "Create an AppDB rule instead or define additional criteria!";
 			}
 			return HINTPASS;
 		}
@@ -612,35 +470,31 @@ function show_iptables_rules(){
 		header: [
 			{
 				"title" : "Name",
-				"width" : "10%"
+				"width" : "15%"
 			},
 			{
 				"title" : "Local IP",
-				"width" : "11%"
+				"width" : "15%"
 			},
 			{
 				"title" : "Remote IP",
-				"width" : "11%"
+				"width" : "15%"
 			},
 			{
 				"title" : "Proto",
-				"width" : "9%"
+				"width" : "10%"
 			},
 			{
 				"title" : "Local Port",
-				"width" : "12%"
+				"width" : "15%"
 			},
 			{
 				"title" : "Remote Port",
-				"width" : "12%"
+				"width" : "15%"
 			},
 			{
-				"title" : "DSCP",
-				"width" : "8%"
-			},
-			{
-				"title" : "Tin",
-				"width" : "21%"
+				"title" : "Category",
+				"width" : "15%"
 			}
 		],
 		createPanel: {
@@ -690,17 +544,9 @@ function show_iptables_rules(){
 					"validator" : "qosPortRange"
 				},
 				{
-					"editMode" : "text",
-					"title" : "DSCP",
-					"maxlength" : "7",
-					"valueMust" : false,
-					"placeholder": "AF41 EF CS0 CS6",
-					"validator" : "qosMark"
-				},
-				{
 					"editMode" : "select",
-					"title" : "Tin",
-					"option" : { "Bulk" : "0", "Voice" : "3", "Besteffort" : "2" }
+					"title" : "Category",
+					"option" : { "Bulk" : "0", "Streaming" : "1", "Voice" : "2", "Conferencing" : "3", "Gaming" : "4" }
 				}
 			],
 			maximum: 24
@@ -710,7 +556,7 @@ function show_iptables_rules(){
 				{
 					"editMode" : "text",
 					"maxlength" : "27",
-					"styleList" : {"word-wrap":"break-word","overflow-wrap":"break-word","font-size":"90%"},
+					"styleList" : {"word-wrap":"break-word","overflow-wrap":"break-word"},
 					"validator" : "description"
 				},
 				{
@@ -742,14 +588,8 @@ function show_iptables_rules(){
 					"validator" : "qosPortRange"
 				},
 				{
-					"editMode" : "text",
-					"maxlength" : "7",
-					"valueMust" : false,
-					"validator" : "qosMark"
-				},
-				{
 					"editMode" : "select",
-					"option" : { "Bulk" : "0", "Voice" : "3", "Besteffort" : "2" }
+					"option" : { "Bulk" : "0", "Streaming" : "1", "Voice" : "2", "Conferencing" : "3", "Gaming" : "4" }
 				}
 			]
 		},
@@ -757,32 +597,6 @@ function show_iptables_rules(){
 		ruleValidation : "iptables_rule"
 	}
 	tableApi.genTableAPI(tableStruct);
-}
-
-function show_appdb_rules() {
-	var appdb_rulelist_row = decodeURIComponent(appdb_rulelist_array).split('<');
-	var code = "";
-
-	code +='<table width="100%" border="1" cellspacing="0" cellpadding="4" align="center" class="list_table" id="appdb_rulelist_table">';
-	if(appdb_rulelist_row.length == 1)
-		code +='<tr><td style="color:#FFCC00;" colspan="4">No rules defined</td></tr>';
-	else{
-		for(var i = 1; i < appdb_rulelist_row.length; i++){
-			code +='<tr id="row'+i+'">';
-			var appdb_rulelist_col = appdb_rulelist_row[i].split('>');
-			for(var j = 0; j < appdb_rulelist_col.length; j++){
-				if (j==1){
-					code +='<td width="30%">'+ appdb_rulelist_col[j] +'</td>';
-				} else {
-					code +='<td width="auto">'+ appdb_rulelist_col[j] +'</td>';
-				}
-			}
-			code +='<td width="15%"><input class="edit_btn" onclick="edit_appdb_Row(this);" value=""/>';
-			code +='<input class="remove_btn" onclick="del_appdb_Row(this);" value=""/></td></tr>';
-		}
-	}
-	code +='</table>';
-	document.getElementById("appdb_rules_block").innerHTML = code;
 }
 
 function get_config()
@@ -804,7 +618,6 @@ function get_config()
 
 	if ( custom_settings.cakeqos_iptables == undefined )  // rules not yet converted to API format
 		{
-			// prepend default rules which can be later edited/deleted by user
 			iptables_rulelist_array = iptables_default_rules;
 			iptables_rulename_array = decodeURIComponent(iptables_default_rulenames);
 		}
@@ -820,11 +633,6 @@ function get_config()
 		else
 			iptables_rulename_array = decodeURIComponent(custom_settings.cakeqos_iptables_names);
 	}
-
-	//if ( custom_settings.cakeqos_dlif == undefined )
-	//	document.form.cakeqos_dlif.value = 0;
-	//else
-	//	document.form.cakeqos_dlif.value = custom_settings.cakeqos_dlif;
 
 	if ( custom_settings.cakeqos_dlprio == undefined )
 		document.getElementById('cakeqos_dlprio').value = 3;
@@ -886,20 +694,10 @@ function get_config()
 	else
 		document.getElementById('cakeqos_ulcust').value = Base64.decode(custom_settings.cakeqos_ulcust);
 
-	if ( custom_settings.cakeqos_appdb == undefined )
-		// start with default appdb rules which can be edited/deleted later by user
-		appdb_rulelist_array = appdb_default_rules;
+	if ( custom_settings.cakeqos_ulrules == undefined )
+		document.form.cakeqos_ulrules.value = 0;
 	else
-		appdb_rulelist_array = custom_settings.cakeqos_appdb;
-
-	appdb_temp_array = appdb_rulelist_array.split("<");
-	appdb_temp_array.shift();
-	for (var a=0; a<appdb_temp_array.length;a++) {
-		if (appdb_temp_array[a].length == 8) {
-			appdb_temp_array[a]=appdb_temp_array[a].split(">");
-			appdb_temp_array[a].unshift(appdb_temp_array[a][0]);
-		}
-	}
+		document.form.cakeqos_ulrules.value = custom_settings.cakeqos_ulrules;
 
 	var r=0;
 	iptables_temp_array = iptables_rulelist_array.split("<");
@@ -934,11 +732,6 @@ function CakeQoS_reset_iptables() {
 	show_iptables_rules();
 } // CakeQoS_reset_iptables()
 
-function CakeQoS_reset_appdb() {
-	appdb_rulelist_array = appdb_default_rules;
-	show_appdb_rules();
-} // CakeQoS_reset_appdb
-
 function save_config_apply() {
 	iptables_rulelist_array = "";
 	iptables_rulename_array = "";
@@ -958,29 +751,12 @@ function save_config_apply() {
 		}
 	}
 
-	appdb_temp_array = appdb_rulelist_array.split("<");
-	appdb_temp_array.shift();
-	var appdb_last_rules = "";
-	appdb_rulelist_array = "";
-	for (var a=0; a<appdb_temp_array.length;a++) {
-		if (appdb_temp_array[a].substr(2,4) == "****")
-			appdb_last_rules += '<' + appdb_temp_array[a];
-		else
-			appdb_rulelist_array += '<' + appdb_temp_array[a];
-	}
-	appdb_rulelist_array += appdb_last_rules;
-
-
 	if (iptables_rulelist_array.length > 2999) {
 		alert("Total iptables rules exceeds 2999 bytes! Please delete or consolidate!");
 		return
 	}
 	if (iptables_rulename_array.length > 2999) {
 		alert("Total iptables rule names exceed 2999 bytes! Please shorten or consolidate rules!");
-		return
-	}
-	if (appdb_rulelist_array.length > 2999) {
-		alert("Total AppDB rules exceeds 2999 bytes! Please delete or consolidate!");
 		return
 	}
 	if (iptables_rulelist_array == iptables_default_rules && iptables_rulename_array == iptables_default_rulenames) {
@@ -990,15 +766,6 @@ function save_config_apply() {
 		custom_settings.cakeqos_iptables = iptables_rulelist_array;
 		custom_settings.cakeqos_iptables_names = iptables_rulename_array;
 	}
-	if (appdb_rulelist_array == appdb_default_rules)
-		delete custom_settings.cakeqos_appdb;
-	else
-		custom_settings.cakeqos_appdb = appdb_rulelist_array;
-
-	//if ( document.form.cakeqos_dlif.value == 0 )
-	//	delete custom_settings.cakeqos_dlif;
-	//else
-	//	custom_settings.cakeqos_dlif = document.form.cakeqos_dlif.value;
 
 	if ( document.getElementById('cakeqos_dlprio').value == 3 )
 		delete custom_settings.cakeqos_dlprio;
@@ -1060,6 +827,11 @@ function save_config_apply() {
 	else
 		custom_settings.cakeqos_ulcust = Base64.encode(document.getElementById('cakeqos_ulcust').value);
 
+	if ( custom_settings.cakeqos_ulrules == 0 )
+		delete custom_settings.cakeqos_ulrules;
+	else
+		custom_settings.cakeqos_ulrules = document.form.cakeqos_ulrules.value;
+
 	/* Store object as a string in the amng_custom hidden input field */
 	if (JSON.stringify(custom_settings).length < 8192) {
 		document.getElementById('amng_custom').value = JSON.stringify(custom_settings);
@@ -1069,19 +841,6 @@ function save_config_apply() {
 	}
 	else
 		alert("Settings for all addons exceeds 8K limit! Cannot save!");
-}
-
-function validate_mark(input)
-{
-	if (!(input))		return 1;		//is blank
-	if (input.length != 6 )		return false;	//console.log("fail length");
-	if ( catdb_mark_array.indexOf(input.toUpperCase()) < 0 ) {
-		document.form.appdb_desc_x.value="Unknown Mark";
-		return false;
-	}
-	document.form.appdb_desc_x.value=input.toUpperCase();
-	document.form.appdb_mark_x.value=input.toUpperCase();
-	return 1;
 }
 
 function SetCurrentPage() {
@@ -1307,16 +1066,15 @@ function version_update() {
 function well_known_rules(){
 	var code = "";
 	var wellKnownRule = new Array();
-//		[ "Rule Name", "Local IP", "Remote IP", "Proto", "Local Port", "Remote Port", "Mark", "Class"],
+//		[ "Rule Name", "Local IP", "Remote IP", "Proto", "Local Port", "Remote Port", "DSCP/Tin"],
+//      Tin: { "Bulk" : "0", "Streaming" : "1", "Voice" : "2", "Conferencing" : "3", "Gaming" : "4" }
 	wItem = [
-		[ "Facetime", "", "", "udp", "16384:16415", "", "", "3"],
-		[ "Game Downloads", "", "", "tcp", "", "80,443", "08****", "5"],
-		[ "Gaming Rule", "login_ip_str", "", "both", "", "!80,443", "000000", "1"],
-		[ "Google Meet", "", "", "udp", "", "19302:19309", "", "3"],
-		[ "Skype/Teams", "", "", "udp", "", "3478:3481", "000000", "3"],
-		[ "Usenet", "", "", "tcp", "", "119,563", "", "5"],
-		[ "WiFi Calling", "", "", "udp", "", "500,4500", "", "3"],
-		[ "Zoom", "", "", "udp", "", "8801:8810", "000000", "3"]
+		[ "Facetime", "", "", "udp", "16384:16415", "", "3"],
+		[ "Google Meet", "", "", "udp", "", "19302:19309", "3"],
+		[ "Skype/Teams", "", "", "udp", "", "3478:3481", "3"],
+		[ "Usenet", "", "", "tcp", "", "119,563", "0"],
+		[ "WiFi Calling", "", "", "udp", "", "500,4500", "2"],
+		[ "Zoom", "", "", "udp", "", "8801:8810", "3"]
 	];
 
 	code += '<option value="User Defined">Please select</option>';
@@ -1347,7 +1105,6 @@ function change_wizard(o){
 	wellKnownRule.push(wItem[i][4]);
 	wellKnownRule.push(wItem[i][5]);
 	wellKnownRule.push(wItem[i][6]);
-	wellKnownRule.push(wItem[i][7]);
 
 	var validDuplicateFlag = true;
 	if(tableApi._attr.hasOwnProperty("ruleDuplicateValidation")) {
@@ -1418,13 +1175,6 @@ function change_wizard(o){
 			&nbsp;&nbsp;&nbsp;
 			<img id="ver_update_scan" style="display:none;vertical-align:middle;" src="images/InternetScan.gif">
 			<span id="versionStatus" style="color:#FC0;display:none;"></span>
-		</td>
-	</tr>
-	<tr style="display:none">
-		<th><a class="hintstyle" href="javascript:void(0);" onclick="YazHint(1);">Cake Download Interface</a></th>
-		<td colspan="2">
-			<input type="radio" name="cakeqos_dlif" class="input" value="0">WAN ingress
-			<input type="radio" name="cakeqos_dlif" class="input" value="1">LAN bridge
 		</td>
 	</tr>
 	<tr id="qos_overhead_tr">
@@ -1553,7 +1303,14 @@ function change_wizard(o){
 			<input id="cakeqos_ulcust" type="text" maxlength="48" class="input_32_table" name="cakeqos_ulcust" autocomplete="off" autocorrect="off" autocapitalize="off" placeholder="Optional custom parameters">
 		</td>
 	</tr>
-	<tr style="display:none;" >
+	<tr>
+		<th><a class="hintstyle" href="javascript:void(0);" onclick="YazHint(1);">Enable Upload Classification</a></th>
+		<td colspan="2">
+			<input type="radio" name="cakeqos_ulrules" class="input" value="1" onclick="showhide('well_known_rules_tr',1);showhide('iptables_rules_block',1);">Yes
+			<input type="radio" name="cakeqos_ulrules" class="input" value="0" onclick="showhide('well_known_rules_tr',0);showhide('iptables_rules_block',0);">No
+		</td>
+	</tr>
+	<tr id="well_known_rules_tr">
 		<th>Add Well-Known iptables Rule</th>
 		<td colspan="2">
 			<select name="WellKnownRules" class="input_option" onChange="change_wizard(this);">
@@ -1562,38 +1319,9 @@ function change_wizard(o){
 		</td>
 	</tr>
 </table>
+<div id="iptables_rules_block"></div>
 <div class="apply_gen">
 	<input name="button" type="button" class="button_gen" onclick="save_config_apply();" value="Apply" />
-</div>
-<div style="display:none;" id="iptables_rules_block"></div>
-
-<table style="display:none;" width="100%" border="1" align="center" cellpadding="4" cellspacing="0" class="FormTable_table">
-	<thead>
-		<tr>
-			<td colspan="4">dnsmasq ipset Rules&nbsp;(Max Limit : 32)<small style="float:right; font-weight:normal; margin-right:10px; cursor:pointer;" onclick="CakeQoS_reset_appdb()">Reset</small></td>
-		</tr>
-	</thead>
-	<tbody>
-	<tr>
-		<th width="auto"><div class="table_text">Domain(s)</div></th>
-		<th width="30%"><div class="table_text">ipset</div></th>
-		<th width="15%">Edit</th>
-	</tr>
-	<tr>
-		<td width="auto">
-			<input id="appdb_search_x" type="text" maxlength="52" class="input_32_table" name="appdb_desc_x" autocomplete="off" autocorrect="off" autocapitalize="off" placeholder="Enter domain names">
-		</td>
-		<td width="30%">
-			<input id="appdb_ipset_x" type="text" maxlength="32" class="input_18_table" name="appdb_ipset_x" autocomplete="off" autocorrect="off" autocapitalize="off" placeholder="Enter ipset name">
-		</td>
-		<td width="15%">
-			<div><input type="button" class="add_btn" onClick="addRow_AppDB_Group(32);" value=""></div>
-		</td>
-	</tr>
-</tbody>
-</table>
-<div style="display:none;" id="appdb_rules_block"></div>
-<p style="clear:left;clear:right;"></p>
 </div>
 <div id="cakeqos_status"></div>
 <div class="apply_gen">

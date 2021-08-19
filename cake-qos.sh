@@ -15,20 +15,21 @@
 ##                                    |_|              ##
 ##                                                     ##
 ##      https://github.com/ttgapers/cakeqos-merlin     ##
-##                        v2.0.0                       ##
+##                        v2.1.0                       ##
 ##                                                     ##
 #########################################################
 
 # shellcheck disable=SC2086
 
-version=2.0.0
+version=2.1.0
 readonly SCRIPT_NAME="cake-qos"
 readonly SCRIPT_NAME_FANCY="CakeQOS-Merlin"
 readonly SCRIPT_BRANCH="master"
 readonly SCRIPT_DIR="/jffs/addons/${SCRIPT_NAME}"
 readonly SCRIPT_REMOTEDIR="https://raw.githubusercontent.com/ttgapers/cakeqos-merlin/${SCRIPT_BRANCH}"
+IPv6_enabled="$(nvram get ipv6_service)"
 
-readonly CRIT="\\e[41m"
+#readonly CRIT="\\e[41m"
 readonly ERR="\\e[31m"
 readonly WARN="\\e[33m"
 readonly PASS="\\e[32m"
@@ -250,7 +251,7 @@ Cake_Mount_UI(){
 		am_get_webui_page "${SCRIPT_DIR}/${SCRIPT_NAME}.asp"
 	fi
 	if [ "$am_webui_page" = "none" ]; then
-		logmsg "No API slots available to install web page"
+		Print_Output "true" "No API slots available to install web page"
 	else
 		cp -p "${SCRIPT_DIR}/${SCRIPT_NAME}.asp" /www/user/"$am_webui_page"
 		if [ ! -f /tmp/menuTree.js ]; then
@@ -305,6 +306,8 @@ Cake_Install(){
 	fi
 	if [ "$(nvram get qos_enable)" != "1" ] || [ "$(nvram get qos_type)" != "9" ]; then
 		Print_Output "true" "Enable Cake QoS scheduler in the firmware..." "$PASS"
+		tc qdisc del dev eth0 root 2>/dev/null
+		tc qdisc del dev br0 root 2>/dev/null
 		nvram set qos_enable=1
 		nvram set qos_type=9
 		nvram set fc_disable=0
@@ -364,6 +367,11 @@ Cake_Install(){
 	Init_UserScript "services-start"
 	sed -i '\~# CakeQOS-Merlin~d' /jffs/scripts/services-start
 	echo "sh ${SCRIPT_DIR}/${SCRIPT_NAME} mountui # $SCRIPT_NAME_FANCY" >> /jffs/scripts/services-start
+
+	# Add to firewall-start
+	Init_UserScript "firewall-start"
+	sed -i '\~# CakeQOS-Merlin~d' /jffs/scripts/firewall-start
+	echo "sh ${SCRIPT_DIR}/${SCRIPT_NAME} startup # $SCRIPT_NAME_FANCY" >> /jffs/scripts/firewall-start
 
 	if [ ! -L "/opt/bin/${SCRIPT_NAME}" ] || [ "$(readlink /opt/bin/${SCRIPT_NAME})" != "${SCRIPT_DIR}/${SCRIPT_NAME}" ]; then
 		rm -rf /opt/bin/${SCRIPT_NAME}
@@ -481,6 +489,174 @@ Display_Line(){
 	printf '\n#########################################################\n\n'
 }
 
+Is_Valid_CIDR() {
+	/bin/grep -qE '^[!]?([0-9]{1,3}\.){3}[0-9]{1,3}(/[0-9]{1,2})?$'
+} # Is_Valid_CIDR
+
+Is_Valid_Port() {
+	/bin/grep -qE '^[!]?([0-9]{1,5})((:[0-9]{1,5})?|(,[0-9]{1,5})*)$'
+} # Is_Valid_Port
+
+get_tin_dscp() {
+	case "${1}" in
+		0) printf "%s\n" "CS1"  ;;  # Bulk
+		1) printf "%s\n" "AF31" ;;  # Streaming
+		2) printf "%s\n" "EF"   ;;  # Voice
+		3) printf "%s\n" "AF41" ;;  # Conferencing
+		4) printf "%s\n" "CS4"  ;;  # Gaming
+		*) printf "%s\n" "CS0"  ;;  # Other
+	esac
+}
+
+apply_iptablesrule() {
+	# Process an iptables custom rule into the appropriate iptables syntax
+	# Input: $1 = local IP (e.g. 192.168.1.100 !192.168.1.100 192.168.1.100/31 !192.168.1.100/31)
+	#        $2 = remote IP (e.g. 9.9.9.9 !9.9.9.9 9.9.9.0/24 !9.9.9.0/24)
+	#        $3 = protocol (e.g. both, tcp, or udp)
+	#        $4 = local port (e.g. 443 !443 1234:5678 !1234:5678 53,123,853 !53,123,853)
+	#        $5 = remote port (e.g. 443 !443 1234:5678 !1234:5678 53,123,853 !53,123,853)
+	#        $6 = CAKE tin (e.g. 0-7)
+	tmp_OLDIFS="$IFS"
+	IFS="$OLDIFS"
+	# local IP
+	# Check for acceptable IP format
+	if echo "${1}" | Is_Valid_CIDR; then
+		# print ! (if present) and remaining CIDR
+		UP_Lip="$(echo "${1}" | sed -E 's/^([!])?/\1 -s /')"
+	else
+		UP_Lip=""
+	fi
+
+	# remote IP
+	# Check for acceptable IP format
+	if echo "${2}" | Is_Valid_CIDR; then
+		# print ! (if present) and remaining CIDR
+		UP_Rip="$(echo "${2}" | sed -E 's/^([!])?/\1 -d /')"
+	else
+		UP_Rip=""
+	fi
+
+	# protocol (required when port specified)
+	if [ "${3}" = "tcp" ] || [ "${3}" = "udp" ]; then
+		# print protocol directly
+		PROTOS="${3}"
+	elif [ "${#4}" -gt "1" ] || [ "${#5}" -gt "1" ]; then
+		# proto=both & ports are defined
+		PROTOS="tcp udp"		# separated by > because IFS will be temporarily set to '>' by calling function. TODO Fix Me
+	else
+		# neither proto nor ports defined
+		PROTOS="all"
+	fi
+
+	# local port
+	if echo "${4}" | Is_Valid_Port; then
+		# Use multiport to specify any port specification:
+		# single port, multiple ports, port range
+		UP_Lport="-m multiport $(echo "${4}" | sed -E 's/^([!])?/\1 --sports /')"
+	else
+		UP_Lport=""
+	fi
+
+	# remote port
+	if echo "${5}" | Is_Valid_Port; then
+		# Use multiport to specify any port specification:
+		# single port, multiple ports, port range
+		UP_Rport="-m multiport $(echo "${5}" | sed -E 's/^([!])?/\1 --dports /')"
+	else
+		UP_Rport=""
+	fi
+
+	# if all parameters are empty stop processing the rule
+	if [ -z "${UP_Lip}${UP_Rip}${UP_Lport}${UP_Rport}" ]; then
+		return
+	fi
+
+	# destination tin
+	# numbers come from webui select options for Tin field
+	Dst_tin="$(get_tin_dscp "${6}")"
+	if [ -z "${Dst_tin}" ]; then
+		return
+	fi
+	UP_dst="-j DSCP --set-dscp-class ${Dst_tin}"
+
+	# This block is redirected to the /tmp/cake-qos_iprules file, so no extraneous output, please
+	# If proto=both we have to create 2 statements, one for tcp and one for udp.
+	for proto in ${PROTOS}; do
+		# upload ipv4
+		iptables -t mangle -A "${SCRIPT_NAME_FANCY}" -o "${iface}" ${UP_Lip} ${UP_Rip} -p ${proto} ${UP_Lport} ${UP_Rport} ${UP_dst}
+		# If rule contains no IPv4 local or remote addresses, and IPv6 is enabled, add a corresponding rule for IPv6
+		if [ "${IPv6_enabled}" != "disabled" ] && [ -z "${UP_Lip}" ] && [ -z "${UP_Rip}" ]; then
+			# upload ipv6
+			ip6tables -t mangle -A "${SCRIPT_NAME_FANCY}" -o "${iface}" -p ${proto} ${UP_Lport} ${UP_Rport} ${UP_dst}
+		fi
+	done
+	IFS="$tmp_OLDIFS"
+} # apply_iptablesrule
+
+startup() {
+	if [ "$(nvram get qos_enable)" != "1" ] || [ "$(nvram get qos_type)" != "9" ]; then
+		Print_Output "true" "Cake QoS is not enabled. Skipping ${SCRIPT_NAME_FANCY} startup."
+		return 1
+	fi # Cake qos not enabled
+
+	Check_Lock
+	# Read settings from Addon API config file.
+	if [ "$(am_settings_get cakeqos_ulrules)" = "1" ]; then
+		iptables_rules="$(am_settings_get cakeqos_iptables)"
+		# Only apply iptables rules if user defined any
+		if [ -n "${iptables_rules}" ]; then
+			Print_Output "true" "Applying iptables rules"
+			iptables -t mangle -N "${SCRIPT_NAME_FANCY}" 2>/dev/null
+			if ! iptables -t mangle -C POSTROUTING -j "${SCRIPT_NAME_FANCY}" 2>/dev/null; then
+				iptables -t mangle -A POSTROUTING -j "${SCRIPT_NAME_FANCY}"
+			fi
+			if [ "${IPv6_enabled}" != "disabled" ]; then
+				ip6tables -t mangle -N "${SCRIPT_NAME_FANCY}" 2>/dev/null
+				if ! ip6tables -t mangle -C POSTROUTING -j "${SCRIPT_NAME_FANCY}" 2>/dev/null; then
+					ip6tables -t mangle -A POSTROUTING -j "${SCRIPT_NAME_FANCY}"
+				fi
+			fi
+			iptables -t mangle -F "${SCRIPT_NAME_FANCY}" 2>/dev/null
+			if [ "${IPv6_enabled}" != "disabled" ]; then
+				ip6tables -t mangle -F "${SCRIPT_NAME_FANCY}" 2>/dev/null
+			fi
+			# loop through iptables rules and write an iptables command to a temporary file for later execution
+			OLDIFS="${IFS}"		# Save existing field separator
+			IFS=">"				# Set custom field separator to match rule format
+			# read the rules, 1 per line and break into separate fields
+			echo "${iptables_rules}" | sed 's/</\n/g' | while read -r localip remoteip proto lport rport tin
+			do
+				# Ensure at least one criteria field is populated
+				if [ -n "${localip}${remoteip}${proto}${lport}${rport}" ]; then
+					# Process the rule and the stdout containing the resulting rule gets saved to the temporary script file
+					apply_iptablesrule "${localip}" "${remoteip}" "${proto}" "${lport}" "${rport}" "${tin}"
+				fi
+			done
+			IFS="${OLDIFS}"		# Restore saved field separator
+			# Flush conntrack table so that existing connections will be processed by new iptables rules
+			Print_Output "true" "Flushing conntrack table"
+			/usr/sbin/conntrack -F conntrack >/dev/null 2>&1
+		fi
+	fi
+} # startup
+
+Kill_Lock() {
+	if [ -f "/tmp/${SCRIPT_NAME}.lock" ] && [ -d "/proc/$(sed -n '1p' "/tmp/${SCRIPT_NAME}.lock")" ]; then
+		logmsg "[*] Killing Running Process (pid=$(sed -n '1p' "/tmp/${SCRIPT_NAME}.lock"))"
+		logmsg "[*] $(ps | awk -v pid="$(sed -n '1p' "/tmp/${SCRIPT_NAME}.lock")" '$1 == pid')"
+		kill "$(sed -n '1p' "/tmp/${SCRIPT_NAME}.lock")"
+	fi
+	rm -rf "/tmp/${SCRIPT_NAME}.lock"
+} # Kill_Lock
+
+Check_Lock() {
+	if [ -f "/tmp/${SCRIPT_NAME}.lock" ] && [ -d "/proc/$(sed -n '1p' "/tmp/${SCRIPT_NAME}.lock")" ] && [ "$(sed -n '1p' "/tmp/${SCRIPT_NAME}.lock")" != "$$" ]; then
+		Kill_Lock
+	fi
+	printf "%s\n" "$$" > "/tmp/${SCRIPT_NAME}.lock"
+	lock="true"
+} # Check_Lock
+
 Cake_Menu(){
 	reloadmenu="1"
 	echo "Select an option"
@@ -583,9 +759,10 @@ case "$arg1" in
 	config)
 		Cake_Write_QOS
 	;;
-	init)
-		#Nothing to do yet. Future enhancements
-	;;
+	startup)
+		Print_Output "true" "$0 (pid=$$) called in ${mode} mode with $# args: $*"
+		startup
+		;;
 	mountui)
 		Cake_Mount_UI
 	;;
@@ -648,3 +825,4 @@ case "$arg1" in
 esac
 Display_Line
 if [ -n "$reloadmenu" ]; then echo; printf "[*] Press Enter To Continue..."; read -r "reloadmenu"; exec "$0"; fi
+if [ "${lock}" = "true" ]; then rm -rf "/tmp/${SCRIPT_NAME}.lock"; fi
