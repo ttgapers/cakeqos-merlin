@@ -21,7 +21,7 @@
 
 # shellcheck disable=SC2086
 
-version=2.1.0
+version=2.2.0
 readonly SCRIPT_NAME="cake-qos"
 readonly SCRIPT_NAME_FANCY="CakeQOS-Merlin"
 readonly SCRIPT_BRANCH="develop"
@@ -33,6 +33,20 @@ IPv6_enabled="$(nvram get ipv6_service)"
 readonly ERR="\\e[31m"
 readonly WARN="\\e[33m"
 readonly PASS="\\e[32m"
+
+# DSCP values for every possible tin for iptables classification
+readonly bulk_DSCP="0x08"       # CS1
+readonly besteffort_DSCP="0x00" # CS0
+readonly video_DSCP="0x18"      # CS3
+readonly voice_DSCP="0x30"      # CS6
+readonly tin0_DSCP="0x01"       # TOS1
+readonly tin1_DSCP="0x08"       # CS1
+readonly tin2_DSCP="0x00"       # CS0
+readonly tin3_DSCP="0x18"       # CS3
+readonly tin4_DSCP="0x12"       # AF21
+readonly tin5_DSCP="0x12"       # CS2
+readonly tin6_DSCP="0x28"       # CS5
+readonly tin7_DSCP="0x30"       # CS6
 
 [ -z "$(nvram get odmpid)" ] && RMODEL=$(nvram get productid) || RMODEL=$(nvram get odmpid) #get router model
 
@@ -101,6 +115,97 @@ get_wanif() {
 		fi
 	fi
 	printf "%s" "$ifname"
+}
+
+Create_ipsets(){
+	local setlist
+
+	# Do not bother with extra classification if download or upload are set to besteffort
+	if [ "$(Cake_Get_Prio dl)" != "besteffort" ]; then
+		setlist="$(Cake_Get_Tins dl)"
+	fi
+	if [ "$(Cake_Get_Prio ul)" != "besteffort" ]; then
+		# append upload tin names to download tin list (if populated)
+		setlist="${setlist} $(Cake_Get_Tins ul)"
+	fi
+
+	# get a unique list of tins to avoid creating same ipset twice
+	setlist="$(echo ${setlist} | tr ' ' '\n' | awk '!x[$0]++' | xargs)"
+
+	for i in $setlist; do
+		# create ipset with 24 hour retention of IPs
+		ipset -q create ${i}_4 hash:ip timeout 86400
+		if [ "${IPv6_enabled}" != "disabled" ]; then
+			ipset -q create ${i}_6 hash:ip family inet6 timeout 86400
+		fi
+	done
+}
+
+Create_ipset_iptables(){
+	local set_DSCP setlist
+
+	# Do not bother with extra classification if upload is set to besteffort
+	[ "$(Cake_Get_Prio ul)" = "besteffort" ] && return
+
+	setlist="$(Cake_Get_Tins ul)"
+	for i in $setlist; do
+		eval set_DSCP="\$${i}_DSCP"  # kludge to get dynamic variable defined globally
+		iptables -t mangle -A "${SCRIPT_NAME_FANCY}" -o "${iface}" -m set --match-set ${i}_4 dst -j DSCP --set-dscp "${set_DSCP:-0x00}"  # if DSCP is null, default to CS0
+		if [ "${IPv6_enabled}" != "disabled" ]; then
+			ip6tables -t mangle -A "${SCRIPT_NAME_FANCY}" -o "${iface}" -m set --match-set ${i}_6 dst -j DSCP --set-dscp "${set_DSCP:-0x00}"  # if DSCP is null, default to CS0
+		fi
+	done
+}
+
+Create_ipset_tcfilters(){
+	local handle setlist matchstr
+	local tin
+
+	# Do not bother with extra classification if download is set to besteffort
+	[ "$(Cake_Get_Prio dl)" = "besteffort" ] && return
+
+	# Get existing cake qdisc handle for use in filter rule
+	handle="$(tc qdisc show dev ifb4${iface} root | awk ' { print $3 } ')"
+
+	# load ipset match module
+	[ -d /sys/module/em_ipset ] || modprobe em_ipset 2>/dev/null
+
+	setlist="$(Cake_Get_Tins dl)"
+	tin=1  # used for numeric priority of filter rules and tin priority values
+	for i in $setlist; do
+		matchstr="ipset(${i}_4 src)"  # kludge to allow variable within ipset parentheses
+		tc filter add dev ifb4${iface} parent "${handle}" protocol ip prio ${tin}0 basic match ${matchstr} action skbedit priority ${handle}${tin}
+		if [ "${IPv6_enabled}" != "disabled" ]; then
+			matchstr="ipset(${i}_6 src)"
+			tc filter add dev ifb4${iface} parent "${handle}" protocol ipv6 prio ${tin}1 basic match ${matchstr} action skbedit priority ${handle}${tin}
+		fi
+		tin=$((tin+1))
+	done
+
+	# Put all unclassified traffic in besteffort tin (priority 2). Only makes sense for diffserv3/4
+	case "$(Cake_Get_Prio dl)" in
+		diffserv3|diffserv4)
+			tc filter add dev ifb4${iface} parent "${handle}" protocol ip prio 99 matchall action skbedit priority ${handle}2
+			;;
+	esac
+}
+
+Cake_Get_Tins(){
+	DIR="$1"  # dl or ul
+	PRIO="$(am_settings_get cakeqos_${DIR}prio)"
+	if [ -z "$PRIO" ]; then    # if unset, use default value
+		case $DIR in
+			'dl') PRIO="3" ;;  # besteffort
+			'ul') PRIO="0" ;;  # diffserv3
+		esac
+	fi
+	case $PRIO in
+		0) printf "bulk besteffort voice\n" ;;  # diffserv3
+		1) printf "bulk besteffort video voice\n" ;;  # diffserv4
+		2) printf "tin0 tin1 tin2 tin3 tin4 tin5 tin6 tin7\n" ;;  # diffserv8
+		3) printf "tin0\n" ;;  # besteffort
+		*) printf "\n" ;;
+	esac
 }
 
 Cake_Get_Prio(){
@@ -600,27 +705,32 @@ startup() {
 	fi # Cake qos not enabled
 
 	Check_Lock
+	Print_Output "true" "Applying iptables rules"
+	iptables -t mangle -N "${SCRIPT_NAME_FANCY}" 2>/dev/null
+	if ! iptables -t mangle -C POSTROUTING -j "${SCRIPT_NAME_FANCY}" 2>/dev/null; then
+		iptables -t mangle -A POSTROUTING -j "${SCRIPT_NAME_FANCY}"
+	fi
+	if [ "${IPv6_enabled}" != "disabled" ]; then
+		ip6tables -t mangle -N "${SCRIPT_NAME_FANCY}" 2>/dev/null
+		if ! ip6tables -t mangle -C POSTROUTING -j "${SCRIPT_NAME_FANCY}" 2>/dev/null; then
+			ip6tables -t mangle -A POSTROUTING -j "${SCRIPT_NAME_FANCY}"
+		fi
+	fi
+	iptables -t mangle -F "${SCRIPT_NAME_FANCY}" 2>/dev/null
+	if [ "${IPv6_enabled}" != "disabled" ]; then
+		ip6tables -t mangle -F "${SCRIPT_NAME_FANCY}" 2>/dev/null
+	fi
+
+	Create_ipsets
+	Create_ipset_iptables
+	Create_ipset_tcfilters
+
 	# Read settings from Addon API config file.
 	if [ "$(am_settings_get cakeqos_ulrules)" = "1" ]; then
 		iptables_rules="$(am_settings_get cakeqos_iptables)"
 		# Only apply iptables rules if user defined any
 		if [ -n "${iptables_rules}" ]; then
-			Print_Output "true" "Applying iptables rules"
-			iptables -t mangle -N "${SCRIPT_NAME_FANCY}" 2>/dev/null
-			if ! iptables -t mangle -C POSTROUTING -j "${SCRIPT_NAME_FANCY}" 2>/dev/null; then
-				iptables -t mangle -A POSTROUTING -j "${SCRIPT_NAME_FANCY}"
-			fi
-			if [ "${IPv6_enabled}" != "disabled" ]; then
-				ip6tables -t mangle -N "${SCRIPT_NAME_FANCY}" 2>/dev/null
-				if ! ip6tables -t mangle -C POSTROUTING -j "${SCRIPT_NAME_FANCY}" 2>/dev/null; then
-					ip6tables -t mangle -A POSTROUTING -j "${SCRIPT_NAME_FANCY}"
-				fi
-			fi
-			iptables -t mangle -F "${SCRIPT_NAME_FANCY}" 2>/dev/null
-			if [ "${IPv6_enabled}" != "disabled" ]; then
-				ip6tables -t mangle -F "${SCRIPT_NAME_FANCY}" 2>/dev/null
-			fi
-			# loop through iptables rules and write an iptables command to a temporary file for later execution
+			# loop through iptables rules
 			OLDIFS="${IFS}"		# Save existing field separator
 			IFS=">"				# Set custom field separator to match rule format
 			# read the rules, 1 per line and break into separate fields
