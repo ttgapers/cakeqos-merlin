@@ -613,6 +613,44 @@ get_tin_dscp() {
 	esac
 }
 
+create_ipset() {
+	# To translate IPv4 iptables rules using local IPv4 addresses, create 2 ipsets and 2 iptables rules to track
+	# corresponding IPv6 addresses for a given IPv4 local address
+	# Input: $1 = local IP/CIDR (minus optional negation)
+	# Output: stdout ipset and iptables commands
+	local LOCALIP IPV6LIFETIME IPV6RASTATE
+
+	# If IPv6 is disabled, return early
+	[ "${IPv6_enabled}" = "disabled" ] && return
+
+	# Strip optional negation if present
+	LOCALIP="${1}"
+	IPV6RASTATE="$(nvram get ipv6_autoconf_type)" # 0=Stateless, 1=Stateful
+	ipset -! create "${LOCALIP}-mac" hash:mac timeout "$(nvram get dhcp_lease)" 2>/dev/null
+
+	case "${IPv6_enabled}" in
+	dhcp6|other) #Native or Static
+		if [ "${IPV6RASTATE}" = "1" ]; then
+			# Stateful, get DHCP Lifetime
+			IPV6LIFETIME="$(nvram get ipv6_dhcp_lifetime)"
+		else
+			# Stateless, use hard-coded value from firmware
+			IPV6LIFETIME=600
+		fi
+		;;
+	*)
+		IPV6LIFETIME=600
+		;;
+	esac
+
+	ipset -! create "${LOCALIP}" hash:ip family inet6 timeout "${IPV6LIFETIME}" 2>/dev/null
+
+	iptables -t mangle -D PREROUTING -m conntrack --ctstate NEW -s "${LOCALIP}" -j SET --add-set "${LOCALIP}"-mac src --exist 2>/dev/null
+	ip6tables -t mangle -D PREROUTING -m conntrack --ctstate NEW -m set --match-set "${LOCALIP}"-mac src -j SET --add-set "${LOCALIP}" src --exist 2>/dev/null
+	iptables -t mangle -I PREROUTING -m conntrack --ctstate NEW -s "${LOCALIP}" -j SET --add-set "${LOCALIP}"-mac src --exist
+	ip6tables -t mangle -I PREROUTING -m conntrack --ctstate NEW -m set --match-set "${LOCALIP}"-mac src -j SET --add-set "${LOCALIP}" src --exist
+}
+
 apply_iptablesrule() {
 	# Process an iptables custom rule into the appropriate iptables syntax
 	# Input: $1 = local IP (e.g. 192.168.1.100 !192.168.1.100 192.168.1.100/31 !192.168.1.100/31)
@@ -628,8 +666,16 @@ apply_iptablesrule() {
 	if echo "${1}" | Is_Valid_CIDR; then
 		# print ! (if present) and remaining CIDR
 		UP_Lip="$(echo "${1}" | sed -E 's/^([!])?/\1 -s /')"
+		# Only create ipset if there is no remote IP/CIDR defined, since the IPv6 rule would not work with remote IPv4 CIDR
+		if ! echo "${2}" | Is_Valid_CIDR; then
+			# Alternate syntax for IPv6 ipset matching
+			CIDR="$(echo "${1}" | sed -E 's/^!//')"
+			create_ipset "${CIDR}" # 2>/dev/null
+			UP_Lip6="$(echo "${1}" | sed -E 's/^([!])?(([0-9]{1,3}\.){3}[0-9]{1,3}(\/[0-9]{1,2})?)/-m set \1 --match-set \2 src/')"
+		fi
 	else
 		UP_Lip=""
+		UP_Lip6=""
 	fi
 
 	# remote IP
@@ -690,9 +736,9 @@ apply_iptablesrule() {
 		# upload ipv4
 		iptables -t mangle -A "${SCRIPT_NAME_FANCY}" -o "${iface}" ${UP_Lip} ${UP_Rip} -p ${proto} ${UP_Lport} ${UP_Rport} ${UP_dst}
 		# If rule contains no IPv4 local or remote addresses, and IPv6 is enabled, add a corresponding rule for IPv6
-		if [ "${IPv6_enabled}" != "disabled" ] && [ -z "${UP_Lip}" ] && [ -z "${UP_Rip}" ]; then
+		if [ "${IPv6_enabled}" != "disabled" ] && [ -z "${UP_Rip}" ]; then
 			# upload ipv6
-			ip6tables -t mangle -A "${SCRIPT_NAME_FANCY}" -o "${iface}" -p ${proto} ${UP_Lport} ${UP_Rport} ${UP_dst}
+			ip6tables -t mangle -A "${SCRIPT_NAME_FANCY}" -o "${iface}" ${UP_Lip6} -p ${proto} ${UP_Lport} ${UP_Rport} ${UP_dst}
 		fi
 	done
 	IFS="$tmp_OLDIFS"
