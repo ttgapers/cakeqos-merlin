@@ -729,7 +729,6 @@ apply_iptablesrule() {
 	fi
 	UP_dst="-j DSCP --set-dscp-class ${Dst_tin}"
 
-	# This block is redirected to the /tmp/cake-qos_iprules file, so no extraneous output, please
 	# If proto=both we have to create 2 statements, one for tcp and one for udp.
 	for proto in ${PROTOS}; do
 		# upload ipv4
