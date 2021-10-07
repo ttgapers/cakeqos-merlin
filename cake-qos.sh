@@ -866,7 +866,7 @@ Cake_Menu(){
 				break
 			;;
 			2)
-				option1="updatecheck"
+				option1="update"
 				break
 			;;
 			3)
