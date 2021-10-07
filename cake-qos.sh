@@ -133,10 +133,13 @@ Create_ipsets(){
 	setlist="$(echo ${setlist} | tr ' ' '\n' | awk '!x[$0]++' | xargs)"
 
 	for i in $setlist; do
+		ipset -q create ${i} list:set
 		# create ipset with 24 hour retention of IPs
 		ipset -q create ${i}_4 hash:ip timeout 86400
+		ipset -q add ${i} ${i}_4
 		if [ "${IPv6_enabled}" != "disabled" ]; then
 			ipset -q create ${i}_6 hash:ip family inet6 timeout 86400
+			ipset -q add ${i} ${i}_6
 		fi
 	done
 }
@@ -173,12 +176,8 @@ Create_ipset_tcfilters(){
 	setlist="$(Cake_Get_Tins dl)"
 	tin=1  # used for numeric priority of filter rules and tin priority values
 	for i in $setlist; do
-		matchstr="ipset(${i}_4 src)"  # kludge to allow variable within ipset parentheses
-		tc filter add dev ifb4${iface} parent "${handle}" protocol ip prio ${tin}0 basic match ${matchstr} action skbedit priority ${handle}${tin}
-		if [ "${IPv6_enabled}" != "disabled" ]; then
-			matchstr="ipset(${i}_6 src)"
-			tc filter add dev ifb4${iface} parent "${handle}" protocol ipv6 prio ${tin}1 basic match ${matchstr} action skbedit priority ${handle}${tin}
-		fi
+		matchstr="ipset(${i} src)"  # kludge to allow variable within ipset parentheses
+		tc filter add dev ifb4${iface} parent "${handle}" protocol all prio ${tin}0 basic match ${matchstr} action skbedit priority ${handle}${tin}
 		tin=$((tin+1))
 	done
 
