@@ -185,7 +185,7 @@ Create_ipset_tcfilters(){
 	# Put all unclassified traffic in besteffort tin (priority 2). Only makes sense for diffserv3/4
 	case "$(Cake_Get_Prio dl)" in
 		diffserv3|diffserv4)
-			tc filter add dev ifb4${iface} parent "${handle}" protocol ip prio 99 matchall action skbedit priority ${handle}2
+			tc filter add dev ifb4${iface} parent "${handle}" protocol all prio 99 matchall action skbedit priority ${handle}2
 			;;
 	esac
 }
