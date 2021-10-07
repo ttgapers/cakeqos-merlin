@@ -604,9 +604,9 @@ Is_Valid_Port() {
 get_tin_dscp() {
 	case "${1}" in
 		0) printf "%s\n" "CS1"  ;;  # Bulk
-		1) printf "%s\n" "AF31" ;;  # Streaming
-		2) printf "%s\n" "EF"   ;;  # Voice
-		3) printf "%s\n" "AF41" ;;  # Conferencing
+		1) printf "%s\n" "CS3" ;;  # Streaming
+		2) printf "%s\n" "CS6"   ;;  # Voice
+		3) printf "%s\n" "CS3" ;;  # Conferencing
 		4) printf "%s\n" "CS4"  ;;  # Gaming
 		*) printf "%s\n" "CS0"  ;;  # Other
 	esac
