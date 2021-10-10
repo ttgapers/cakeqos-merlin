@@ -404,7 +404,7 @@ Cake_Uninstall(){
 		# Remove last mounted asp page
 		rm -f /www/user/"$prev_webui_page" 2>/dev/null
 	fi
-	sed -i '\~# CakeQOS-Merlin~d' /jffs/scripts/service-event /jffs/scripts/service-event-end /jffs/scripts/services-start #/jffs/scripts/qos-start
+	sed -i '\~# CakeQOS-Merlin~d' /jffs/scripts/service-event /jffs/scripts/service-event-end /jffs/scripts/services-start /jffs/scripts/firewall-start #/jffs/scripts/qos-start
 	sed -i "/^cakeqos_/d" /jffs/addons/custom_settings.txt
 	rm -rf "/opt/bin/${SCRIPT_NAME}" "${SCRIPT_DIR}" "/www/ext/${SCRIPT_NAME}" /jffs/configs/cake-qos.conf.add 2>/dev/null
 }
