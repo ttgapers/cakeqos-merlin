@@ -923,11 +923,11 @@ function format_Cake_Stat(statname, statval) {
 	return statval.toLocaleString();
 }
 
-function generate_Cake_StatsTable(cake_stats_object, dir){
+function generate_Cake_StatsTable(cake_stats_object, dir, id){
 	var code = '';
 	var lastUpdated = new Date(cake_statstime*1000);
 	code +='<table width="100%" border="1" align="center" cellpadding="4" cellspacing="0" bordercolor="#6b8fa3" class="FormTable_table">';
-	code += '<thead class="collapsible-jquery" id="dl_status"><tr><td colspan="' + ( cake_stats_object.tins.length + 1 ) + '">Cake ' + dir + ' Statistics (click to expand/collapse)<small style="float:right;font-weight:normal;">Last Updated: ' + lastUpdated.toLocaleDateString() + ' ' + lastUpdated.toLocaleTimeString() + '</small></td></tr></thead>';
+	code += '<thead class="collapsible-jquery" id="' + id + '"><tr><td colspan="' + ( cake_stats_object.tins.length + 1 ) + '">Cake ' + dir + ' Statistics (click to expand/collapse)<small style="float:right;font-weight:normal;">Last Updated: ' + lastUpdated.toLocaleDateString() + ' ' + lastUpdated.toLocaleTimeString() + '</small></td></tr></thead>';
 	code += '<tr><th></th>';
 	switch (cake_stats_object.tins.length) {
 		case 3:
@@ -974,8 +974,8 @@ function refresh_Cake_StatsInfo(){
 	code += '<tr><th>MPU</th><td>' + cake_download_stats.options.mpu + '</td><td>' + cake_upload_stats.options.mpu + '</td></tr>';
 	code += '</table>';
 
-	code += generate_Cake_StatsTable(cake_download_stats, "Download");
-	code += generate_Cake_StatsTable(cake_upload_stats, "Upload");
+	code += generate_Cake_StatsTable(cake_download_stats, "Download", "dl_status");
+	code += generate_Cake_StatsTable(cake_upload_stats, "Upload", "ul_status");
 
 	return code;
 }
