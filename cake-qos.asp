@@ -906,20 +906,31 @@ function format_Cake_Stat(statname, statval) {
 	if (statname.match(bytes)) {
 		if (statval > 1024) {
 			statval = statval / 1024;
-			unit = " KB";
+			unit = " KiB";
 		}
 		if (statval > 1024) {
 			statval = statval / 1024;
-			unit = " MB";
+			unit = " MiB";
 		}
 		if (statval > 1024) {
 			statval = statval / 1024;
-			unit = " GB";
+			unit = " GiB";
 		}
 		return statval.toLocaleFixed(0,2) + unit;
 	}
-	if (statname == 'threshold_rate')
-		return ( statval * 8 / 1000 ).toLocaleString() + ' Kbit';
+	if (statname == 'threshold_rate') {
+		unit = ' Kbit/s'
+		statval = statval * 8 / 1000;
+		if (statval > 1000) {
+			statval = statval / 1000;
+			unit = ' Mbit/s'
+		}
+		if (statval > 1000) {
+			statval = statval / 1000;
+			unit = ' Gbit/s'
+		}
+		return statval.toLocaleFixed(0,2) + unit;
+	}
 	return statval.toLocaleString();
 }
 
@@ -960,7 +971,7 @@ function refresh_Cake_StatsInfo(){
 	code += '<tr><th width="34%"></th>';
 	code += '<th width="33%">Download</th>';
 	code += '<th width="33%">Upload</th></tr>';
-	code += '<tr><th>Bandwidth (Mb/s)</th><td>' + ( cake_download_stats.options.bandwidth * 8 / 1024000 ).toLocaleFixed(2,2) + '</td><td>' + ( cake_upload_stats.options.bandwidth * 8 / 1024000 ).toLocaleFixed(2,2) + '</td></tr>';
+	code += '<tr><th>Bandwidth</th><td>' + format_Cake_Stat('threshold_rate', cake_download_stats.options.bandwidth) + '</td><td>' + format_Cake_Stat('threshold_rate', cake_upload_stats.options.bandwidth) + '</td></tr>';
 	code += '<tr><th>Priority Queue</th><td>' + cake_download_stats.options.diffserv + '</td><td>' + cake_upload_stats.options.diffserv + '</td></tr>';
 	code += '<tr><th>Flow Isolation</th><td>' + cake_download_stats.options.flowmode + '</td><td>' + cake_upload_stats.options.flowmode + '</td></tr>';
 	code += '<tr><th>NAT</th><td>' + ( cake_download_stats.options.nat ? 'Yes' : 'No' ) + '</td><td>' + ( cake_upload_stats.options.nat ? 'Yes' : 'No' ) + '</td></tr>';
@@ -968,7 +979,7 @@ function refresh_Cake_StatsInfo(){
 	code += '<tr><th>Ingress</th><td>' + ( cake_download_stats.options.ingress ? 'ingress' : 'egress' ) + '</td><td>' + ( cake_upload_stats.options.ingress ? 'ingress' : 'egress' )  + '</td></tr>';
 	code += '<tr><th>ACK Filter</th><td>' + cake_download_stats.options["ack-filter"] + '</td><td>' + cake_upload_stats.options["ack-filter"] + '</td></tr>';
 	code += '<tr><th>Split GSO</th><td>' + ( cake_download_stats.options["split_gso"] ? 'Yes' : 'No' ) + '</td><td>' + ( cake_upload_stats.options["split_gso"] ? 'Yes' : 'No' ) + '</td></tr>';
-	code += '<tr><th>Rount Trip Time (ms)</th><td>' + ( cake_download_stats.options.rtt / 1000 ) + '</td><td>' + ( cake_upload_stats.options.rtt / 1000 ) + '</td></tr>';
+	code += '<tr><th>Round Trip Time</th><td>' + format_Cake_Stat('rtt_us', cake_download_stats.options.rtt) + '</td><td>' + format_Cake_Stat('rtt_us', cake_upload_stats.options.rtt) + '</td></tr>';
 	code += '<tr><th>Overhead</th><td>' + cake_download_stats.options.overhead + '</td><td>' + cake_upload_stats.options.overhead + '</td></tr>';
 	code += '<tr><th>ATM</th><td>' + cake_download_stats.options.atm + '</td><td>' + cake_upload_stats.options.atm + '</td></tr>';
 	code += '<tr><th>MPU</th><td>' + cake_download_stats.options.mpu + '</td><td>' + cake_upload_stats.options.mpu + '</td></tr>';
