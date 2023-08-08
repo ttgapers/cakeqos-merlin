@@ -360,7 +360,7 @@ Cake_Install(){
 	# Add to service-event-end
 	Init_UserScript "service-event-end"
 	sed -i '\~# CakeQOS-Merlin~d' /jffs/scripts/service-event-end
-	echo "if echo \"\$2\" | /bin/grep -q \"^${SCRIPT_NAME}\"; then { sh ${SCRIPT_DIR}/${SCRIPT_NAME} \"\${2#${SCRIPT_NAME}}\" & } ; fi # $SCRIPT_NAME_FANCY" >> /jffs/scripts/service-event-end
+	echo "if echo \"\$2\" | /bin/grep -q \"^${SCRIPT_NAME/-}\"; then { sh ${SCRIPT_DIR}/${SCRIPT_NAME} \"\${2#${SCRIPT_NAME/-}}\" & } ; fi # $SCRIPT_NAME_FANCY" >> /jffs/scripts/service-event-end
 	echo "[ \"\$2\" = \"qos\" ] && ${SCRIPT_DIR}/${SCRIPT_NAME} statsupdate # $SCRIPT_NAME_FANCY" >> /jffs/scripts/service-event-end
 
 	# Add to services-start

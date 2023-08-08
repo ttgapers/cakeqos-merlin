@@ -1062,7 +1062,7 @@ function submit_refresh_status() {
 
 function version_check() {
 	document.getElementById("ver_check").disabled = true;
-	document.ver_check.action_script.value="start_cake-qosupdatecheck"
+	document.ver_check.action_script.value="start_cakeqosupdatecheck"
 	document.ver_check.submit();
 	document.getElementById("versionStatus").style.display = "none";
 	document.getElementById("ver_update_scan").style.display = "";
@@ -1070,7 +1070,7 @@ function version_check() {
 }
 
 function version_update() {
-	document.form.action_script.value="start_cake-qosupdatesilent"
+	document.form.action_script.value="start_cakeqosupdatesilent"
 	document.form.submit();
 }
 
@@ -1366,7 +1366,7 @@ function change_wizard(o){
 	<input type="hidden" name="current_page" value="">
 	<input type="hidden" name="next_page" value="">
 	<input type="hidden" name="action_mode" value="apply">
-	<input type="hidden" name="action_script" value="start_cake-qosstatsupdate">
+	<input type="hidden" name="action_script" value="start_cakeqosstatsupdate">
 	<input type="hidden" name="action_wait" value="">
 </form>
 <div id="footer"></div>
