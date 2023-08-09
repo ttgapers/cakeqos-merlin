@@ -373,7 +373,7 @@ Cake_Install(){
 	sed -i '\~# CakeQOS-Merlin~d' /jffs/scripts/firewall-start
 	echo "sh ${SCRIPT_DIR}/${SCRIPT_NAME} startup # $SCRIPT_NAME_FANCY" >> /jffs/scripts/firewall-start
 
-	if [ -d "/opt/bin" ] && [ ! -L "/opt/bin/${SCRIPT_NAME}" ] || [ "$(readlink /opt/bin/${SCRIPT_NAME})" != "${SCRIPT_DIR}/${SCRIPT_NAME}" ]; then
+	if [ -d "/opt/bin" ] && { [ ! -L "/opt/bin/${SCRIPT_NAME}" ] || [ "$(readlink /opt/bin/${SCRIPT_NAME})" != "${SCRIPT_DIR}/${SCRIPT_NAME}" ]; } then
 		rm -rf /opt/bin/${SCRIPT_NAME}
 		ln -s "${SCRIPT_DIR}/${SCRIPT_NAME}" "/opt/bin/${SCRIPT_NAME}"
 	fi
