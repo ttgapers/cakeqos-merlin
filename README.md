@@ -1,4 +1,4 @@
-# CakeQOS-Merlin ![Build Status](https://travis-ci.com/ttgapers/cakeqos-merlin.svg?branch=master) ![Shellcheck](https://github.com/ttgapers/cakeqos-merlin/actions/workflows/shellcheck.yml/badge.svg)
+# CakeQOS-Merlin
 
 ## Pre-requisites
 1.  Currently supports ASUS HND models running [ASUSWRT-Merlin firmware](https://github.com/RMerl/asuswrt-merlin.ng) version 386.2 and above. Versions prior to 386.2 are supported on the legacy 386 branch or 384 branch. This script will automatically install the appropriate legacy version if your firmware does not support Cake natively.
